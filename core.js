@@ -120,6 +120,9 @@ $jn = ( function($jn) {
 	});
 
 	$jn.TServer = $jn.TObject.extends("TServer", {
+		cluster: null,
+		connectionWorkers: 0,
+		compressionWorkers: 0,
 		port: 80,
 		location: '127.0.0.1',
 		baseDir: 'public',
@@ -129,11 +132,30 @@ $jn = ( function($jn) {
 			this.location = oPar.location || this.location;
 			this.baseDir = oPar.baseDir || this.baseDir;
 			this.cache = new $jn.TServerCache();
+
+			this.cluster = require("cluster");
+			this.connectionWorkers = oPar.connectionWorkers || require("os").cpus().length-1;
+			this.compressionWorkers = oPar.compressionWorkers || 1;
 		},
 		start: function() {
 			var self = this;
-			this.server = require('http').createServer(function(req, resp) {self.handleRequest(req, resp);}).listen(this.port, this.location);
-			console.log('Server running at http://'+this.location+':'+this.port+'/');
+			if(this.cluster.isMaster) { // lets create some child processes
+				console.log(this.connectionWorkers);
+				for(var i = 0; i < this.connectionWorkers; i++)
+					this.cluster.fork();
+
+				this.cluster.on("fork", function(worker) {
+					console.log("Worker forked (nasty) with pid " + worker.process.pid);
+				});
+				this.cluster.on("exit", function(worker) {
+					console.log("Worker died (tip) with pid " + worker.process.pid);
+				});
+			} else {
+				require('http').createServer(function(req, resp) {
+					self.handleRequest(req, resp);
+				}).listen(this.port);
+				console.log('Server running at pid:' + this.cluster.worker.process.pid + ' http://'+this.location+':'+this.port+'/');
+			}
 		},
 		handleRequest: function(req, resp) {
 			new $jn.TServerRequest(this, req, resp).start();
