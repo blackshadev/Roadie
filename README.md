@@ -8,7 +8,10 @@ Our philosophy is keep it simple and clean, so don't expect any fancy functions.
 
 Future features:
  - Auto compression (Gzip and deflate) of files and caching of those files
- - Web services in clusters with 1 master on the :80
  - JSON Config file
  - Serverside JS functionality: RESTfull style.
  - MSSql implementation
+
+Features:
+ - Really standard webservice based upon javascript and nodeJS
+ - Request handling by multiple processes (nodeJS Cluster)
