@@ -62,19 +62,15 @@ $jn = ( function($jn) {
 		idxFld: null,
 		elType: null,
 		items: null,
-		itemsArray: [],
+		itemsArray: null,
 		create: function(oPar) {
-			this.idxFld = oPar.idxFld || null;
-			this.idxPrefix = oPar.idxPrefix || "Li_";
 			this.items = {};
-			if (oPar.elType && oPar.elType instanceof Function) {
-				this.elType = oPar.elType;
-			}
+			this.itemsArray = [];
 		},
 		add: function(el) {
 			var idx;
 			if (this.idxFld) {
-				idx = el[idxFld];
+				idx = el[this.idxFld];
 			} else {
 				idx = this.idxPrefix + this.idxCounter++;
 			}
@@ -83,21 +79,56 @@ $jn = ( function($jn) {
 			}
 			this.items[idx] = el;
 			this.itemsArray.push(el);
+			return el;
 		},
 		toString: function() {
 			return this.itemsArray.toString();
 		}
 	});
 
+	$jn.TServerCache = $jn.TList.extends("TServerCache", {
+		elType: $jn.TCacheEntry,
+		idxFld: "fullName",
+		add: function(oPar) {
+			this.inherited().add.call(this, new $jn.TCacheEntry(oPar));
+		}
+	});
+
+	$jn.TCacheEntry = $jn.TObject.extends("TCacheEntry", {
+		fillName: "",
+		filePath: "",
+		fileName: "",
+		reroute: "",
+		mimeType: "",
+		encodeType: "",
+		ext: "",
+		lastModified: null,
+		length: null,
+		create: function(oPar) {
+			this.fullName = oPar.fullName;
+			this.filePath = oPar.filePath;
+			this.fileName = oPar.fileName;
+			this.ext = oPar.ext;
+			this.mimeType = oPar.mimeType;
+			this.encodeType = oPar.encodeType;
+			this.length = oPar.length;
+			this.reroute = oPar.reroute;
+		},
+		toString: function() {
+			return "TCacheEntry: ["+this.fullName+"]: reroute{"+this.reroute+"}";
+		}
+	});
+
 	$jn.TServer = $jn.TObject.extends("TServer", {
-		server: null,
 		port: 80,
 		location: '127.0.0.1',
 		baseDir: 'public',
+		cache: null,
 		create: function(oPar) {
 			this.port = oPar.port || this.port;
 			this.location = oPar.location || this.location;
 			this.baseDir = oPar.baseDir || this.baseDir;
+			this.cache = new $jn.TServerCache();
 		},
 		start: function() {
 			var self = this;
@@ -132,15 +163,15 @@ $jn = ( function($jn) {
 		},
 		parseRequestUrl: function() {
 			var self = this;
-			console.log(this.oUrl);
 			var file = "./" + this.server.baseDir + this.oUrl.pathname;
-			this.file = new $jn.TServerFile(file);
+			this.file = new $jn.TServerFile(this.server, file);
 			
 		},
 		fileError: function(err) {
 			switch (err.errno) {
 				case 28:
 					this.oUrl.pathname += "index.htm";
+					this.file.reroute = "./" + this.server.baseDir + this.oUrl.pathname;
 					this.start();
 					return false;
 				case 34:
@@ -163,12 +194,13 @@ $jn = ( function($jn) {
 			this.file.pipe(this.resp, {
 					start: function(stat) {
 						self.header.headers["Content-Type"] = self.file.mimeType;
-						self.header.headers["Content-Length"] = stat.size;
+						self.header.headers["Content-Length"] = self.file.length;
 						self.resp.writeHead(self.header.code, self.header.headers);
+						//console.log("Writen headers: length<"+self.file.length+">, mime<"+self.file.mimeType+">");
 					},
 					data: function(data) { self.file.length+=data.length; self.resp.write(data); },
-					end: function() {self.resp.end();},
-					error: function(err) { console.log(err); self.fileError(err); }
+					end: function() {self.resp.end(); },
+					error: function(err) { self.fileError(err); }
 				});
 		}
 	});
@@ -180,6 +212,7 @@ $jn = ( function($jn) {
 	};
 
 	$jn.TServerFile = $jn.TObject.extends("TServerFile", {
+		server: null,
 		fullName: "",
 		filePath: "",
 		fileName: "",
@@ -187,10 +220,24 @@ $jn = ( function($jn) {
 		mimeType: "",
 		encodeType: null,
 		length: 0,
+		lastModified: null,
+		isChached: false,
+		reroute: "", // only used if a file (directory) gets rerouted to another file 
 		fs: require("fs"),
-		create: function(fullName) {
+		create: function(server,fullName) {
 			this.fullName = fullName;
-			this.parseFile();
+			this.server = server;
+			var cache = this.server.cache.items[fullName];
+			this.parseFileCache(cache); // fill result in a parseFile cal if cache is empty
+
+		},
+		parseFileCache: function(entry) {
+			if(!entry) { this.parseFile(); return; }
+			this.isCache = true;
+			for(var iX in entry) {
+				this[iX] = entry[iX];
+			}
+			//console.log("cache found item:" + entry.fullName);
 		},
 		parseFile: function() {
 			var lastDirSep = this.fullName.lastIndexOf("/");
@@ -218,6 +265,31 @@ $jn = ( function($jn) {
 			require("fs").readFile(this.fullName, {encode: this.encodeType, flag: 'r'}, fn);
 		},
 		pipe: function(dest, oPars) {
+			if(this.isCache)
+				this.cacheHit(dest, oPars);
+			else
+				this.cacheMiss(dest, oPars);
+		},
+		createStream: function(oPars) {
+			var fstream = this.fs.createReadStream(this.fullName);
+			for(var type in oPars) {
+				fstream.on(type, oPars[type]);
+			}
+		},
+		cacheHit: function(dest, oPars) {
+			this.followRoute();
+			oPars.start({size: this.length});
+			delete oPars.start;
+			this.createStream(oPars);
+		},
+		followRoute: function() {
+			var cache = this.server.cache.items[this.fullName];
+			while(cache.reroute) {
+				cache = this.server.cache.items[cache.reroute];
+			}
+			this.parseFileCache(cache);
+		},
+		cacheMiss: function(dest, oPars) {
 			var self = this;
 			var statFn = oPars.start;
 			var statErr = oPars.error;
@@ -231,19 +303,16 @@ $jn = ( function($jn) {
 				else {
 					if(stat.isDirectory()) {
 						statErr({errno: 28});
-						return;
+					} else {
+						self.lastModified = stat.mtime;
+						self.length = stat.size;
+						statFn(stat);
+						self.createStream(oPars);
 					}
-					self.createStream(oPars);
-					statFn(stat);
+					// add to cache
+					self.server.cache.add(self);
 				}
 			});
-
-		},
-		createStream: function(oPars) {
-			var fstream = this.fs.createReadStream(this.fullName);
-			for(var type in oPars) {
-				fstream.on(type, oPars[type]);
-			}
 		}
 	});
 	$jn.TServerFile.mime = function(ext){
