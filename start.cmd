@@ -1,0 +1,2 @@
+node ./junction.js
+pause
