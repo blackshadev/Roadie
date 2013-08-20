@@ -4,7 +4,6 @@
 	require("./core.js");
 
 	var server = new $jn.TServer({
-		location: 'govin.nl',
 		port: 1337
 	});
 	server.start();

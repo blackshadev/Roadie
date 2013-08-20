@@ -90,7 +90,7 @@ $jn = ( function($jn) {
 		elType: $jn.TCacheEntry,
 		idxFld: "fullName",
 		add: function(oPar) {
-			this.inherited().add.call(this, new $jn.TCacheEntry(oPar));
+			return this.inherited().add.call(this, new $jn.TCacheEntry(oPar));
 		}
 	});
 
@@ -100,9 +100,11 @@ $jn = ( function($jn) {
 		fileName: "",
 		reroute: "",
 		mimeType: "",
+		encodeMimeType: "",
 		encodeType: "",
 		ext: "",
 		lastModified: null,
+		compressedFiles: null,
 		length: null,
 		create: function(oPar) {
 			this.fullName = oPar.fullName;
@@ -110,9 +112,11 @@ $jn = ( function($jn) {
 			this.fileName = oPar.fileName;
 			this.ext = oPar.ext;
 			this.mimeType = oPar.mimeType;
+			this.encodeMimeType = oPar.encodeMimeType;
 			this.encodeType = oPar.encodeType;
 			this.length = oPar.length;
 			this.reroute = oPar.reroute;
+			this.compressedFiles = null;
 		},
 		toString: function() {
 			return "TCacheEntry: ["+this.fullName+"]: reroute{"+this.reroute+"}";
@@ -158,6 +162,7 @@ $jn = ( function($jn) {
 			}
 		},
 		handleRequest: function(req, resp) {
+			console.log("process handled by " + this.cluster.worker.process.pid);
 			new $jn.TServerRequest(this, req, resp).start();
 		}
 	});
@@ -186,7 +191,7 @@ $jn = ( function($jn) {
 		parseRequestUrl: function() {
 			var self = this;
 			var file = "./" + this.server.baseDir + this.oUrl.pathname;
-			this.file = new $jn.TServerFile(this.server, file);
+			this.file = new $jn.TServerFile(this, file);
 			
 		},
 		fileError: function(err) {
@@ -214,16 +219,17 @@ $jn = ( function($jn) {
 			var self = this;
 			this.parseRequestUrl();
 			this.file.pipe(this.resp, {
-					start: function(stat) {
-						self.header.headers["Content-Type"] = self.file.mimeType;
-						self.header.headers["Content-Length"] = self.file.length;
-						self.resp.writeHead(self.header.code, self.header.headers);
-						//console.log("Writen headers: length<"+self.file.length+">, mime<"+self.file.mimeType+">");
-					},
-					data: function(data) { self.file.length+=data.length; self.resp.write(data); },
-					end: function() {self.resp.end(); },
-					error: function(err) { self.fileError(err); }
-				});
+				start: function(stat) {
+					self.header.headers["Content-Type"] = self.file.mimeType;
+					self.header.headers["Content-Length"] = self.file.length;
+					if(self.file.encodeType)
+						self.header.headers["content-encoding"] = self.file.encodeType;
+					self.resp.writeHead(self.header.code, self.header.headers);
+				},
+				data: function(data) { self.file.length+=data.length; self.resp.write(data); },
+				end: function() { self.resp.end(); self.file.cacheCheck(); },
+				error: function(err) { self.fileError(err); }
+			});
 		}
 	});
 	$jn.TServerRequest.errorPage = function(code) {
@@ -234,21 +240,25 @@ $jn = ( function($jn) {
 	};
 
 	$jn.TServerFile = $jn.TObject.extends("TServerFile", {
+		serverRequest: null,
 		server: null,
 		fullName: "",
 		filePath: "",
 		fileName: "",
 		ext: "",
 		mimeType: "",
-		encodeType: null,
+		encodeMimeType: null,
+		encodeType: null, //
 		length: 0,
 		lastModified: null,
 		isChached: false,
+		compressedFile: null, // contains gZip and deflate file names
 		reroute: "", // only used if a file (directory) gets rerouted to another file 
 		fs: require("fs"),
-		create: function(server,fullName) {
+		create: function(serverRequest, fullName) {
 			this.fullName = fullName;
-			this.server = server;
+			this.serverRequest = serverRequest;
+			this.server = serverRequest.server;
 			var cache = this.server.cache.items[fullName];
 			this.parseFileCache(cache); // fill result in a parseFile cal if cache is empty
 
@@ -259,7 +269,6 @@ $jn = ( function($jn) {
 			for(var iX in entry) {
 				this[iX] = entry[iX];
 			}
-			//console.log("cache found item:" + entry.fullName);
 		},
 		parseFile: function() {
 			var lastDirSep = this.fullName.lastIndexOf("/");
@@ -274,17 +283,17 @@ $jn = ( function($jn) {
 
 			var mime = $jn.TServerFile.mime(this.ext);
 			this.mimeType = mime[0];
-			this.encodeType = mime[1];
+			this.encodeMimeType = mime[1];
 		},
 		toString: function() {
 			return "File: " + this.fileName + "\r\n" + "Path: " + this.filePath +
 				"\r\n" + "ext: " + this.ext +
 				"\r\n" + "MimeType: " + this.mimeType +
-				"\r\n" + "EncodeType: " + this.encodeType +
+				"\r\n" + "encodeMimeType: " + this.encodeMimeType +
 				"\r\n";
 		},
 		open: function(fn) {
-			require("fs").readFile(this.fullName, {encode: this.encodeType, flag: 'r'}, fn);
+			require("fs").readFile(this.fullName, {encode: this.encodeMimeType, flag: 'r'}, fn);
 		},
 		pipe: function(dest, oPars) {
 			if(this.isCache)
@@ -300,14 +309,31 @@ $jn = ( function($jn) {
 		},
 		cacheHit: function(dest, oPars) {
 			this.followRoute();
-			oPars.start({size: this.length});
+			oPars.start();
 			delete oPars.start;
+
 			this.createStream(oPars);
 		},
 		followRoute: function() {
 			var cache = this.server.cache.items[this.fullName];
 			while(cache.reroute) {
 				cache = this.server.cache.items[cache.reroute];
+			}
+			var compressedFile;
+			
+			if(cache.compressedFiles) {
+				var acceptEncoding = this.serverRequest.req.headers["accept-encoding"];
+				if(acceptEncoding.match(/\bdeflate\b/)) {
+					this.encodeType = "deflate";
+					compressedFile = cache.compressedFiles.deflate;
+				} else if(acceptEncoding.match(/\bgzip\b/)) {
+					this.encodeType = "gzip";
+					compressedFile = cahche.compressedFiles.gzip;
+				}
+				if(compressedFile) {
+					this.fullName = compressedFile;
+					cache = this.server.cache.items[compressedFile];
+				}
 			}
 			this.parseFileCache(cache);
 		},
@@ -332,8 +358,45 @@ $jn = ( function($jn) {
 						self.createStream(oPars);
 					}
 					// add to cache
-					self.server.cache.add(self);
+					self.refreshCache(null, stat);
 				}
+			});
+		},
+		cacheCheck: function() {
+			var cacheEntry = this.server.cache.items[this.fullName];
+			var self = this;
+			this.fs.stat(this.fullName, function(err,stat) {
+				if(!cacheEntry || stat.mtime.getTime() > cacheEntry.lastModified) {
+					self.refreshCache(cacheEntry, stat);
+				}
+			});
+		},
+		refreshCache: function(entry, stat) {
+			this.length = stat.size; // if the request was handled by cache, no size was given
+			if(!entry)
+				entry = this.server.cache.add(this);
+			entry.lastModified = this.lastModified = stat.mtime;
+
+			if(!entry.reroute) {
+				entry.compressedFiles = {};
+				this.compress(entry.compressedFiles);
+			}
+		},
+		compress: function(obj) {
+			var self = this;
+			var zlib = require("zlib");
+			var deflateStrm = this.fs.createWriteStream(this.filePath + '/' + this.fileName + ".defl" + "." + this.ext);
+			var gzipStrm = this.fs.createWriteStream(this.filePath + '/' + this.fileName + ".gzip" + "." + this.ext);
+
+			var fstrm = this.fs.createReadStream(this.fullName);
+			fstrm.on("open", function() {
+				fstrm.pipe(zlib.createGzip()).pipe(gzipStrm);
+				fstrm.pipe(zlib.createDeflate()).pipe(deflateStrm);
+			});
+
+			fstrm.on("end", function() {
+				obj["deflate"] = self.filePath + '/' + self.fileName + ".defl" + "." + self.ext;
+				obj["gzip"] = self.filePath + '/' + self.fileName + ".gzip" + "." + self.ext;
 			});
 		}
 	});
