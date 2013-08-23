@@ -7,7 +7,6 @@ At its current state Junction will only send default HTML pages with the additio
 Our philosophy is keep it simple and clean, so don't expect any fancy functions.
 
 Future features:
- - Auto compression (Gzip and deflate) of files and caching of those files
  - JSON Config file
  - Serverside JS functionality: RESTfull style.
  - MSSql implementation
@@ -15,3 +14,5 @@ Future features:
 Features:
  - Really standard webservice based upon javascript and nodeJS
  - Request handling by multiple processes (nodeJS Cluster)
+ - Auto compression (Gzip and deflate)
+ - Cache currently only caches the stats, this saves 1 file access but the file that is sent is still up to date, and saves allot of memory

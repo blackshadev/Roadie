@@ -155,6 +155,7 @@ $jn = ( function($jn) {
 					console.log("Worker died (tip) with pid " + worker.process.pid);
 				});
 			} else {
+				this.cluster.worker.process.title = "Junction WebHandler";
 				require('http').createServer(function(req, resp) {
 					self.handleRequest(req, resp);
 				}).listen(this.port);
