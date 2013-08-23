@@ -192,7 +192,6 @@ $jn = ( function($jn) {
 			var self = this;
 			var file = "./" + this.server.baseDir + this.oUrl.pathname;
 			this.file = new $jn.TServerFile(this, file);
-			
 		},
 		fileError: function(err) {
 			switch (err.errno) {
@@ -259,7 +258,7 @@ $jn = ( function($jn) {
 			this.fullName = fullName;
 			this.serverRequest = serverRequest;
 			this.server = serverRequest.server;
-			var cache = this.server.cache.items[fullName];
+			var cache = this.followRoute();
 			this.parseFileCache(cache); // fill result in a parseFile cal if cache is empty
 
 		},
@@ -284,6 +283,7 @@ $jn = ( function($jn) {
 			var mime = $jn.TServerFile.mime(this.ext);
 			this.mimeType = mime[0];
 			this.encodeMimeType = mime[1];
+			this.isCache = false;
 		},
 		toString: function() {
 			return "File: " + this.fileName + "\r\n" + "Path: " + this.filePath +
@@ -308,7 +308,8 @@ $jn = ( function($jn) {
 			}
 		},
 		cacheHit: function(dest, oPars) {
-			this.followRoute();
+			//this.followRoute();
+			//if(!this.isCache) { this.cacheMiss(dest, oPars); return; }
 			oPars.start();
 			delete oPars.start;
 
@@ -316,6 +317,7 @@ $jn = ( function($jn) {
 		},
 		followRoute: function() {
 			var cache = this.server.cache.items[this.fullName];
+			if(!cache) return cache;
 			while(cache.reroute) {
 				cache = this.server.cache.items[cache.reroute];
 			}
@@ -335,9 +337,10 @@ $jn = ( function($jn) {
 					cache = this.server.cache.items[compressedFile];
 				}
 			}
-			this.parseFileCache(cache);
+			return cache;
 		},
 		cacheMiss: function(dest, oPars) {
+			console.log("Cachemiss for " + this.fullName );
 			var self = this;
 			var statFn = oPars.start;
 			var statErr = oPars.error;
