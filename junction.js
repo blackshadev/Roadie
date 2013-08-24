@@ -3,8 +3,11 @@
 	var fs = require("fs");
 	require("./core.js");
 
-	var server = new $jn.TServer({
-		port: 1337
-	});
+	var config = {};
+	if(fs.existsSync("config.json")) {
+		config = require("./config.json");
+	}
+	
+	var server = new $jn.TServer(config);
 	server.start();
 })();
