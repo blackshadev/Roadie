@@ -1,2 +1,2 @@
-node ./junction.js
+node ./start.js
 pause
