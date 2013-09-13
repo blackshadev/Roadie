@@ -311,7 +311,10 @@ $jn = ( function($jn) {
 					self.resp.writeHead(self.header.code, self.header.headers);
 				},
 				data: function(data) { self.file.length+=data.length; self.resp.write(data); },
-				end: function() { self.resp.end(); self.file.cacheCheck(); },
+				end: function(noCache) {
+					self.resp.end();
+					if(!noCache) self.file.cacheCheck();
+				},
 				error: function(err) { self.fileError(err); }
 			});
 		}
@@ -373,7 +376,7 @@ $jn = ( function($jn) {
 		},
 		parseFilePath: function(requestUri) {
 			var file;
-			if(requestUri.indexOf(this.server.dynamicUrlHook) < 2) {
+			if(requestUri.indexOf(this.server.dynamicUrlHook) > 0) {
 				/* If dynamic, let him handle everything. 
 				 * Uses ServerFile just as interface for caches */
 				this.dynamicFile = new $jn.TDynamicFile(this,
@@ -382,7 +385,8 @@ $jn = ( function($jn) {
 				this.pipe = this.dynamicFile.pipe;
 				return;
 			}
-			this.fullName = "./" + this.server.staticBaseDir + this.oUrl.pathname;
+			this.fullName = "./" + this.server.staticBaseDir +
+				this.serverRequest.oUrl.pathname;
 		},
 		/** parses an ile by the given entry. If entry is undefined {@link $jn.TServerFile#parseFile|parseFile} is called.
 		* @memberof $jn.TServerFile
@@ -575,7 +579,6 @@ $jn = ( function($jn) {
 			this.serverFile = serverFile;
 			this.serverRequest = serverFile.req;
 			this.server = serverFile.serverRequest.server;
-			console.log(this.serverRequest);
 			var file = filePath.substr(
 				filePath.indexOf(this.server.dynamicUrlHook) +
 				this.server.dynamicUrlHook.length);
@@ -586,12 +589,14 @@ $jn = ( function($jn) {
 		oPar contains a start function which writes the headers,
 		an data path which passes the data to the connection
 		end to close the connection and error for file errors
+		* first execute the file, get the response as json, copy the headers
+		* and add everything to data.
 		*/
 		pipe: function(req, oPar) {
 			console.log("Should pipe that shit");
-			oPar.start({ size: 5});
+			oPar.start();
 			oPar.data("test");
-			oPar.end();
+			oPar.end(true);
 		}
 	});
 	/**
