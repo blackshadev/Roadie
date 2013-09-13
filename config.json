@@ -2,5 +2,6 @@
 	"port": 1337,
 	"staticBaseDir": "public",
 	"dynaBaseDir": "cgi-bin",
-	"dynaUrlHook": "cgi-bin"
+	"dynaUrlHook": "cgi-bin",
+	"defaultPages": ["index.htm","index.html","default.htm","default.html"]
 }

@@ -174,6 +174,7 @@ $jn = ( function($jn) {
 		staticBaseDir: 'public',
 		dynamicBaseDir: 'cgi-bin',
 		dynamicUrlHook: 'cgi-bin',
+		defaultPages: ["index.htm"],
 		cache: null,
 		/** The main server Object. Which will start the server with the given configs
 		 * @constructor TServer
@@ -239,7 +240,6 @@ $jn = ( function($jn) {
 		header: null,
 		body: null,
 		length: 0,
-		type: "static",
 		/** The Objects which handles a HTTP Request
 		 * @constructor TServerRequest
 		 * @memberof $jn
@@ -264,14 +264,8 @@ $jn = ( function($jn) {
 		 * @instance */
 		parseRequestUrl: function() {
 			var self = this;
-			var file;
-			if(this.oUrl.pathname.indexOf(this.server.dynamicUrlHook) === 0) {
-				file = "./" + this.server.dynamicBaseDir + thos.oUrl.pathname;
-				this.file = new $jn.TDynamicFile(this, file);
-				return;
-			}
-			file = "./" + this.server.staticBaseDir + this.oUrl.pathname;
-			this.file = new $jn.TServerFile(this, file);
+			
+			this.file = new $jn.TServerFile(this, this.oUrl.pathname);
 		},
 		/** What the server does when encountering an file error. <br /> Changes the header response code, reroutes to an other file. When the headerCode is changed, {@link $jn.TServerRequest#errorPage|errorPage} is called.
 		 * @memberof $jn.TServerRequest
@@ -330,6 +324,7 @@ $jn = ( function($jn) {
 		fullName: "",
 		filePath: "",
 		fileName: "",
+		dynamicFile: null,
 		ext: "",
 		mimeType: "",
 		encodeMimeType: null,
@@ -358,13 +353,28 @@ $jn = ( function($jn) {
 		 * @prop {TServerRequest} serverRequest Reference to the {@link $jn.TServerRequest|TServereRequest} instance
 		 * @prop {TServer} server				Reference to the {@link $jn.TServer|TServere} instance
 		 */
-		create: function(serverRequest, fullName) {
-			this.fullName = fullName;
+		create: function(serverRequest, requestUri) {
 			this.serverRequest = serverRequest;
 			this.server = serverRequest.server;
+
+			this.parseFilePath(requestUri);
+			
 			var cache = this.followRoute();
 			this.parseFileCache(cache); // fill result in a parseFile cal if cache is empty
 
+		},
+		parseFilePath: function(requestUri) {
+			var file;
+			if(requestUri.indexOf(this.server.dynamicUrlHook) < 2) {
+				/* If dynamic, let him handle everything. 
+				 * Uses ServerFile just as interface for caches */
+				this.dynamicFile = new $jn.TDynamicFile(this,
+					this.serverRequest.oUrl.pathname);
+				this.fullName = this.dynamicFile.fullName;
+				this.pipe = this.dynamicFile.pipe;
+				return;
+			}
+			this.fullName = "./" + this.server.staticBaseDir + this.oUrl.pathname;
 		},
 		/** parses an ile by the given entry. If entry is undefined {@link $jn.TServerFile#parseFile|parseFile} is called.
 		* @memberof $jn.TServerFile
@@ -548,17 +558,32 @@ $jn = ( function($jn) {
 	});
 
 	$jn.TDynamicFile = $jn.TObject.extends("TDynamicFile", {
-		filePath: "",
-		create: function(filePath) {
-			thisfilePath = filePath;
+		fullName: "",
+		serverFile: null,
+		server: null,
+		serverReq: null,
+		fs: require("fs"),
+		create: function(serverFile, filePath) {
+			this.serverFile = serverFile;
+			this.serverRequest = serverFile.req;
+			this.server = serverFile.serverRequest.server;
+			console.log(this.serverRequest);
+			var file = filePath.substr(
+				filePath.indexOf(this.server.dynamicUrlHook) +
+				this.server.dynamicUrlHook.length);
+			/* removes the DynamicUrlHook and adds the dynamicFilePath */
+			this.fullName = "./" + this.server.dynamicBaseDir +  file;
 		},
 		/**
 		oPar contains a start function which writes the headers,
 		an data path which passes the data to the connection
 		end to close the connection and error for file errors
 		*/
-		pipe: function(oPar) {
-
+		pipe: function(req, oPar) {
+			console.log("Should pipe that shit");
+			oPar.start({ size: 5});
+			oPar.data("test");
+			oPar.end();
 		}
 	});
 	/**
