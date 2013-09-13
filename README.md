@@ -19,6 +19,6 @@ Features:
 
  TODO:
   - core.js:TServerRequest::fileError
-  	Use the predefined base files and cache to find an landingspage instead of hardcoded index.htm
+  	Use the predefined base files and cache to find a landingspage instead of hardcoded index.htm
   -	core.js:TServerRequest::create
   	Make a specific parseUrl function which gives the request URI, and headers.

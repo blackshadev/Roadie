@@ -270,12 +270,20 @@ $jn = ( function($jn) {
 		/** What the server does when encountering an file error. <br /> Changes the header response code, reroutes to an other file. When the headerCode is changed, {@link $jn.TServerRequest#errorPage|errorPage} is called.
 		 * @memberof $jn.TServerRequest
 		 * @instance*/
-		fileError: function(err) {
+		fileError: function(err, i) {
 			switch (err.errno) {
 				case 28:
-					this.oUrl.pathname += "index.htm";
-					this.file.reroute = "./" + this.server.staticBaseDir + this.oUrl.pathname;
-					this.start();
+					var self = this;
+					i = i || 0;
+					require("fs").exists("./" + self.server.staticBaseDir + self.server.defaultPages[i], function(exists) {
+						if(!exists) {
+							self.fileError({errno: 28}, i++);
+							return;
+						}
+						self.oUrl.pathname += self.server.defaultPages[i];
+						self.file.reroute = "./" + self.server.staticBaseDir + self.oUrl.pathname;
+						self.start();
+					});
 					return false;
 				case 34:
 					this.header.code = 404;
