@@ -1,4 +1,6 @@
 {
 	"port": 1337,
-	"baseDir": "public"
+	"staticBaseDir": "public",
+	"dynaBaseDir": "cgi-bin",
+	"dynaUrlHook": "cgi-bin"
 }

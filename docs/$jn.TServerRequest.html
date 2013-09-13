@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: TServer</title>
+    <title>JSDoc: Class: TServerRequest</title>
     
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Class: TServer</h1>
+    <h1 class="page-title">Class: TServerRequest</h1>
     
     
 
@@ -29,7 +29,7 @@
     <h2>
         <span class="ancestors"><a href="$jn.html">$jn</a>.</span>
     
-    TServer
+    TServerRequest
     </h2>
     
 </header>  
@@ -41,7 +41,7 @@
     
         
 <dt>
-    <h4 class="name" id="TServer"><span class="type-signature"></span>new TServer<span class="signature">(oPar)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="TServerRequest"><span class="type-signature"></span>new TServerRequest<span class="signature">(server, request, response)</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -49,7 +49,7 @@
     
     
     <div class="description">
-        The main server Object. Which will start the server with the given configs
+        The Objects which handles a HTTP Request
     </div>
     
 
@@ -83,13 +83,13 @@
 	
         <tr>
             
-                <td class="name"><code>oPar</code></td>
+                <td class="name"><code>server</code></td>
             
             
             <td class="type">
             
                 
-<span class="param-type">object</span>
+<span class="param-type"><a href="$jn.TServer.html">$jn.TServer</a></span>
 
 
             
@@ -99,192 +99,53 @@
             
             
             
-            <td class="description last">
-                <h6>Properties</h6>
-                
-
-<table class="params">
-    <thead>
-	<tr>
-		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		<th>Argument</th>
-		
-		
-		
-		<th>Default</th>
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr>
-            
-                <td class="name"><code>port</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">integer</span>
-
-
-            
-            </td>
-            
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-                    
-                
-                    
-                
-                </td>
-            
-            
-            
-                <td class="default">
-                
-                    80
-                
-                </td>
-            
-            
-            <td class="description last">The port on which the server will run</td>
+            <td class="description last">The server object, mainly for cache access</td>
         </tr>
 	
 	
 	
         <tr>
             
-                <td class="name"><code>location</code></td>
+                <td class="name"><code>request</code></td>
             
             
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">nodejs.HTTPRequest</span>
 
 
             
             </td>
             
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-                    
-                
-                    
-                
-                </td>
             
             
             
-                <td class="default">
-                
-                    '127.0.0.1'
-                
-                </td>
-            
-            
-            <td class="description last">The location the server wll listen to</td>
+            <td class="description last">The HTTPRequest given by <a href="$jn.TServer.html#handleRequest">handleRequest()</a></td>
         </tr>
 	
 	
 	
         <tr>
             
-                <td class="name"><code>baseDir</code></td>
+                <td class="name"><code>response</code></td>
             
             
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">nodejs.HTTPResponse</span>
 
 
             
             </td>
             
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-                    
-                
-                    
-                
-                </td>
             
             
             
-                <td class="default">
-                
-                    'public'
-                
-                </td>
-            
-            
-            <td class="description last">The base directory for the webfiles</td>
-        </tr>
-	
-	
-	
-        <tr>
-            
-                <td class="name"><code>listeners</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">integer</span>
-
-
-            
-            </td>
-            
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-                    
-                
-                    
-                
-                </td>
-            
-            
-            
-                <td class="default">
-                
-                    numCpus
-                
-                </td>
-            
-            
-            <td class="description last">The number of listerners deployed</td>
-        </tr>
-	
-	
-	</tbody>
-</table>
-            </td>
+            <td class="description last">The HTTPResponse given by <a href="$jn.TServer.html#handleRequest">handleRequest()</a></td>
         </tr>
 	
 	
@@ -315,7 +176,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line176">line 176</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line241">line 241</a>
     </li></ul></dd>
     
     
@@ -367,7 +228,7 @@
         <dl>
             
 <dt>
-    <h4 class="name" id="handleRequest"><span class="type-signature"></span>handleRequest<span class="signature">(request, response)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="errorPage"><span class="type-signature">&lt;static> </span>errorPage<span class="signature">()</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -375,7 +236,7 @@
     
     
     <div class="description">
-        Handles a request. Triggered by the listerners. <br />Creates a new <a href="$jn.TServerRequest.html">TServerRequest</a>
+        Handles errorPages ike file not found
     </div>
     
 
@@ -383,77 +244,6 @@
     
     
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-	<tr>
-		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr>
-            
-                <td class="name"><code>request</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">nodejs.HTTPRequest</span>
-
-
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last">The request object from nodeJs HTTPRequest</td>
-        </tr>
-	
-	
-	
-        <tr>
-            
-                <td class="name"><code>response</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">nodejs.HTTPResponse</span>
-
-
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last">The response object from nodeJs HTTPResponse</td>
-        </tr>
-	
-	
-	</tbody>
-</table>
     
     
     
@@ -479,7 +269,76 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line226">line 226</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line311">line 311</a>
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="fileError"><span class="type-signature"></span>fileError<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        What the server does when encountering an file error. <br /> Changes the header response code, reroutes to an other file. When the headerCode is changed, errorPage is called.
+    </div>
+    
+
+    
+    
+    
+    
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line271">line 271</a>
     </li></ul></dd>
     
     
@@ -581,7 +440,7 @@
         
             
 <dt>
-    <h4 class="name" id="start"><span class="type-signature"></span>start<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="parseRequestUrl"><span class="type-signature"></span>parseRequestUrl<span class="signature">()</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -589,7 +448,7 @@
     
     
     <div class="description">
-        Starts the webserver; forks all the workers given by the value of Listener and starts all their listeners. <br />On a request it will trigger the function $jn.TServer.handleRequest
+        Parses the request URL and creates a <a href="$jn.TServerFile.html">TServerFile</a> with that parsed URL
     </div>
     
 
@@ -622,7 +481,76 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line199">line 199</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line263">line 263</a>
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="start"><span class="type-signature"></span>start<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        Starts the file request by parsing the request URL and calling <a href="$jn.TServerFile.html#pipe">TServerFile.pipe()</a>
+    </div>
+    
+
+    
+    
+    
+    
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line291">line 291</a>
     </li></ul></dd>
     
     

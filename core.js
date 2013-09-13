@@ -171,7 +171,9 @@ $jn = ( function($jn) {
 		listeners: 0,
 		port: 80,
 		location: undefined,
-		baseDir: 'public',
+		staticBaseDir: 'public',
+		dynamicBaseDir: 'cgi-bin',
+		dynamicUrlHook: 'cgi-bin',
 		cache: null,
 		/** The main server Object. Which will start the server with the given configs
 		 * @constructor TServer
@@ -184,15 +186,14 @@ $jn = ( function($jn) {
 		 * @param {integer} [oPar.listeners=numCpus]	The number of listerners deployed
 		 */
 		create: function(oPar) {
-			this.port = oPar.port || this.port;
-			this.location = oPar.location || this.location;
-			this.baseDir = oPar.baseDir || this.baseDir;
+			for(var key in oPar)
+				this[key] = oPar[key];
 			this.cache = new $jn.TServerCache();
 
 			this.cluster = require("cluster");
 			this.listeners = oPar.listeners || require("os").cpus().length;
 		},
-		/** Starts the webserver; forks all the workers given by the value of Listener and starts all their listeners. \r\nOn a request it will trigger the function {@link $jn.TServer.handleRequest}
+		/** Starts the webserver; forks all the workers given by the value of Listener and starts all their listeners. <br />On a request it will trigger the function {@link $jn.TServer.handleRequest}
 		 * @memberof $jn.TServer
 		 * @instance
 		 */
@@ -217,11 +218,11 @@ $jn = ( function($jn) {
 				console.log('Server running at pid:' + this.cluster.worker.process.pid + ' http://'+this.location+':'+this.port+'/');
 			}
 		},
-		/** Handles a request. Triggered by the listerners.
+		/** Handles a request. Triggered by the listerners. <br />Creates a new {@link $jn.TServerRequest|TServerRequest}
 		 * @memberof $jn.TServer
 		 * @instance
-		 * @param {object} request The request object from nodeJs HTTPRequest
-		 * @param {object} response The response object from nodeJs HTTPResponse
+		 * @param {nodejs.HTTPRequest} request The request object from nodeJs HTTPRequest
+		 * @param {nodejs.HTTPResponse} response The response object from nodeJs HTTPResponse
 		 */
 		handleRequest: function(req, resp) {
 			console.log("process handled by " + this.cluster.worker.process.pid);
@@ -238,6 +239,14 @@ $jn = ( function($jn) {
 		header: null,
 		body: null,
 		length: 0,
+		/** The Objects which handles a HTTP Request
+		 * @constructor TServerRequest
+		 * @memberof $jn
+		 * @extends $jn.TObject
+		 * @param {$jn.TServer} server				The server object, mainly for cache access
+		 * @param {nodejs.HTTPRequest} request		The HTTPRequest given by {@link $jn.TServer#handleRequest|handleRequest()}
+		 * @param {nodejs.HTTPResponse} response	The HTTPResponse given by {@link $jn.TServer#handleRequest|handleRequest()}
+		 */
 		create: function(server, req, resp) {
 			this.inherited().create.call(this, req);
 			this.req = req;
@@ -248,13 +257,18 @@ $jn = ( function($jn) {
 				code: 200,
 				headers: {'Content-Type': 'text/plain'}
 			};
-
 		},
+		/** Parses the request URL and creates a {@link $jn.TServerFile|TServerFile} with that parsed URL
+		 * @memberof $jn.TServerRequest
+		 * @instance */
 		parseRequestUrl: function() {
 			var self = this;
 			var file = "./" + this.server.baseDir + this.oUrl.pathname;
 			this.file = new $jn.TServerFile(this, file);
 		},
+		/** What the server does when encountering an file error. <br /> Changes the header response code, reroutes to an other file. When the headerCode is changed, {@link $jn.TServerRequest#errorPage|errorPage} is called.
+		 * @memberof $jn.TServerRequest
+		 * @instance*/
 		fileError: function(err) {
 			switch (err.errno) {
 				case 28:
@@ -272,10 +286,9 @@ $jn = ( function($jn) {
 			this.file.mimeType = "text/html";
 			this.body = $jn.TServerRequest.errorPage(this.header.code);
 		},
-		end: function() {
-			this.resp.writeHead(this.header.code, this.header.headers);
-			this.resp.end(this.body, this.file.method);
-		},
+		/** Starts the file request by parsing the request URL and calling {@link $jn.TServerFile#pipe|TServerFile.pipe()}
+		 * @memberof $jn.TServerRequest 
+		 * @instance */
 		start: function() {
 			var self = this;
 			this.parseRequestUrl();
@@ -293,6 +306,9 @@ $jn = ( function($jn) {
 			});
 		}
 	});
+	/** Handles errorPages ike file not found
+	 * @memberof $jn.TServerRequest 
+	 * @static */
 	$jn.TServerRequest.errorPage = function(code) {
 		switch (code) {
 			case 404:  return "<h1>Not Found</h1><p>The page you requested could not be found</p>";
@@ -312,10 +328,28 @@ $jn = ( function($jn) {
 		encodeType: null, //
 		length: 0,
 		lastModified: null,
-		isChached: false,
+		isCached: false,
 		compressedFile: null, // contains gZip and deflate file names
 		reroute: "", // only used if a file (directory) gets rerouted to another file 
 		fs: require("fs"),
+		/** The object which handle file interaction
+		 * @constructor TServerFile
+		 * @memberof $jn
+		 * @extends $jn.TObject
+		 * @prop {string} fullName			The full file name (with path)
+		 * @prop {string} filePath			The path to the file
+		 * @prop {string} ext				The extention of the file
+		 * @prop {string} reroute			The fullName (index) of the Cache entry this file is rerouted to (./ to ./index.htm)
+		 * @prop {string} mimeType			The mimeType of the file, determined by matching the file extention to a predefined list. Used in the header of the HTTP response. 
+		 * @prop {string} encodeMimeType	The file encoding type (charsets, binary, ect.). Used in tje HTTP response
+		 * @prop {string} encodeType		The encodeType / compression type. (eg. gzip, deflate)
+		 * @prop {Date} lastModified		The lastModified date given by the file stats. 
+		 * @prop {object} compressedFiles	The cache entry keys of the compressed files. The kind of compression as object key (gzip, deflate)
+		 * @prop {integer} length			The file size
+		 * @prop {boolean} [isCache=false]		If file was found as chache entry
+		 * @prop {TServerRequest} serverRequest Reference to the {@link $jn.TServerRequest|TServereRequest} instance
+		 * @prop {TServer} server				Reference to the {@link $jn.TServer|TServere} instance
+		 */
 		create: function(serverRequest, fullName) {
 			this.fullName = fullName;
 			this.serverRequest = serverRequest;
@@ -324,6 +358,9 @@ $jn = ( function($jn) {
 			this.parseFileCache(cache); // fill result in a parseFile cal if cache is empty
 
 		},
+		/** parses an ile by the given entry. If entry is undefined {@link $jn.TServerFile#parseFile|parseFile} is called.
+		* @memberof $jn.TServerFile
+		* @instance */
 		parseFileCache: function(entry) {
 			if(!entry) { this.parseFile(); return; }
 			this.isCache = true;
@@ -331,12 +368,16 @@ $jn = ( function($jn) {
 				this[iX] = entry[iX];
 			}
 		},
+		/** Parses a file by the given {@link $jn.TServerFile#fullName|fullName} property
+		 * @memberof $jn.TServerFile
+		 * @instance */
 		parseFile: function() {
 			var lastDirSep = this.fullName.lastIndexOf("/");
 			if(lastDirSep < 0)
 				return this.error(34);
 
 			this.filePath = this.fullName.substr(0, lastDirSep);
+			console.log
 			if(!this.filePath)
 				this.filePath = "/";
 			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
@@ -347,6 +388,8 @@ $jn = ( function($jn) {
 			this.encodeMimeType = mime[1];
 			this.isCache = false;
 		},
+		/** @memberOf $jn.TServerFile
+		 * @instance */
 		toString: function() {
 			return "File: " + this.fileName + "\r\n" + "Path: " + this.filePath +
 				"\r\n" + "ext: " + this.ext +
@@ -354,21 +397,32 @@ $jn = ( function($jn) {
 				"\r\n" + "encodeMimeType: " + this.encodeMimeType +
 				"\r\n";
 		},
-		open: function(fn) {
-			require("fs").readFile(this.fullName, {encode: this.encodeMimeType, flag: 'r'}, fn);
-		},
+		/** Implements the stream functioniality
+		 * @memberof $jn.TServerFile
+		 * @instance
+		 * @param {object} destination		The destination to which the data is send
+		 * @param {object} oPar				Parameters with event handlers (eg. data, end, start)  */
 		pipe: function(dest, oPars) {
 			if(this.isCache)
 				this.cacheHit(dest, oPars);
 			else
 				this.cacheMiss(dest, oPars);
 		},
+		/** creates a {@link nodejs.ReadableStream|ReadableStream} of the file. With events given in oPar
+		 * @memberof $jn.TServerFile
+		 * @instance
+		 * @param {object} oPar		The events on which the stream should listen
+		 */
 		createStream: function(oPars) {
 			var fstream = this.fs.createReadStream(this.fullName);
 			for(var type in oPars) {
 				fstream.on(type, oPars[type]);
 			}
 		},
+		/**
+		 * @memberof $jn.TServerFile
+		 * @instance
+		 */
 		cacheHit: function(dest, oPars) {
 			//this.followRoute();
 			//if(!this.isCache) { this.cacheMiss(dest, oPars); return; }
@@ -377,6 +431,10 @@ $jn = ( function($jn) {
 
 			this.createStream(oPars);
 		},
+		/**
+		 * @memberof $jn.TServerFile
+		 * @instance
+		 */
 		followRoute: function() {
 			var cache = this.server.cache.items[this.fullName];
 			if(!cache) return cache;
@@ -401,6 +459,10 @@ $jn = ( function($jn) {
 			}
 			return cache;
 		},
+		/**
+		 * @memberof $jn.TServerFile
+		 * @instance
+		 */
 		cacheMiss: function(dest, oPars) {
 			console.log("Cachemiss for " + this.fullName );
 			var self = this;
@@ -427,6 +489,10 @@ $jn = ( function($jn) {
 				}
 			});
 		},
+		/**
+		 * @memberof $jn.TServerFile
+		 * @instance
+		 */
 		cacheCheck: function() {
 			var cacheEntry = this.server.cache.items[this.fullName];
 			var self = this;
@@ -436,6 +502,10 @@ $jn = ( function($jn) {
 				}
 			});
 		},
+		/**
+		 * @memberof $jn.TServerFile
+		 * @instance
+		 */
 		refreshCache: function(entry, stat) {
 			this.length = stat.size; // if the request was handled by cache, no size was given
 			if(!entry)
@@ -447,6 +517,10 @@ $jn = ( function($jn) {
 				this.compress(entry.compressedFiles);
 			}
 		},
+		/**
+		 * @memberof $jn.TServerFile
+		 * @instance
+		 */
 		compress: function(obj) {
 			var self = this;
 			var zlib = require("zlib");
@@ -465,6 +539,10 @@ $jn = ( function($jn) {
 			});
 		}
 	});
+	/**
+	 * @memberof $jn.TServerFile
+	 * @static
+	 */
 	$jn.TServerFile.mime = function(ext){
 		switch(ext.toLowerCase()) {
 			case "htm": case "html": return ["text/html", "utf-8"];
