@@ -132,6 +132,7 @@ $jn = ( function($jn) {
 		ext: "",
 		lastModified: null,
 		compressedFiles: null,
+		isDir: false,
 		length: null,
 		/** An entry of the {@link $jn.TServerCache|TServerCache}
 		 * @constructor TCacheEntry
@@ -159,6 +160,7 @@ $jn = ( function($jn) {
 			this.length = oPar.length;
 			this.reroute = oPar.reroute;
 			this.compressedFiles = null;
+			this.isDir = oPar.isDir;
 		},
 		toString: function() {
 			return "TCacheEntry: ["+this.fullName+"]: reroute{"+this.reroute+"}";
@@ -264,26 +266,30 @@ $jn = ( function($jn) {
 		 * @instance */
 		parseRequestUrl: function() {
 			var self = this;
-			
 			this.file = new $jn.TServerFile(this, this.oUrl.pathname);
 		},
 		/** What the server does when encountering an file error. <br /> Changes the header response code, reroutes to an other file. When the headerCode is changed, {@link $jn.TServerRequest#errorPage|errorPage} is called.
 		 * @memberof $jn.TServerRequest
 		 * @instance*/
-		fileError: function(err, i) {
+		fileError: function(err) {
 			switch (err.errno) {
 				case 28:
+					var found = false;
 					var self = this;
-					i = i || 0;
-					require("fs").exists("./" + self.server.staticBaseDir + self.server.defaultPages[i], function(exists) {
-						if(!exists) {
-							self.fileError({errno: 28}, i++);
-							return;
-						}
-						self.oUrl.pathname += self.server.defaultPages[i];
-						self.file.reroute = "./" + self.server.staticBaseDir + self.oUrl.pathname;
-						self.start();
-					});
+					var fs = require("fs");
+					this.isDir = true;
+					for(var i = 0; i < this.server.defaultPages.length; i++) {
+						console.log("Zoekt naar: " + self.oUrl.pathname + this.server.defaultPages[i]);
+						fs.exists("./" + self.server.staticBaseDir + self.oUrl.pathname + this.server.defaultPages[i],
+							function(exists) {
+							if(exists && !found) {
+								found = true;
+								self.oUrl.pathname += "index.htm";
+								self.file.reroute = "./" + self.server.staticBaseDir + self.oUrl.pathname;
+								self.start();
+							}
+						});
+					}
 					return false;
 				case 34:
 					this.header.code = 404;
@@ -369,7 +375,6 @@ $jn = ( function($jn) {
 			this.server = serverRequest.server;
 
 			this.parseFilePath(requestUri);
-			
 			var cache = this.followRoute();
 			this.parseFileCache(cache); // fill result in a parseFile cal if cache is empty
 
@@ -443,6 +448,7 @@ $jn = ( function($jn) {
 		 * @param {object} oPar		The events on which the stream should listen
 		 */
 		createStream: function(oPars) {
+			console.log("Create steam: " + this.fullName);
 			var fstream = this.fs.createReadStream(this.fullName);
 			for(var type in oPars) {
 				fstream.on(type, oPars[type]);
@@ -501,12 +507,14 @@ $jn = ( function($jn) {
 			delete oPars.error;
 			var hasErr = false;
 
+			console.log("Stated " + this.fullName);
 			this.fs.stat(this.fullName, function(err,stat) {
 				if(err)
 					statErr(err);
 				else {
 					if(stat.isDirectory()) {
 						statErr({errno: 28});
+						self.isDir = true;
 					} else {
 						self.lastModified = stat.mtime;
 						self.length = stat.size;
@@ -525,6 +533,8 @@ $jn = ( function($jn) {
 		cacheCheck: function() {
 			var cacheEntry = this.server.cache.items[this.fullName];
 			var self = this;
+
+			console.log("Stated " + this.fullName);
 			this.fs.stat(this.fullName, function(err,stat) {
 				if(!cacheEntry || stat.mtime.getTime() > cacheEntry.lastModified) {
 					self.refreshCache(cacheEntry, stat);
@@ -541,7 +551,8 @@ $jn = ( function($jn) {
 				entry = this.server.cache.add(this);
 			entry.lastModified = this.lastModified = stat.mtime;
 
-			if(!entry.reroute) {
+			console.log(entry);
+			if(!entry.reroute && !entry.isDir) {
 				entry.compressedFiles = {};
 				this.compress(entry.compressedFiles);
 			}
@@ -553,6 +564,8 @@ $jn = ( function($jn) {
 		compress: function(obj) {
 			var self = this;
 			var zlib = require("zlib");
+
+			console.log("compressing " + this.filePath + '/' + this.fileName);
 			var deflateStrm = this.fs.createWriteStream(this.filePath + '/' + this.fileName + ".defl" + "." + this.ext);
 			var gzipStrm = this.fs.createWriteStream(this.filePath + '/' + this.fileName + ".gzip" + "." + this.ext);
 
@@ -584,6 +597,7 @@ $jn = ( function($jn) {
 				this.server.dynamicUrlHook.length);
 			/* removes the DynamicUrlHook and adds the dynamicFilePath */
 			this.fullName = "./" + this.server.dynamicBaseDir +  file;
+			console.log(this.serverFile);
 		},
 		/**
 		oPar contains a start function which writes the headers,
@@ -594,9 +608,21 @@ $jn = ( function($jn) {
 		*/
 		pipe: function(req, oPar) {
 			console.log("Should pipe that shit");
+
+			out = require(this.fullName)("testje!");
+			if(out.headers)
+				for(var key in out.headers)
+					this.serverRequest.header.headers[key] = out.headers[key];
+			out = out.data || out;
+
+			this.length = out.length;
+
 			oPar.start();
-			oPar.data("test");
+			oPar.data(out);
 			oPar.end(true);
+		},
+		parseHeaders: function(headers) {
+
 		}
 	});
 	/**
