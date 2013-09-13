@@ -104,7 +104,6 @@ $jn = ( function($jn) {
 			return this.itemsArray.toString();
 		}
 	});
-
 	return $jn;
 })($jn);
 exports.$jn = $jn;

@@ -1,5 +1,4 @@
 var $jn = require("./core.js").$jn;
-
 (function($jn) {
 	/** List of all items, with as items {@link $jn.TCacheEntry|TCacheEntry}
 	 * @memberof $jn
@@ -533,6 +532,66 @@ var $jn = require("./core.js").$jn;
 			oPar.start(true);
 			oPar.data(out);
 			oPar.end(true);
+		}
+	});
+
+$jn.TPreprocessor = $jn.TObject.extends("TPreprocessed", {
+		fullName: "",
+		serverFile: null,
+		server: null,
+		serverReq: null,
+		fs: require("fs"),
+		//vm: require("vm"),
+		create: function(serverFile, fullName) {
+			this.serverFile = serverFile;
+			this.serverRequest = serverFile.req;
+			this.server = serverFile.serverRequest.server;
+			/* removes the DynamicUrlHook and adds the dynamicFilePath */
+			this.fullName = fullName;
+		},
+		/**
+		oPar contains a start function which writes the headers,
+		an data path which passes the data to the connection
+		end to close the connection and error for file errors
+		* first execute the file, get the response as json, copy the headers
+		* and add everything to data.
+		*/
+		pipe: function(req, oPar) {
+			var vm = require('vm');
+			var self = this;
+			this.fs.readFile(this.fullName, function (err, data) {
+				if (err) throw err;
+				
+				data = data.toString();
+				var startIndex, endIndex = -2;
+				var html = '';
+				var sandbox = {};
+				
+				while ((startIndex = data.indexOf('<{')) != -1) {
+					endIndex = data.indexOf('}>');
+					
+					var code = '(function(){' +
+						data.substring(startIndex + 2, endIndex) +
+					'})()';
+					var result = vm.runInNewContext(code, sandbox);
+					
+					html += data.substring(0, startIndex);
+					// if function put source between script tags
+					if (result !== undefined)
+						html += result.toString();
+					data = data.substring(endIndex + 2);
+				}
+				html += data;
+				
+				self.length = html.length;
+
+				oPar.start();
+				oPar.data(html);
+				oPar.end(true);
+			});
+		},
+		parseHeaders: function(headers) {
+
 		}
 	});
 	/**
