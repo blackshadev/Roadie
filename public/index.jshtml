@@ -1,0 +1,6 @@
+<{ i = 'Hoi!' }>
+<html>
+<body>
+<p><{ return i }></p>
+</body>
+</html>

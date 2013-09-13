@@ -416,6 +416,12 @@ $jn = ( function($jn) {
 				this.filePath = "/";
 			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
 			this.ext = this.fileName.substr(this.fileName.lastIndexOf(".")+1, this.fileName.length);
+			
+			if (this.ext == "jshtml") {
+				this.preprocessor = new $jn.TPreprocessor(this,
+					this.serverRequest.oUrl.pathname);
+				this.pipe = this.preprocessor.pipe;
+			}
 
 			var mime = $jn.TServerFile.mime(this.ext);
 			this.mimeType = mime[0];
@@ -625,13 +631,74 @@ $jn = ( function($jn) {
 
 		}
 	});
+	
+	$jn.TPreprocessor = $jn.TObject.extends("TPreprocessed", {
+		fullName: "",
+		serverFile: null,
+		server: null,
+		serverReq: null,
+		fs: require("fs"),
+		//vm: require("vm"),
+		create: function(serverFile, fullName) {
+			this.serverFile = serverFile;
+			this.serverRequest = serverFile.req;
+			this.server = serverFile.serverRequest.server;
+			/* removes the DynamicUrlHook and adds the dynamicFilePath */
+			this.fullName = fullName;
+		},
+		/**
+		oPar contains a start function which writes the headers,
+		an data path which passes the data to the connection
+		end to close the connection and error for file errors
+		* first execute the file, get the response as json, copy the headers
+		* and add everything to data.
+		*/
+		pipe: function(req, oPar) {
+			var vm = require('vm');
+			var self = this;
+			this.fs.readFile(this.fullName, function (err, data) {
+				if (err) throw err;
+				
+				data = data.toString();
+				var startIndex, endIndex = -2;
+				var html = '';
+				var sandbox = {};
+				
+				while ((startIndex = data.indexOf('<{')) != -1) {
+					endIndex = data.indexOf('}>');
+					
+					var code = '(function(){' +
+						data.substring(startIndex + 2, endIndex) +
+					'})()';
+					var result = vm.runInNewContext(code, sandbox);
+					
+					html += data.substring(0, startIndex);
+					// if function put source between script tags
+					if (result != undefined)
+						html += result.toString();
+					data = data.substring(endIndex + 2);
+				}
+				html += data;
+				
+				self.length = html.length;
+
+				oPar.start();
+				oPar.data(html);
+				oPar.end(true);
+			});	
+		},
+		parseHeaders: function(headers) {
+
+		}
+	});
+	
 	/**
 	 * @memberof $jn.TServerFile
 	 * @static
 	 */
 	$jn.TServerFile.mime = function(ext){
 		switch(ext.toLowerCase()) {
-			case "htm": case "html": return ["text/html", "utf-8"];
+			case "htm": case "html": case "jshtml": return ["text/html", "utf-8"];
 			case "json": return ["application/json", "utf-8"];
 			case "js": return ["application/javascript", "utf-8"];
 			case "pdf": return ["application/pdf", "binary"];
