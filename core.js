@@ -308,7 +308,7 @@ $jn = ( function($jn) {
 			var self = this;
 			this.parseRequestUrl();
 			this.file.pipe(this.resp, {
-				start: function(stat) {
+				start: function() {
 					self.header.headers["Content-Type"] = self.file.mimeType;
 					self.header.headers["Content-Length"] = self.file.length;
 					self.header.code = 200;
@@ -603,7 +603,6 @@ $jn = ( function($jn) {
 				this.server.dynamicUrlHook.length);
 			/* removes the DynamicUrlHook and adds the dynamicFilePath */
 			this.fullName = "./" + this.server.dynamicBaseDir +  file;
-			console.log(this.serverFile);
 		},
 		/**
 		oPar contains a start function which writes the headers,
@@ -614,21 +613,26 @@ $jn = ( function($jn) {
 		*/
 		pipe: function(req, oPar) {
 			console.log("Should pipe that shit");
-
-			out = require(this.fullName)("testje!");
+			obj = {
+				searchQuery: this.serverRequest.oUrl.search,
+				query: this.serverRequest.oUrl.query,
+				method: this.serverRequest.method
+			};
+			out = require(this.fullName)(obj);
+			var abs = require('path').resolve(this.fullName);
+			delete require.cache[abs];
 			if(out.headers)
 				for(var key in out.headers)
 					this.serverRequest.header.headers[key] = out.headers[key];
 			out = out.data || out;
 
 			this.length = out.length;
+			this.mimeType =
+				this.serverRequest.header.headers['Content-Type'] || "text/html";
 
-			oPar.start();
+			oPar.start(true);
 			oPar.data(out);
 			oPar.end(true);
-		},
-		parseHeaders: function(headers) {
-
 		}
 	});
 	
