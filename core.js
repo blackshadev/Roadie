@@ -597,7 +597,6 @@ $jn = ( function($jn) {
 				this.server.dynamicUrlHook.length);
 			/* removes the DynamicUrlHook and adds the dynamicFilePath */
 			this.fullName = "./" + this.server.dynamicBaseDir +  file;
-			console.log(this.serverFile);
 		},
 		/**
 		oPar contains a start function which writes the headers,
@@ -620,9 +619,6 @@ $jn = ( function($jn) {
 			oPar.start();
 			oPar.data(out);
 			oPar.end(true);
-		},
-		parseHeaders: function(headers) {
-
 		}
 	});
 	/**
