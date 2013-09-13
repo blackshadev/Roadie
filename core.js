@@ -182,7 +182,7 @@ $jn = ( function($jn) {
 		 * @param {object} oPar
 		 * @param {integer} [oPar.port=80]				The port on which the server will run
 		 * @param {string} [oPar.location='127.0.0.1']	The location the server wll listen to
-		 * @param {string} [oPar.baseDir='public']		The base directory for the webfiles
+		 * @param {string} [oPar.staticBaseDir='public']		The base directory for the webfiles
 		 * @param {integer} [oPar.listeners=numCpus]	The number of listerners deployed
 		 */
 		create: function(oPar) {
@@ -239,6 +239,7 @@ $jn = ( function($jn) {
 		header: null,
 		body: null,
 		length: 0,
+		type: "static",
 		/** The Objects which handles a HTTP Request
 		 * @constructor TServerRequest
 		 * @memberof $jn
@@ -254,7 +255,7 @@ $jn = ( function($jn) {
 			this.oUrl = require('url').parse(this.req.url, true);
 			this.server = server;
 			this.header = {
-				code: 200,
+				code: 500, // default file error 
 				headers: {'Content-Type': 'text/plain'}
 			};
 		},
@@ -263,7 +264,13 @@ $jn = ( function($jn) {
 		 * @instance */
 		parseRequestUrl: function() {
 			var self = this;
-			var file = "./" + this.server.baseDir + this.oUrl.pathname;
+			var file;
+			if(this.oUrl.pathname.indexOf(this.server.dynamicUrlHook) === 0) {
+				file = "./" + this.server.dynamicBaseDir + thos.oUrl.pathname;
+				this.file = new $jn.TDynamicFile(this, file);
+				return;
+			}
+			file = "./" + this.server.staticBaseDir + this.oUrl.pathname;
 			this.file = new $jn.TServerFile(this, file);
 		},
 		/** What the server does when encountering an file error. <br /> Changes the header response code, reroutes to an other file. When the headerCode is changed, {@link $jn.TServerRequest#errorPage|errorPage} is called.
@@ -273,7 +280,7 @@ $jn = ( function($jn) {
 			switch (err.errno) {
 				case 28:
 					this.oUrl.pathname += "index.htm";
-					this.file.reroute = "./" + this.server.baseDir + this.oUrl.pathname;
+					this.file.reroute = "./" + this.server.staticBaseDir + this.oUrl.pathname;
 					this.start();
 					return false;
 				case 34:
@@ -296,6 +303,7 @@ $jn = ( function($jn) {
 				start: function(stat) {
 					self.header.headers["Content-Type"] = self.file.mimeType;
 					self.header.headers["Content-Length"] = self.file.length;
+					self.header.code = 200;
 					if(self.file.encodeType)
 						self.header.headers["content-encoding"] = self.file.encodeType;
 					self.resp.writeHead(self.header.code, self.header.headers);
@@ -332,7 +340,7 @@ $jn = ( function($jn) {
 		compressedFile: null, // contains gZip and deflate file names
 		reroute: "", // only used if a file (directory) gets rerouted to another file 
 		fs: require("fs"),
-		/** The object which handle file interaction
+		/** The object which handle static file interaction
 		 * @constructor TServerFile
 		 * @memberof $jn
 		 * @extends $jn.TObject
@@ -377,7 +385,6 @@ $jn = ( function($jn) {
 				return this.error(34);
 
 			this.filePath = this.fullName.substr(0, lastDirSep);
-			console.log
 			if(!this.filePath)
 				this.filePath = "/";
 			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
@@ -537,6 +544,21 @@ $jn = ( function($jn) {
 				obj["deflate"] = self.filePath + '/' + self.fileName + ".defl" + "." + self.ext;
 				obj["gzip"] = self.filePath + '/' + self.fileName + ".gzip" + "." + self.ext;
 			});
+		}
+	});
+
+	$jn.TDynamicFile = $jn.TObject.extends("TDynamicFile", {
+		filePath: "",
+		create: function(filePath) {
+			thisfilePath = filePath;
+		},
+		/**
+		oPar contains a start function which writes the headers,
+		an data path which passes the data to the connection
+		end to close the connection and error for file errors
+		*/
+		pipe: function(oPar) {
+
 		}
 	});
 	/**
