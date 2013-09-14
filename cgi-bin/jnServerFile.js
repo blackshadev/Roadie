@@ -8,17 +8,32 @@ $jn = (function($jn) {
 		bodyFn: null,
 		create: function(args) {
 			/* set server args */
+			this.response = new jnResponse(/*..*/);
 		},
 		exec: function(fn) {
-			fn.call(this);
+			var res = fn.call(this);
 			/*	Takes the output and returns it as 
 				{ headers: headers , data: out };
 				and somewhere needs the cookies to be stored
 				*/
-
+			return { headers: this.response.headers(), data: res };
 		},
 		setCookie: function(key, value, args, flags) {
 			/* sets a cookie in response.cookies */
+		}
+	});
+
+	var jnResponse = $jn.TObject.extends("jnResponse", {
+		headerObj: null,
+		cookies: null,
+		create: function() {
+			this.headerObj = {};
+			this.cookies = [];
+			this.setHeader("Content-Type","text/html");
+		},
+		headers: function() { return this.headerObj; },
+		setHeader: function(type, value) {
+			this.headerObj[type] = value;
 		}
 	});
 
@@ -42,8 +57,8 @@ $jn = (function($jn) {
 		}
 	});
 
-	
+	return $jn;
 })($jn);
 module.exports = function(bodyFn) {
-	return function(args) { new $jn.jnFunction(args).exec(bodyFn); };
+	return function(args) { return new $jn.jnFunction(args).exec(bodyFn); };
 };
