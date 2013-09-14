@@ -1,4 +1,4 @@
-require("./jcCookies.js");
+
 module.exports = function(inp) {
 	var out = "";
 	out = objToString(inp, "<br />", "&emsp;");
