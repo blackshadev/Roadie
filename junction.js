@@ -1,4 +1,5 @@
-var $jn = require("./core.js").$jn;
+var $jn = require("./core.js");
+
 (function($jn) {
 	/** List of all items, with as items {@link $jn.TCacheEntry|TCacheEntry}
 	 * @memberof $jn
@@ -130,6 +131,9 @@ var $jn = require("./core.js").$jn;
 
 	$jn.TServerRequest = $jn.TObject.extends("TServerRequest", {
 		req: null,
+		resp: null,
+		respHeader: null, // headers used in the response
+		reqHeaders: null, // headers send with req
 		oUrl: null,
 		server: null,
 		method: null,
@@ -152,10 +156,26 @@ var $jn = require("./core.js").$jn;
 			this.method = req.method;
 			this.oUrl = require('url').parse(this.req.url, true);
 			this.server = server;
-			this.header = {
+			this.respHeader = {
 				code: 500, // default file error 
 				headers: {'Content-Type': 'text/plain'}
 			};
+
+			this.parseClientHeaders();
+			
+		},
+		parseClientHeaders: function() {
+			this.reqHeaders = $jn.extend({}, this.req.headers);
+			var cookies = {};
+
+			var arr = this.reqHeaders.cookie.split(';');
+			var cookieArr;
+			for(var iX = 0; iX < arr.length; iX++) {
+				cookieArr = arr[iX].split('=');
+				cookies[cookieArr[0].trim()] = cookieArr[1].trim();
+			}
+
+			this.reqHeaders.cookies = cookies;
 		},
 		/** Parses the request URL and creates a {@link $jn.TServerFile|TServerFile} with that parsed URL
 		 * @memberof $jn.TServerRequest
@@ -188,14 +208,14 @@ var $jn = require("./core.js").$jn;
 					}
 					return false;
 				case 34:
-					this.header.code = 404;
+					this.respHeader.code = 404;
 					break;
 				default:
-					this.header.code = 500;
+					this.respHeader.code = 500;
 					break;
 			}
 			this.file.mimeType = "text/html";
-			this.body = $jn.TServerRequest.errorPage(this.header.code);
+			this.body = $jn.TServerRequest.errorPage(this.respHeader.code);
 		},
 		/** Starts the file request by parsing the request URL and calling {@link $jn.TServerFile#pipe|TServerFile.pipe()}
 		 * @memberof $jn.TServerRequest 
@@ -205,12 +225,12 @@ var $jn = require("./core.js").$jn;
 			this.parseRequestUrl();
 			this.file.pipe(this.resp, {
 				start: function() {
-					self.header.headers["Content-Type"] = self.file.mimeType;
-					self.header.headers["Content-Length"] = self.file.length;
-					self.header.code = 200;
+					self.respHeader.headers["Content-Type"] = self.file.mimeType;
+					self.respHeader.headers["Content-Length"] = self.file.length;
+					self.respHeader.code = 200;
 					if(self.file.encodeType)
-						self.header.headers["content-encoding"] = self.file.encodeType;
-					self.resp.writeHead(self.header.code, self.header.headers);
+						self.respHeader.headers["content-encoding"] = self.file.encodeType;
+					self.resp.writeHead(self.respHeader.code, self.respHeader.headers);
 				},
 				data: function(data) { self.file.length+=data.length; self.resp.write(data); },
 				end: function(noCache) {
@@ -517,7 +537,7 @@ var $jn = require("./core.js").$jn;
 				delete require.cache[abs];
 				if(out.headers)
 					for(var key in out.headers)
-						this.serverRequest.header.headers[key] = out.headers[key];
+						this.serverRequest.respHeader.headers[key] = out.headers[key];
 				out = out.data || out;
 			} catch(e) {
 				out = e + "";
@@ -527,7 +547,7 @@ var $jn = require("./core.js").$jn;
 
 			this.length = out.length;
 			this.mimeType =
-				this.serverRequest.header.headers['Content-Type'] || "text/html";
+				this.serverRequest.respHeader.headers['Content-Type'] || "text/html";
 
 			oPar.start(true);
 			oPar.data(out);
