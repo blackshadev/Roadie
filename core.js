@@ -104,6 +104,13 @@ $jn = ( function($jn) {
 			return this.itemsArray.toString();
 		}
 	});
+
+	$jn.extend = function(src, obj) {
+		for(var key in obj)
+			src[key] = obj[key];
+		return src;
+	};
+
 	return $jn;
 })($jn);
-exports.$jn = $jn;
+module.exports = $jn;

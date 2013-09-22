@@ -1,4 +1,5 @@
-var $jn = require("./core.js").$jn;
+var $jn = require("./core.js");
+
 (function($jn) {
 	/** List of all items, with as items {@link $jn.TCacheEntry|TCacheEntry}
 	 * @memberof $jn
@@ -130,6 +131,9 @@ var $jn = require("./core.js").$jn;
 
 	$jn.TServerRequest = $jn.TObject.extends("TServerRequest", {
 		req: null,
+		resp: null,
+		respHeader: null, // headers used in the response
+		reqHeaders: null, // headers send with req
 		oUrl: null,
 		server: null,
 		method: null,
@@ -152,10 +156,29 @@ var $jn = require("./core.js").$jn;
 			this.method = req.method;
 			this.oUrl = require('url').parse(this.req.url, true);
 			this.server = server;
-			this.header = {
+			this.respHeader = {
 				code: 500, // default file error 
 				headers: {'Content-Type': 'text/plain'}
 			};
+
+			this.parseClientHeaders();
+			
+		},
+		/** Copy the client headers and split the cookie
+		 */
+		parseClientHeaders: function() {
+			this.reqHeaders = $jn.extend({}, this.req.headers);
+			var cookies = {};
+
+			if(this.reqHeaders.cookie) {
+				var arr = this.reqHeaders.cookie.split(';');
+				var cookieArr;
+				for(var iX = 0; iX < arr.length; iX++) {
+					cookieArr = arr[iX].split('=');
+					cookies[cookieArr[0].trim()] = cookieArr[1].trim();
+				}
+			}
+			this.reqHeaders.cookies = cookies;
 		},
 		/** Parses the request URL and creates a {@link $jn.TServerFile|TServerFile} with that parsed URL
 		 * @memberof $jn.TServerRequest
@@ -188,14 +211,14 @@ var $jn = require("./core.js").$jn;
 					}
 					return false;
 				case 34:
-					this.header.code = 404;
+					this.respHeader.code = 404;
 					break;
 				default:
-					this.header.code = 500;
+					this.respHeader.code = 500;
 					break;
 			}
 			this.file.mimeType = "text/html";
-			this.body = $jn.TServerRequest.errorPage(this.header.code);
+			this.body = $jn.TServerRequest.errorPage(this.respHeader.code);
 		},
 		/** Starts the file request by parsing the request URL and calling {@link $jn.TServerFile#pipe|TServerFile.pipe()}
 		 * @memberof $jn.TServerRequest 
@@ -205,12 +228,12 @@ var $jn = require("./core.js").$jn;
 			this.parseRequestUrl();
 			this.file.pipe(this.resp, {
 				start: function() {
-					self.header.headers["Content-Type"] = self.file.mimeType;
-					self.header.headers["Content-Length"] = self.file.length;
-					self.header.code = 200;
+					self.respHeader.headers["Content-Type"] = self.file.mimeType;
+					self.respHeader.headers["Content-Length"] = self.file.length;
+					self.respHeader.code = 200;
 					if(self.file.encodeType)
-						self.header.headers["content-encoding"] = self.file.encodeType;
-					self.resp.writeHead(self.header.code, self.header.headers);
+						self.respHeader.headers["content-encoding"] = self.file.encodeType;
+					self.resp.writeHead(self.respHeader.code, self.respHeader.headers);
 				},
 				data: function(data) { self.file.length+=data.length; self.resp.write(data); },
 				end: function(noCache) {
@@ -219,6 +242,14 @@ var $jn = require("./core.js").$jn;
 				},
 				error: function(err) { self.fileError(err); }
 			});
+		},
+		getDynamicHeaders: function() {
+			return {
+				searchQuery: this.oUrl.search,
+				query: this.oUrl.query,
+				method: this.method,
+				cookies: this.reqHeaders.cookies
+			};
 		}
 	});
 	/** Handles errorPages ike file not found
@@ -486,7 +517,7 @@ var $jn = require("./core.js").$jn;
 		fullName: "",
 		serverFile: null,
 		server: null,
-		serverReq: null,
+		serverRequest: null,
 		fs: require("fs"),
 		create: function(serverFile, filePath) {
 			this.serverFile = serverFile;
@@ -499,29 +530,34 @@ var $jn = require("./core.js").$jn;
 			this.fullName = "./" + this.server.dynamicBaseDir +  file;
 		},
 		/**
-		oPar contains a start function which writes the headers,
-		an data path which passes the data to the connection
-		end to close the connection and error for file errors
+		oPar contains a 
+		- start function which writes the headers,
+		- data function, which passes the data to the connection
+		- end function,  to close the connection and error for file errors
+		* Get the client headers to pass to the script,
+		* change the cwd, and change it back afterwards
 		* first execute the file, get the response as json, copy the headers
 		* and add everything to data.
 		*/
 		pipe: function(req, oPar) {
-			console.log("Should pipe that shit");
-			obj = {
-				searchQuery: this.serverRequest.oUrl.search,
-				query: this.serverRequest.oUrl.query,
-				method: this.serverRequest.method
-			};
+			var clienHeaders = this.serverRequest.getDynamicHeaders();
+
+			// absFiePaths for cache deletion
+			var absScript = require('path').resolve(this.fullName);
+			var absWrapper = require('path').resolve('./jnServerFile.js');
+
 			var oldPath = this.server.cluster.worker.process.cwd();
 			try {
 				this.server.cluster.worker.process.chdir(this.filePath);
-				out = require(this.fullName)(obj);
+				out = require(this.fullName)(clienHeaders);
 
-				var abs = require('path').resolve(this.fullName);
-				delete require.cache[abs];
+				// delete cache for debugging
+				delete require.cache[absScript];
+				delete require.cache[absWrapper];
+				
 				if(out.headers)
 					for(var key in out.headers)
-						this.serverRequest.header.headers[key] = out.headers[key];
+						this.serverRequest.respHeader.headers[key] = out.headers[key];
 				out = out.data || out;
 			} catch(e) {
 				out = e + "";
@@ -531,22 +567,18 @@ var $jn = require("./core.js").$jn;
 
 			this.length = out.length;
 			this.mimeType =
-				this.serverRequest.header.headers['Content-Type'] || "text/html";
+				this.serverRequest.respHeader.headers['Content-Type'] || "text/html";
 
 			oPar.start(true);
 			oPar.data(out);
 			oPar.end(true);
 		}
 	});
-
+	
+	/*
+	 * Executes Javascript snippets in a jshtml file before sending it on the the browser.
+	 */
 	$jn.TPreprocessor = {
-		/**
-		oPar contains a start function which writes the headers,
-		an data path which passes the data to the connection
-		end to close the connection and error for file errors
-		* first execute the file, get the response as json, copy the headers
-		* and add everything to data.
-		*/
 		pipe: function(req, oPar) {
 			var self = this;
 			var fs = require('fs'), vm = require('vm');
