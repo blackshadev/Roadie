@@ -581,7 +581,8 @@ var $jn = require("./core.js");
 	$jn.TPreprocessor = {
 		pipe: function(req, oPar) {
 			var self = this;
-			var fs = require('fs'), vm = require('vm');
+			var fs = require('fs'), vm = require('vm'),
+				browserutils = require('./modules/browserutils');
 			fs.readFile(this.fullName, function (err, data) {
 				if (err) throw err;
 				
@@ -589,13 +590,10 @@ var $jn = require("./core.js");
 				var startIndex, endIndex = -2;
 
 				var html = '';
-				var transfers = [];
 				var sandbox = {
 					require: require,
 					console: console,
-					transfer: function(name) {
-						transfers[transfers.length] = name;
-					}
+					transfer: browserutils.transfer
 				};
 				
 				while ((startIndex = data.indexOf('<{')) != -1) {
@@ -624,13 +622,15 @@ var $jn = require("./core.js");
 				}
 				html += data;
 				
+				var transfers = browserutils.transfers;
 				var transferScript = '<script>';
-				for (var i = 0; i < transfers.length; i++) {
-					transferScript += transfers[i] + '=' +
-						JSON.stringify(sandbox[transfers[i]]) + ';';
+				for (var name in transfers) {
+					transferScript += name + '=' +
+						JSON.stringify(transfers[name]) + ';';
 				}
 				transferScript += '</script>'
 				html = transferScript + html;
+				browserutils.transfers = {};
 
 				self.length = html.length;
 

@@ -1,9 +1,8 @@
 <{
-  greeting = require('./modules/greeting.js')()
+  DB = require('./modules/db.js');
 }>
 <html>
 <body>
-<p><{ return function(){ return greeting; } }></p>
+<p><{ return DB.get('greeting') }></p>
 </body>
 </html>
-<{ transfer('greeting') }>
