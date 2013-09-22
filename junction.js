@@ -164,8 +164,7 @@ var $jn = require("./core.js");
 			this.parseClientHeaders();
 			
 		},
-		/** Copy the client headers and split the cookie
-		 */
+		/** Copy the client headers and split the cookie */
 		parseClientHeaders: function() {
 			this.reqHeaders = $jn.extend({}, this.req.headers);
 			var cookies = {};
@@ -187,27 +186,31 @@ var $jn = require("./core.js");
 			var self = this;
 			this.file = new $jn.TServerFile(this, this.oUrl.pathname);
 		},
-		/** What the server does when encountering an file error. <br /> Changes the header response code, reroutes to an other file. When the headerCode is changed, {@link $jn.TServerRequest#errorPage|errorPage} is called.
+		/** What the server does when encountering an file error.<br />
+		 * Changes the header response code, reroutes to an other file. When the headerCode is changed
+		 * {@link $jn.TServerRequest#errorPage|errorPage} is called.
 		 * @memberof $jn.TServerRequest
 		 * @instance*/
 		fileError: function(err) {
 			switch (err.errno) {
 				case 28:
-					var found = false;
+					/* Upon encountering a folder, search for the defaultPages
+					 * and add the first one you find to the cache route. */
 					var self = this;
 					var fs = require("fs");
+					var oldPath = this.server.staticBaseDir + self.oUrl.pathname;
 					this.isDir = true;
 					for(var i = 0; i < this.server.defaultPages.length; i++) {
-						console.log("Zoekt naar: " + self.oUrl.pathname + this.server.defaultPages[i]);
-						fs.exists("./" + self.server.staticBaseDir + self.oUrl.pathname + this.server.defaultPages[i],
-							function(exists) {
-							if(exists && !found) {
-								found = true;
-								self.oUrl.pathname += "index.htm";
-								self.file.reroute = "./" + self.server.staticBaseDir + self.oUrl.pathname;
-								self.start();
-							}
-						});
+						/* This is slower than the async version but wit does the job better */
+						var filePath = oldPath + this.server.defaultPages[i];
+						var exists = fs.existsSync("./" + filePath);
+						if(exists) {
+							console.log("Rerouted: " + oldPath + " to " + filePath);
+							self.oUrl.pathname += self.server.defaultPages[i];
+							self.file.reroute = "./" + filePath;
+							self.start();
+							break;
+						}
 					}
 					return false;
 				case 34:
@@ -434,7 +437,6 @@ var $jn = require("./core.js");
 			delete oPars.error;
 			var hasErr = false;
 
-			console.log("Stated " + this.fullName);
 			this.fs.stat(this.fullName, function(err,stat) {
 				if(err)
 					statErr(err);
@@ -461,7 +463,6 @@ var $jn = require("./core.js");
 			var cacheEntry = this.server.cache.items[this.fullName];
 			var self = this;
 
-			console.log("Stated " + this.fullName);
 			this.fs.stat(this.fullName, function(err,stat) {
 				if(!cacheEntry || stat.mtime.getTime() > cacheEntry.lastModified) {
 					self.refreshCache(cacheEntry, stat);
@@ -478,7 +479,6 @@ var $jn = require("./core.js");
 				entry = this.server.cache.add(this);
 			entry.lastModified = this.lastModified = stat.mtime;
 
-			console.log(entry);
 			if(!entry.reroute && !entry.isDir) {
 				entry.compressedFiles = {};
 				this.compress(entry.compressedFiles);
@@ -515,6 +515,9 @@ var $jn = require("./core.js");
 		server: null,
 		serverRequest: null,
 		fs: require("fs"),
+		/* Dynamic files, sets the filepath, 
+		 * Executes the dynamic file function with the clientHeaders,
+		 * Uses the output as content */
 		create: function(serverFile, filePath) {
 			this.serverFile = serverFile;
 			this.serverRequest = serverFile.req;

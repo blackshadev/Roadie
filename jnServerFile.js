@@ -1,5 +1,23 @@
 var $jn = require("./core.js");
-
+/**
+ * Wrapper for dynamic files. This class makes dynamic files easy to handle,
+ *
+ * Features:
+ * - Client header parsing
+ * - Easy accessing of clientHeaders, response Headers, and output
+ * - Output given by the return value of the given function
+ *
+ * Usage:
+ * var fn = require("../jnServerFile.js")(function() {
+ *		this.setCookie("CookieKey","CookieValue");
+ *		this.setHeader("Content-Type","text/html");
+ *		var output = "<p>This will be displayed</p>";
+ *		return output;
+ * }); module.export = fn;
+ *
+ * Defaults:
+ * - response::headers::Content-Type: text/html
+ */
 $jn = (function($jn) {
 	$jn.jnFunction = $jn.TObject.extends("jnFunction", {
 		client: null,
@@ -15,6 +33,9 @@ $jn = (function($jn) {
 		},
 		setCookie: function(key, value, args, flags) {
 			this.response.addCookie(new $jn.TCookie(key, value, args, flags));
+		},
+		setHeader: function(key, type) { // shortcut
+			this.response.setHeader(key, type);
 		}
 	});
 
