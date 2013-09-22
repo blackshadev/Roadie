@@ -313,6 +313,10 @@ var $jn = require("./core.js").$jn;
 			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
 			this.ext = this.fileName.substr(this.fileName.lastIndexOf(".")+1, this.fileName.length);
 
+			if (this.ext === 'jshtml') {
+				this.pipe = $jn.TPreprocessor.pipe;
+			}
+			
 			var mime = $jn.TServerFile.mime(this.ext);
 			this.mimeType = mime[0];
 			this.encodeMimeType = mime[1];
@@ -535,20 +539,7 @@ var $jn = require("./core.js").$jn;
 		}
 	});
 
-$jn.TPreprocessor = $jn.TObject.extends("TPreprocessed", {
-		fullName: "",
-		serverFile: null,
-		server: null,
-		serverReq: null,
-		fs: require("fs"),
-		//vm: require("vm"),
-		create: function(serverFile, fullName) {
-			this.serverFile = serverFile;
-			this.serverRequest = serverFile.req;
-			this.server = serverFile.serverRequest.server;
-			/* removes the DynamicUrlHook and adds the dynamicFilePath */
-			this.fullName = fullName;
-		},
+	$jn.TPreprocessor = {
 		/**
 		oPar contains a start function which writes the headers,
 		an data path which passes the data to the connection
@@ -557,50 +548,73 @@ $jn.TPreprocessor = $jn.TObject.extends("TPreprocessed", {
 		* and add everything to data.
 		*/
 		pipe: function(req, oPar) {
-			var vm = require('vm');
 			var self = this;
-			this.fs.readFile(this.fullName, function (err, data) {
+			var fs = require('fs'), vm = require('vm');
+			fs.readFile(this.fullName, function (err, data) {
 				if (err) throw err;
 				
 				data = data.toString();
 				var startIndex, endIndex = -2;
+
 				var html = '';
-				var sandbox = {};
+				var transfers = [];
+				var sandbox = {
+					require: require,
+					console: console,
+					transfer: function(name) {
+						transfers[transfers.length] = name;
+					}
+				};
 				
 				while ((startIndex = data.indexOf('<{')) != -1) {
 					endIndex = data.indexOf('}>');
 					
+					var result = '';
 					var code = '(function(){' +
 						data.substring(startIndex + 2, endIndex) +
 					'})()';
-					var result = vm.runInNewContext(code, sandbox);
+					try {
+						result = vm.runInNewContext(code, sandbox);
+					} catch (e) {
+						result = e.toString();
+					}
 					
 					html += data.substring(0, startIndex);
-					// if function put source between script tags
-					if (result !== undefined)
-						html += result.toString();
+					if (result !== undefined) {
+						if (typeof(result) === 'function') {
+							html += '<script>document.write((' +
+								result.toString() + ')().toString())</script>';
+						} else {
+							html += result.toString();
+						}
+					}
 					data = data.substring(endIndex + 2);
 				}
 				html += data;
 				
+				var transferScript = '<script>';
+				for (var i = 0; i < transfers.length; i++) {
+					transferScript += transfers[i] + '=' +
+						JSON.stringify(sandbox[transfers[i]]) + ';';
+				}
+				transferScript += '</script>'
+				html = transferScript + html;
+
 				self.length = html.length;
 
 				oPar.start();
 				oPar.data(html);
 				oPar.end(true);
 			});
-		},
-		parseHeaders: function(headers) {
-
 		}
-	});
+	};
 	/**
 	 * @memberof $jn.TServerFile
 	 * @static
 	 */
 	$jn.TServerFile.mime = function(ext){
 		switch(ext.toLowerCase()) {
-			case "htm": case "html": return ["text/html", "utf-8"];
+			case "htm": case "html": case "jshtml": return ["text/html", "utf-8"];
 			case "json": return ["application/json", "utf-8"];
 			case "js": return ["application/javascript", "utf-8"];
 			case "pdf": return ["application/pdf", "binary"];

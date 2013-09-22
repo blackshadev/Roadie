@@ -1,6 +1,9 @@
-<{ i = 'Hoi!' }>
+<{
+  greeting = require('./modules/greeting.js')()
+}>
 <html>
 <body>
-<p><{ return i }></p>
+<p><{ return function(){ return greeting; } }></p>
 </body>
 </html>
+<{ transfer('greeting') }>
