@@ -164,17 +164,20 @@ var $jn = require("./core.js");
 			this.parseClientHeaders();
 			
 		},
+		/** Copy the client headers and split the cookie
+		 */
 		parseClientHeaders: function() {
 			this.reqHeaders = $jn.extend({}, this.req.headers);
 			var cookies = {};
 
-			var arr = this.reqHeaders.cookie.split(';');
-			var cookieArr;
-			for(var iX = 0; iX < arr.length; iX++) {
-				cookieArr = arr[iX].split('=');
-				cookies[cookieArr[0].trim()] = cookieArr[1].trim();
+			if(this.reqHeaders.cookie) {
+				var arr = this.reqHeaders.cookie.split(';');
+				var cookieArr;
+				for(var iX = 0; iX < arr.length; iX++) {
+					cookieArr = arr[iX].split('=');
+					cookies[cookieArr[0].trim()] = cookieArr[1].trim();
+				}
 			}
-
 			this.reqHeaders.cookies = cookies;
 		},
 		/** Parses the request URL and creates a {@link $jn.TServerFile|TServerFile} with that parsed URL
@@ -239,6 +242,14 @@ var $jn = require("./core.js");
 				},
 				error: function(err) { self.fileError(err); }
 			});
+		},
+		getDynamicHeaders: function() {
+			return {
+				searchQuery: this.oUrl.search,
+				query: this.oUrl.query,
+				method: this.method,
+				cookies: this.reqHeaders.cookies
+			};
 		}
 	});
 	/** Handles errorPages ike file not found
@@ -502,7 +513,7 @@ var $jn = require("./core.js");
 		fullName: "",
 		serverFile: null,
 		server: null,
-		serverReq: null,
+		serverRequest: null,
 		fs: require("fs"),
 		create: function(serverFile, filePath) {
 			this.serverFile = serverFile;
@@ -515,26 +526,31 @@ var $jn = require("./core.js");
 			this.fullName = "./" + this.server.dynamicBaseDir +  file;
 		},
 		/**
-		oPar contains a start function which writes the headers,
-		an data path which passes the data to the connection
-		end to close the connection and error for file errors
+		oPar contains a 
+		- start function which writes the headers,
+		- data function, which passes the data to the connection
+		- end function,  to close the connection and error for file errors
+		* Get the client headers to pass to the script,
+		* change the cwd, and change it back afterwards
 		* first execute the file, get the response as json, copy the headers
 		* and add everything to data.
 		*/
 		pipe: function(req, oPar) {
-			console.log("Should pipe that shit");
-			obj = {
-				searchQuery: this.serverRequest.oUrl.search,
-				query: this.serverRequest.oUrl.query,
-				method: this.serverRequest.method
-			};
+			var clienHeaders = this.serverRequest.getDynamicHeaders();
+
+			// absFiePaths for cache deletion
+			var absScript = require('path').resolve(this.fullName);
+			var absWrapper = require('path').resolve('./jnServerFile.js');
+
 			var oldPath = this.server.cluster.worker.process.cwd();
 			try {
 				this.server.cluster.worker.process.chdir(this.filePath);
-				out = require(this.fullName)(obj);
+				out = require(this.fullName)(clienHeaders);
 
-				var abs = require('path').resolve(this.fullName);
-				delete require.cache[abs];
+				// delete cache for debugging
+				delete require.cache[absScript];
+				delete require.cache[absWrapper];
+				
 				if(out.headers)
 					for(var key in out.headers)
 						this.serverRequest.respHeader.headers[key] = out.headers[key];

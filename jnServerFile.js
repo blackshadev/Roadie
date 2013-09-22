@@ -6,6 +6,7 @@ $jn = (function($jn) {
 		response: null,
 		bodyFn: null,
 		create: function(args) {
+			this.client = args;
 			this.response = new jnResponse();
 		},
 		exec: function(fn) {
