@@ -1,6 +1,8 @@
-<{ i = 'Hoi!' }>
+<{
+  DB = require('./modules/db.js');
+}>
 <html>
 <body>
-<p><{ return i }></p>
+<p><{ return DB.get('greeting') }></p>
 </body>
 </html>

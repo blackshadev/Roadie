@@ -347,6 +347,10 @@ var $jn = require("./core.js");
 			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
 			this.ext = this.fileName.substr(this.fileName.lastIndexOf(".")+1, this.fileName.length);
 
+			if (this.ext === 'jshtml') {
+				this.pipe = $jn.TPreprocessor.pipe;
+			}
+			
 			var mime = $jn.TServerFile.mime(this.ext);
 			this.mimeType = mime[0];
 			this.encodeMimeType = mime[1];
@@ -573,73 +577,79 @@ var $jn = require("./core.js");
 			oPar.end(true);
 		}
 	});
-
-$jn.TPreprocessor = $jn.TObject.extends("TPreprocessed", {
-		fullName: "",
-		serverFile: null,
-		server: null,
-		serverReq: null,
-		fs: require("fs"),
-		//vm: require("vm"),
-		create: function(serverFile, fullName) {
-			this.serverFile = serverFile;
-			this.serverRequest = serverFile.req;
-			this.server = serverFile.serverRequest.server;
-			/* removes the DynamicUrlHook and adds the dynamicFilePath */
-			this.fullName = fullName;
-		},
-		/**
-		oPar contains a start function which writes the headers,
-		an data path which passes the data to the connection
-		end to close the connection and error for file errors
-		* first execute the file, get the response as json, copy the headers
-		* and add everything to data.
-		*/
+	
+	/*
+	 * Executes Javascript snippets in a jshtml file before sending it on the the browser.
+	 */
+	$jn.TPreprocessor = {
 		pipe: function(req, oPar) {
-			var vm = require('vm');
 			var self = this;
-			this.fs.readFile(this.fullName, function (err, data) {
+			var fs = require('fs'), vm = require('vm'),
+				browserutils = require('./modules/browserutils');
+			fs.readFile(this.fullName, function (err, data) {
 				if (err) throw err;
 				
 				data = data.toString();
 				var startIndex, endIndex = -2;
+
 				var html = '';
-				var sandbox = {};
+				var sandbox = {
+					require: require,
+					console: console,
+					transfer: browserutils.transfer
+				};
 				
 				while ((startIndex = data.indexOf('<{')) != -1) {
 					endIndex = data.indexOf('}>');
 					
+					var result = '';
 					var code = '(function(){' +
 						data.substring(startIndex + 2, endIndex) +
 					'})()';
-					var result = vm.runInNewContext(code, sandbox);
+					try {
+						result = vm.runInNewContext(code, sandbox);
+					} catch (e) {
+						result = e.toString();
+					}
 					
 					html += data.substring(0, startIndex);
-					// if function put source between script tags
-					if (result !== undefined)
-						html += result.toString();
+					if (result !== undefined) {
+						if (typeof(result) === 'function') {
+							html += '<script>document.write((' +
+								result.toString() + ')().toString())</script>';
+						} else {
+							html += result.toString();
+						}
+					}
 					data = data.substring(endIndex + 2);
 				}
 				html += data;
 				
+				var transfers = browserutils.transfers;
+				var transferScript = '<script>';
+				for (var name in transfers) {
+					transferScript += name + '=' +
+						JSON.stringify(transfers[name]) + ';';
+				}
+				transferScript += '</script>'
+				html = transferScript + html;
+				browserutils.transfers = {};
+
 				self.length = html.length;
 
 				oPar.start();
 				oPar.data(html);
 				oPar.end(true);
 			});
-		},
-		parseHeaders: function(headers) {
-
 		}
-	});
+	};
 	/**
 	 * @memberof $jn.TServerFile
 	 * @static
 	 */
 	$jn.TServerFile.mime = function(ext){
 		switch(ext.toLowerCase()) {
-			case "htm": case "html": return ["text/html", "utf-8"];
+			case "htm": case "html": case "jshtml": return ["text/html", "utf-8"];
 			case "json": return ["application/json", "utf-8"];
 			case "js": return ["application/javascript", "utf-8"];
 			case "pdf": return ["application/pdf", "binary"];
