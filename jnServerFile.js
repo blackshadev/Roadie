@@ -88,6 +88,4 @@ $jn = (function($jn) {
 	});
 	return $jn;
 })($jn);
-module.exports = function(bodyFn) {
-	return function(args) { return new $jn.jnFunction(args).exec(bodyFn); };
-};
+module.exports = $jn.jnFunction;

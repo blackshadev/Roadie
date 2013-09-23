@@ -1,4 +1,5 @@
 var $jn = require("./core.js");
+require("./jnServerFile.js");
 
 (function($jn) {
 	/** List of all items, with as items {@link $jn.TCacheEntry|TCacheEntry}
@@ -547,16 +548,19 @@ var $jn = require("./core.js");
 
 			// absFiePaths for cache deletion
 			var absScript = require('path').resolve(this.fullName);
-			var absWrapper = require('path').resolve('./jnServerFile.js');
-
+			var out = "";
 			var oldPath = this.server.cluster.worker.process.cwd();
+
 			try {
 				this.server.cluster.worker.process.chdir(this.filePath);
-				out = require(this.fullName)(clienHeaders);
+
+				var clientFn = require(this.fullName);
+				if(!clientFn) throw "No function found in export";
+
+				out = new $jn.jnFunction(clienHeaders).exec(clientFn);
 
 				// delete cache for debugging
 				delete require.cache[absScript];
-				delete require.cache[absWrapper];
 				
 				if(out.headers)
 					for(var key in out.headers)
@@ -631,7 +635,7 @@ var $jn = require("./core.js");
 					transferScript += name + '=' +
 						JSON.stringify(transfers[name]) + ';';
 				}
-				transferScript += '</script>'
+				transferScript += '</script>';
 				html = transferScript + html;
 				browserutils.transfers = {};
 

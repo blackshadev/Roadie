@@ -1,8 +1,8 @@
 
-module.exports = function(inp) {
+module.exports = function() {
 	var out = "";
-	out = objToString(inp, "<br />", "&emsp;");
-	return { headers: { 'Content-Type': "text/html" } , data: out };
+	out = objToString(this.client, "<br />", "&emsp;");
+	return out;
 };
 
 function objToString(obj, newl, tab) {

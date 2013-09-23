@@ -10,7 +10,7 @@ var resToString = function(arr) {
 	return out + "</tr>";
 };
 
-var fn = require("../jnServerFile.js")(function() {
+module.export = function() {
 	var mysql = require("mysql");
 	var conn = mysql.createConnection({
 		host: '127.0.0.1',
@@ -29,5 +29,4 @@ var fn = require("../jnServerFile.js")(function() {
 	});
 
 	return "Dit werkt dus ng niet";
-});
-module.exports = fn;
+};
