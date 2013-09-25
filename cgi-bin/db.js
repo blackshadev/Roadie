@@ -5,6 +5,6 @@ module.exports = function(req) {
 		DB.set(req.query.key, JSON.parse(req.query.value));
 	return {
 		headers: { 'Content-Type': 'text/plain' },
-		data: JSON.stringify(DB.get(req.query.key)())
+		data: JSON.stringify(DB.get(req.query.key)() || '')
 	};
 };
