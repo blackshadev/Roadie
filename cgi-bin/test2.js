@@ -1,5 +1,8 @@
-module.export = function() {
+module.exports = function() {
 	this.setCookie("test", "testVal");
 	console.log(this.client);
-	return "test";
+
+	this.print("testjeh");
+	
+	this.send();
 };
