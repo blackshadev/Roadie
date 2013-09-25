@@ -19,7 +19,6 @@ module.exports = {
 				};
 				req.open('GET', '/cgi-bin/db.js?key=' + this.key);
 				req.send();
-				return '<script id="' + elemId + '"/>';
 			}
 		}).bind({ key: k });
 	}

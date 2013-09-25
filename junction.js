@@ -626,6 +626,7 @@ require("./jnServerFile.js");
 					html += data.substring(0, startIndex);
 					if (result !== undefined) {
 						if (typeof(result) === 'function') {
+							/* TODO: insertId's don't work well asyncronously because they're not correctly scoped */
 							var insertId = newVarName('i');
 							html += '<script id="' + insertId +
 								'">_insertId="' + insertId + '";';
