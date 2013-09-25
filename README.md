@@ -8,7 +8,6 @@ Our philosophy is keep it simple and clean, so don't expect any fancy functions.
 
 Future features:
  - JSON Config file
- - Serverside JS functionality: RESTfull style.
  - MSSql implementation
 
 Features:
@@ -18,7 +17,7 @@ Features:
  - Cache currently only caches the stats, this saves 1 file access but the file that is sent is still up to date, and saves allot of memory
 
  TODO:
-  - core.js:TServerRequest::fileError
-  	Use the predefined base files and cache to find a landingspage instead of hardcoded index.htm
-  -	core.js:TServerRequest::create
+  -	junction.js:TServerRequest::create
   	Make a specific parseUrl function which gives the request URI, and headers.
+  - jnServerFile.js: Cleanup and rename some stuff
+  - junction.js::TDynamicFile, create own sandbox/vm/execute the dynamic function in its own closed enviroment with its only reference some functions (print, ect and his jnServerFile instance)

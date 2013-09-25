@@ -1,4 +1,5 @@
 var $jn = require("./core.js");
+require("./jnServerFile.js");
 
 (function($jn) {
 	/** List of all items, with as items {@link $jn.TCacheEntry|TCacheEntry}
@@ -164,8 +165,7 @@ var $jn = require("./core.js");
 			this.parseClientHeaders();
 			
 		},
-		/** Copy the client headers and split the cookie
-		 */
+		/** Copy the client headers and split the cookie */
 		parseClientHeaders: function() {
 			this.reqHeaders = $jn.extend({}, this.req.headers);
 			var cookies = {};
@@ -180,34 +180,38 @@ var $jn = require("./core.js");
 			}
 			this.reqHeaders.cookies = cookies;
 		},
-		/** Parses the request URL and creates a {@link $jn.TServerFile|TServerFile} with that parsed URL
+		/** Parses the request URL and creates a {@link $jn.TStaticFile|TStaticFile} with that parsed URL
 		 * @memberof $jn.TServerRequest
 		 * @instance */
 		parseRequestUrl: function() {
 			var self = this;
-			this.file = new $jn.TServerFile(this, this.oUrl.pathname);
+			this.file = new $jn.TStaticFile(this, this.oUrl.pathname);
 		},
-		/** What the server does when encountering an file error. <br /> Changes the header response code, reroutes to an other file. When the headerCode is changed, {@link $jn.TServerRequest#errorPage|errorPage} is called.
+		/** What the server does when encountering an file error.<br />
+		 * Changes the header response code, reroutes to an other file. When the headerCode is changed
+		 * {@link $jn.TServerRequest#errorPage|errorPage} is called.
 		 * @memberof $jn.TServerRequest
 		 * @instance*/
 		fileError: function(err) {
 			switch (err.errno) {
 				case 28:
-					var found = false;
+					/* Upon encountering a folder, search for the defaultPages
+					 * and add the first one you find to the cache route. */
 					var self = this;
 					var fs = require("fs");
+					var oldPath = this.server.staticBaseDir + self.oUrl.pathname;
 					this.isDir = true;
 					for(var i = 0; i < this.server.defaultPages.length; i++) {
-						console.log("Zoekt naar: " + self.oUrl.pathname + this.server.defaultPages[i]);
-						fs.exists("./" + self.server.staticBaseDir + self.oUrl.pathname + this.server.defaultPages[i],
-							function(exists) {
-							if(exists && !found) {
-								found = true;
-								self.oUrl.pathname += "index.htm";
-								self.file.reroute = "./" + self.server.staticBaseDir + self.oUrl.pathname;
-								self.start();
-							}
-						});
+						/* This is slower than the async version but wit does the job better */
+						var filePath = oldPath + this.server.defaultPages[i];
+						var exists = fs.existsSync("./" + filePath);
+						if(exists) {
+							console.log("Rerouted: " + oldPath + " to " + filePath);
+							self.oUrl.pathname += self.server.defaultPages[i];
+							self.file.reroute = "./" + filePath;
+							self.start();
+							break;
+						}
 					}
 					return false;
 				case 34:
@@ -220,7 +224,7 @@ var $jn = require("./core.js");
 			this.file.mimeType = "text/html";
 			this.body = $jn.TServerRequest.errorPage(this.respHeader.code);
 		},
-		/** Starts the file request by parsing the request URL and calling {@link $jn.TServerFile#pipe|TServerFile.pipe()}
+		/** Starts the file request by parsing the request URL and calling {@link $jn.TStaticFile#pipe|TStaticFile.pipe()}
 		 * @memberof $jn.TServerRequest 
 		 * @instance */
 		start: function() {
@@ -230,13 +234,15 @@ var $jn = require("./core.js");
 				start: function() {
 					self.respHeader.headers["Content-Type"] = self.file.mimeType;
 					self.respHeader.headers["Content-Length"] = self.file.length;
+					console.log("Written length header " + self.file.length);
 					self.respHeader.code = 200;
 					if(self.file.encodeType)
 						self.respHeader.headers["content-encoding"] = self.file.encodeType;
 					self.resp.writeHead(self.respHeader.code, self.respHeader.headers);
 				},
-				data: function(data) { self.file.length+=data.length; self.resp.write(data); },
+				data: function(data) { console.log("Got data: " + data); self.file.length+=data.length; self.resp.write(data); },
 				end: function(noCache) {
+					console.log("Connection closed");
 					self.resp.end();
 					if(!noCache) self.file.cacheCheck();
 				},
@@ -262,6 +268,7 @@ var $jn = require("./core.js");
 		}
 	};
 
+	/* Abstract of all files, each file should have these */
 	$jn.TServerFile = $jn.TObject.extends("TServerFile", {
 		serverRequest: null,
 		server: null,
@@ -280,7 +287,7 @@ var $jn = require("./core.js");
 		reroute: "", // only used if a file (directory) gets rerouted to another file 
 		fs: require("fs"),
 		/** The object which handle static file interaction
-		 * @constructor TServerFile
+		 * @constructor TStaticFile
 		 * @memberof $jn
 		 * @extends $jn.TObject
 		 * @prop {string} fullName			The full file name (with path)
@@ -297,6 +304,48 @@ var $jn = require("./core.js");
 		 * @prop {TServerRequest} serverRequest Reference to the {@link $jn.TServerRequest|TServereRequest} instance
 		 * @prop {TServer} server				Reference to the {@link $jn.TServer|TServere} instance
 		 */
+		create: function(){},
+		/** Implements the stream functioniality
+		 * @memberof $jn.TStaticFile
+		 * @instance
+		 * @param {object} destination		The destination to which the data is send
+		 * @param {object} oPar				Parameters with event handlers (eg. data, end, start)  */
+		pipe: function() {},
+		/** Parses a file by the given {@link $jn.TStaticFile#fullName|fullName} property
+		 * @memberof $jn.TStaticFile
+		 * @instance */
+		parseFile: function() {
+			var lastDirSep = this.fullName.lastIndexOf("/");
+			if(lastDirSep < 0)
+				return this.error(34);
+
+			this.filePath = this.fullName.substr(0, lastDirSep);
+			if(!this.filePath)
+				this.filePath = "/";
+			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
+			this.ext = this.fileName.substr(this.fileName.lastIndexOf(".")+1, this.fileName.length);
+
+			if (this.ext === 'jshtml') {
+				this.pipe = $jn.TPreprocessor.pipe;
+			}
+			
+			var mime = $jn.TStaticFile.mime(this.ext);
+			this.mimeType = mime[0];
+			this.encodeMimeType = mime[1];
+			this.isCache = false;
+		},
+		/** @memberOf $jn.TStaticFile
+		 * @instance */
+		toString: function() {
+			return "File: " + this.fileName + "\r\n" + "Path: " + this.filePath +
+				"\r\n" + "ext: " + this.ext +
+				"\r\n" + "MimeType: " + this.mimeType +
+				"\r\n" + "encodeMimeType: " + this.encodeMimeType +
+				"\r\n";
+		}
+	});
+
+	$jn.TStaticFile = $jn.TServerFile.extends("TStaticFile", {
 		create: function(serverRequest, requestUri) {
 			this.serverRequest = serverRequest;
 			this.server = serverRequest.server;
@@ -320,8 +369,8 @@ var $jn = require("./core.js");
 			this.fullName = "./" + this.server.staticBaseDir +
 				this.serverRequest.oUrl.pathname;
 		},
-		/** parses an ile by the given entry. If entry is undefined {@link $jn.TServerFile#parseFile|parseFile} is called.
-		* @memberof $jn.TServerFile
+		/** parses an ile by the given entry. If entry is undefined {@link $jn.TStaticFile#parseFile|parseFile} is called.
+		* @memberof $jn.TStaticFile
 		* @instance */
 		parseFileCache: function(entry) {
 			if(!entry) { this.parseFile(); return; }
@@ -330,40 +379,8 @@ var $jn = require("./core.js");
 				this[iX] = entry[iX];
 			}
 		},
-		/** Parses a file by the given {@link $jn.TServerFile#fullName|fullName} property
-		 * @memberof $jn.TServerFile
-		 * @instance */
-		parseFile: function() {
-			var lastDirSep = this.fullName.lastIndexOf("/");
-			if(lastDirSep < 0)
-				return this.error(34);
-
-			this.filePath = this.fullName.substr(0, lastDirSep);
-			if(!this.filePath)
-				this.filePath = "/";
-			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
-			this.ext = this.fileName.substr(this.fileName.lastIndexOf(".")+1, this.fileName.length);
-
-			if (this.ext === 'jshtml') {
-				this.pipe = $jn.TPreprocessor.pipe;
-			}
-			
-			var mime = $jn.TServerFile.mime(this.ext);
-			this.mimeType = mime[0];
-			this.encodeMimeType = mime[1];
-			this.isCache = false;
-		},
-		/** @memberOf $jn.TServerFile
-		 * @instance */
-		toString: function() {
-			return "File: " + this.fileName + "\r\n" + "Path: " + this.filePath +
-				"\r\n" + "ext: " + this.ext +
-				"\r\n" + "MimeType: " + this.mimeType +
-				"\r\n" + "encodeMimeType: " + this.encodeMimeType +
-				"\r\n";
-		},
 		/** Implements the stream functioniality
-		 * @memberof $jn.TServerFile
+		 * @memberof $jn.TStaticFile
 		 * @instance
 		 * @param {object} destination		The destination to which the data is send
 		 * @param {object} oPar				Parameters with event handlers (eg. data, end, start)  */
@@ -374,7 +391,7 @@ var $jn = require("./core.js");
 				this.cacheMiss(dest, oPars);
 		},
 		/** creates a {@link nodejs.ReadableStream|ReadableStream} of the file. With events given in oPar
-		 * @memberof $jn.TServerFile
+		 * @memberof $jn.TStaticFile
 		 * @instance
 		 * @param {object} oPar		The events on which the stream should listen
 		 */
@@ -386,7 +403,7 @@ var $jn = require("./core.js");
 			}
 		},
 		/**
-		 * @memberof $jn.TServerFile
+		 * @memberof $jn.TStaticFile
 		 * @instance
 		 */
 		cacheHit: function(dest, oPars) {
@@ -398,7 +415,7 @@ var $jn = require("./core.js");
 			this.createStream(oPars);
 		},
 		/**
-		 * @memberof $jn.TServerFile
+		 * @memberof $jn.TStaticFile
 		 * @instance
 		 */
 		followRoute: function() {
@@ -426,7 +443,7 @@ var $jn = require("./core.js");
 			return cache;
 		},
 		/**
-		 * @memberof $jn.TServerFile
+		 * @memberof $jn.TStaticFile
 		 * @instance
 		 */
 		cacheMiss: function(dest, oPars) {
@@ -438,7 +455,6 @@ var $jn = require("./core.js");
 			delete oPars.error;
 			var hasErr = false;
 
-			console.log("Stated " + this.fullName);
 			this.fs.stat(this.fullName, function(err,stat) {
 				if(err)
 					statErr(err);
@@ -458,14 +474,13 @@ var $jn = require("./core.js");
 			});
 		},
 		/**
-		 * @memberof $jn.TServerFile
+		 * @memberof $jn.TStaticFile
 		 * @instance
 		 */
 		cacheCheck: function() {
 			var cacheEntry = this.server.cache.items[this.fullName];
 			var self = this;
 
-			console.log("Stated " + this.fullName);
 			this.fs.stat(this.fullName, function(err,stat) {
 				if(!cacheEntry || stat.mtime.getTime() > cacheEntry.lastModified) {
 					self.refreshCache(cacheEntry, stat);
@@ -473,7 +488,7 @@ var $jn = require("./core.js");
 			});
 		},
 		/**
-		 * @memberof $jn.TServerFile
+		 * @memberof $jn.TStaticFile
 		 * @instance
 		 */
 		refreshCache: function(entry, stat) {
@@ -482,14 +497,13 @@ var $jn = require("./core.js");
 				entry = this.server.cache.add(this);
 			entry.lastModified = this.lastModified = stat.mtime;
 
-			console.log(entry);
 			if(!entry.reroute && !entry.isDir) {
 				entry.compressedFiles = {};
 				this.compress(entry.compressedFiles);
 			}
 		},
 		/**
-		 * @memberof $jn.TServerFile
+		 * @memberof $jn.TStaticFile
 		 * @instance
 		 */
 		compress: function(obj) {
@@ -519,9 +533,12 @@ var $jn = require("./core.js");
 		server: null,
 		serverRequest: null,
 		fs: require("fs"),
+		/* Dynamic files, sets the filepath, 
+		 * Executes the dynamic file function with the clientHeaders,
+		 * Uses the output as content */
 		create: function(serverFile, filePath) {
 			this.serverFile = serverFile;
-			this.serverRequest = serverFile.req;
+			this.serverRequest = serverFile.serverRequest;
 			this.server = serverFile.serverRequest.server;
 			var file = filePath.substr(
 				filePath.indexOf(this.server.dynamicUrlHook) +
@@ -540,38 +557,28 @@ var $jn = require("./core.js");
 		* and add everything to data.
 		*/
 		pipe: function(req, oPar) {
-			var clienHeaders = this.serverRequest.getDynamicHeaders();
 
 			// absFiePaths for cache deletion
 			var absScript = require('path').resolve(this.fullName);
-			var absWrapper = require('path').resolve('./jnServerFile.js');
+			var dynaFn;
 
-			var oldPath = this.server.cluster.worker.process.cwd();
 			try {
-				this.server.cluster.worker.process.chdir(this.filePath);
-				out = require(this.fullName)(clienHeaders);
+				var clientFn = require(absScript);
+				if(!clientFn) throw "No function found in export";
+
+				/* Default content-type header */
+				this.mimeType = "text/html";
+				/* Execute client function */
+				dynaFn = new $jn.jnFunction(this, oPar);
+				dynaFn.exec(clientFn);
 
 				// delete cache for debugging
 				delete require.cache[absScript];
-				delete require.cache[absWrapper];
-				
-				if(out.headers)
-					for(var key in out.headers)
-						this.serverRequest.respHeader.headers[key] = out.headers[key];
-				out = out.data || out;
 			} catch(e) {
-				out = e + "";
-			} finally {
-				this.server.cluster.worker.process.chdir(oldPath);
+				console.log(e);
+				dynaFn.content = e+"";
+				dynaFn.send();
 			}
-
-			this.length = out.length;
-			this.mimeType =
-				this.serverRequest.respHeader.headers['Content-Type'] || "text/html";
-
-			oPar.start(true);
-			oPar.data(out);
-			oPar.end(true);
 		}
 	});
 	
@@ -676,10 +683,10 @@ var $jn = require("./core.js");
 		}
 	};
 	/**
-	 * @memberof $jn.TServerFile
+	 * @memberof $jn.TStaticFile
 	 * @static
 	 */
-	$jn.TServerFile.mime = function(ext){
+	$jn.TStaticFile.mime = function(ext){
 		switch(ext.toLowerCase()) {
 			case "htm": case "html": case "jshtml": return ["text/html", "utf-8"];
 			case "json": return ["application/json", "utf-8"];
