@@ -563,7 +563,6 @@ require("./jnServerFile.js");
 			var dynaFn;
 
 			try {
-
 				var clientFn = require(absScript);
 				if(!clientFn) throw "No function found in export";
 

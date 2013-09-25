@@ -8,12 +8,11 @@ var $jn = require("./core.js");
  * - Output given by the return value of the given function
  *
  * Usage:
- * var fn = require("../jnServerFile.js")(function() {
- *		this.setCookie("CookieKey","CookieValue");
- *		this.setHeader("Content-Type","text/html");
- *		var output = "<p>This will be displayed</p>";
- *		return output;
- * }); module.export = fn;
+ * module.exports = function() {
+ *		this.print("testje");
+ *		this.send();	
+ * }
+ * 
  *
  * Defaults:
  * - response::headers::Content-Type: text/html
