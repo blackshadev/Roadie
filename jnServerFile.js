@@ -18,7 +18,7 @@ var $jn = require("./core.js");
  * - response::headers::Content-Type: text/html
  */
 $jn = (function($jn) {
-	$jn.jnFunction = $jn.TObject.extends("jnFunction", {
+	$jn.jnAbstract = $jn.TObject.extends("jnAbstract", {
 		client: null,
 		response: null,
 		bodyFn: null,
@@ -32,14 +32,6 @@ $jn = (function($jn) {
 
 			this.content = "";
 			this.response = new jnResponse();
-		},
-		exec: function(fn) {
-			var res = fn.call(this);
-		},
-		print: function(str) {
-			this.content += str;
-
-			console.log("new content: " + str);
 		},
 		setCookie: function(key, value, args, flags) {
 			this.response.addCookie(new $jn.TCookie(key, value, args, flags));
@@ -66,6 +58,49 @@ $jn = (function($jn) {
 		sendContent: function() {
 			console.log("dataSend: " + this.content);
 			this.streamPars.data(this.content);
+		}
+	});
+
+	$jn.jnFunction = $jn.jnAbstract.extends("jnFunction", {
+		fn: null,
+		create: function() {
+			this.inherited().create.apply(this, arguments);
+			this.fn = require(this.serverFile.fullName);
+			if(typeof this.fn !== "function")
+				throw "Expected function, " + typeof this.fn + " given";
+		},
+		exec: function() {
+			var res = this.fn.call(this);
+		},
+		print: function(str) {
+			this.content += str;
+		}
+	});
+
+	$jn.jnFile = $jn.jnAbstract.extends("jnFile", {
+		fileName: "",
+		cp: require('child_process'),
+		child: 0,
+		create: function() {
+			this.inherited().create.apply(this, arguments);
+			this.fileName = this.serverFile.fullName;
+		},
+		exec: function() {
+			var self = this;
+			var testVar = "test";
+			this.child = this.cp.spawn("node",[this.fileName],{
+				
+				stdio: ['ignore', null, null]
+			});
+			this.child.stdout.on("data", function(data) {
+				self.content += data;
+			});
+			this.child.stderr.on("data", function(err) {
+				self.content += err.toString();
+			});
+			this.child.on("exit", function() {
+				self.send();
+			});
 		}
 	});
 

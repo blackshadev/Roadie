@@ -1,8 +1,5 @@
-module.exports = function() {
-	this.setCookie("test", "testVal");
-	console.log(this.client);
-
-	this.print("testjeh");
-	
-	this.send();
-};
+process.argv.forEach(function (val, idx, arr){
+	console.log(idx+":" +val);
+});
+console.log("hallo?");
+console.log(testVar);

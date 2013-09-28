@@ -557,23 +557,15 @@ require("./jnServerFile.js");
 		* and add everything to data.
 		*/
 		pipe: function(req, oPar) {
-
-			// absFiePaths for cache deletion
-			var absScript = require('path').resolve(this.fullName);
 			var dynaFn;
 
 			try {
-				var clientFn = require(absScript);
-				if(!clientFn) throw "No function found in export";
-
 				/* Default content-type header */
 				this.mimeType = "text/html";
 				/* Execute client function */
-				dynaFn = new $jn.jnFunction(this, oPar);
-				dynaFn.exec(clientFn);
-
-				// delete cache for debugging
-				delete require.cache[absScript];
+				// dynaFn = new $jn.jnFunction(this, oPar);
+				dynaFn = new $jn.jnFile(this, oPar);
+				dynaFn.exec();
 			} catch(e) {
 				console.log(e);
 				dynaFn.content = e+"";
