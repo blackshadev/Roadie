@@ -1,10 +1,10 @@
 var DB = require("../modules/db.js");
 
-module.exports = function(req) {
-	if (req.query.key && req.query.value)
-		DB.set(req.query.key, JSON.parse(req.query.value));
-	return {
-		headers: { 'Content-Type': 'text/plain' },
-		data: JSON.stringify(DB.get(req.query.key)())
-	};
+module.exports = function() {
+	var query = this.client.query;
+	if (query.key && query.value)
+		DB.set(query.key, JSON.parse(query.value));
+	this.response.headerObj['Content-Type'] = 'text/plain';
+	this.print(JSON.stringify(DB.get(query.key)() || ''));
+	this.send();
 };

@@ -575,7 +575,7 @@ require("./jnServerFile.js");
 	});
 	
 	/*
-	 * Executes Javascript snippets in a jshtml file before sending it on the the browser.
+	 * Executes JavaScript snippets in a jshtml file before sending it on the the browser.
 	 */
 	$jn.TPreprocessor = {
 		pipe: function(req, oPar) {
@@ -592,9 +592,16 @@ require("./jnServerFile.js");
 				var sandbox = {
 					require: require,
 					console: console,
-					transfer: browserutils.transfer
+					utils: {
+						transfer: browserutils.transfer,
+						transfers: browserutils.transfers
+					}
 				};
-				
+
+				var varCounter = 0;
+				var newVarName = function(prefix) {
+					return '__' + prefix + varCounter++;
+				};
 				while ((startIndex = data.indexOf('<{')) != -1) {
 					endIndex = data.indexOf('}>');
 					
@@ -611,8 +618,22 @@ require("./jnServerFile.js");
 					html += data.substring(0, startIndex);
 					if (result !== undefined) {
 						if (typeof(result) === 'function') {
-							html += '<script>document.write((' +
-								result.toString() + ')().toString())</script>';
+							/* TODO: insertId's don't work well asyncronously because they're not correctly scoped */
+							var insertId = newVarName('i');
+							html += '<script id="' + insertId +
+								'">_insertId="' + insertId + '";';
+							if (result.isBound) {
+								var context = result.boundObject;
+								var func = result.innerFunction;
+								var varName = newVarName('v');
+								browserutils.transfers[varName] = context;
+								html += 'document.write((' + func.toSource() +
+									').call(' + varName + ').toString())';
+							} else {
+								html += 'document.write((' + result.toSource() +
+									')().toString())';
+							}
+							html += '</script>';
 						} else {
 							html += result.toString();
 						}
@@ -621,11 +642,26 @@ require("./jnServerFile.js");
 				}
 				html += data;
 				
+				/*
+				 * Variables in transfers are currently embedded as global variables.
+				 * eventually all functions and variables should be enclosed in a
+				 * separate scope (insert and write help to do achieve this while
+				 * still easily manipulating the DOM from inline code).
+				 */
 				var transfers = browserutils.transfers;
+				/* TODO: Port insert and write to server-side */
+				transfers['utils'] = {
+					insert: function(node) {
+						var dest = document.getElementById(_insertId);
+						dest.parentNode.insertBefore(node, dest);
+					},
+					write: function(text) {
+						this.insert(document.createTextNode(text));
+					}
+				};
 				var transferScript = '<script>';
 				for (var name in transfers) {
-					transferScript += name + '=' +
-						JSON.stringify(transfers[name]) + ';';
+					transferScript += name + '=' + transfers[name].toSource() + ';';
 				}
 				transferScript += '</script>';
 				html = transferScript + html;

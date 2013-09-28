@@ -114,3 +114,43 @@ $jn = ( function($jn) {
 	return $jn;
 })($jn);
 module.exports = $jn;
+
+/* Deze definities moeten ergens staan, maar waar? */
+var _bind = Function.prototype.apply.bind(Function.prototype.bind);
+Object.defineProperty(Function.prototype, 'bind', {
+    value: function(obj) {
+        var boundFunction = _bind(this, arguments);
+		boundFunction.isBound = true;
+        boundFunction.boundObject = obj;
+		boundFunction.innerFunction = this;
+        return boundFunction;
+    }
+});
+
+/*
+ * toSource is om objecten correct om te zetten tot code voor in de browser
+ * bijvoorbeeld. JSON.stringify is het nèt niet, die ondersteunt geen
+ * functies en is er ook niet makkelijk voor te patchen.
+ */
+Object.defineProperty(Object.prototype, 'toSource', {
+    value: function() {
+		if (typeof this === 'string' || this instanceof String) {
+			return '"' + this + '"';
+		} else if (Array.isArray(this)) {
+			var src = '[';
+			for (var i = 0; i < this.length; i++)
+				src += this[i].toSource() + ',';
+			return src.substr(0, src.length - 1) + ']';
+		} else if (this && this.toString() === '[object Object]') {
+			var src = '{';
+			for (var key in this)
+				src += key + ':' + this[key].toSource() + ',';
+			return src.substr(0, src.length - 1) + '}';
+		} else if (typeof this === 'function') {
+			return this.toString().replace(/[\r\n\t]/g, '');
+		} else if (this.toString) {
+			return this.toString();
+		}
+    }
+});
+
