@@ -103,6 +103,34 @@ $jn = (function($jn) {
 			});
 		}
 	});
+	
+	$jn.jnScript = $jn.jnAbstract.extends("jnScript", {
+		fs: require('fs'),
+		vm: require('vm'),
+		create: function() {
+			this.inherited().create.apply(this, arguments);
+		},
+		exec: function() {
+			var self = this;
+			var sandbox = {
+				/* Globally scoped variables */
+				print: function(data) {
+					self.content += data;
+				},
+				send: self.send
+			};
+			/* Files can be cached (compiled once and stored in a Script object) */
+			fs.readFile(self.serverFile.fullName, function (err, data) {
+				try {
+					if (err) throw err;
+					vm.runInNewContext(data, sandbox);
+				} catch (e) {
+					self.content += e.toString();
+				}
+				self.send();
+			});
+		}
+	});
 
 	$jn.TCookie = $jn.TObject.extends("TCookie", {
 		key: "",
@@ -110,7 +138,7 @@ $jn = (function($jn) {
 		args: null,
 		flags: null,
 		create: function(key, value, args, flags) {
-			if(arguments.length  === 1) {
+			if(arguments.length === 1) {
 				console.log("Cookie should be parsed: " + key);
 			}
 			this.key = key;

@@ -564,7 +564,8 @@ require("./jnServerFile.js");
 				this.mimeType = "text/html";
 				/* Execute client function */
 				// dynaFn = new $jn.jnFunction(this, oPar);
-				dynaFn = new $jn.jnFile(this, oPar);
+				// dynaFn = new $jn.jnFile(this, oPar);
+				dynaFn = new $jn.jnScript(this, oPar);
 				dynaFn.exec();
 			} catch(e) {
 				console.log(e);
