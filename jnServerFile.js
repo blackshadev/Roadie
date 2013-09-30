@@ -39,6 +39,9 @@ $jn = (function($jn) {
 		setHeader: function(key, type) { // shortcut
 			this.response.setHeader(key, type);
 		},
+		getClientHeaders: function() {
+			return serverFile.serverRequest.getDynamicHeaders();
+		},
 		send: function() {
 			this.sendHeaders();
 			this.sendContent();
@@ -117,18 +120,30 @@ $jn = (function($jn) {
 				print: function(data) {
 					self.content += data;
 				},
-				send: self.send
+				setHeader: self.setHeader,
+				setCookie: self.setCookie,
+				getClientHeaders: self.getClientHeaders,
+				send: self.send,
+				require: require
+
 			};
+			var context = self.vm.createContext();
+			$jn.extend(context, sandbox);
+			console.log(context);
 			/* Files can be cached (compiled once and stored in a Script object) */
-			fs.readFile(self.serverFile.fullName, function (err, data) {
+			self.fs.readFile(self.serverFile.fullName, function (err, data) {
 				try {
 					if (err) throw err;
-					vm.runInNewContext(data, sandbox);
+					self.vm.runInNewContext(data, context);
 				} catch (e) {
 					self.content += e.toString();
 				}
 				self.send();
 			});
+			// var stream = this.fs.createReadStream(this.serverFile.fullName);
+			// var filecontent = "";
+			// stream.on("data", function(dat) { filecontent += dat; });
+			// stream.on("end", function() { self.send(); })
 		}
 	});
 
