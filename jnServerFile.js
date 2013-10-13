@@ -25,6 +25,7 @@ $jn = (function($jn) {
 		streamPars: null,
 		serverFile: null,
 		content: null,
+		queue: null,
 		create: function(serverFile, streamPars) {
 			this.streamPars = streamPars;
 			this.serverFile = serverFile;
@@ -32,6 +33,9 @@ $jn = (function($jn) {
 			this.content = "";
 			this.clientHeaders = new jnClient(serverFile.serverRequest);
 			this.response = new jnResponse();
+
+			var self = this;
+			this.queue = new jnWait(0, function() { self.send(); });
 		},
 		setCookie: function(key, value, args, flags) {
 			return this.response.addCookie(new $jn.TCookie(key, value, args, flags));
@@ -43,6 +47,7 @@ $jn = (function($jn) {
 			return this.clientHeaders;
 		},
 		send: function() {
+			if(!this.queue.ready()) return;
 			this.sendHeaders();
 			this.sendContent();
 			this.streamPars.end(true);
@@ -118,14 +123,18 @@ $jn = (function($jn) {
 			var sandbox = {
 				/* Globally scoped variables */
 				print: function(data) {
-					self.content += data;
+					self.content += (typeof(data) === "object") ?
+						objToString(data) : data;
 				},
 				setHeader: function(key,val) { return self.setHeader(key, val);},
 				setCookie: function(key,val, args, flags) {
 					return self.setCookie(key, val, args, flags);
 				},
 				getClientHeaders: function() { return self.getClientHeaders(); },
+
 				send: function() { return self.send(); },
+				wait: function() { self.queue.add(); },
+				done: function() { self.queue.sub(); },
 				require: require
 			};
 			var context = self.vm.createContext();
@@ -234,6 +243,29 @@ $jn = (function($jn) {
 		},
 		toString: function() {
 			return objToString(this.headers);
+		}
+	});
+
+	/* NonBlocking semaphore, for waiting for asynch data */
+	var jnWait = $jn.TObject.extends("jnWait", {
+		counter: 0,
+		fn: null,
+		create: function(init, fn) {
+			this.counter = init || this.counter;
+			this.fn = fn;
+		},
+		add: function(num) {
+			num = num || 0;
+			this.counter += num < 1 ? 1 : num;
+		},
+		sub: function(num) {
+			num = num || 0;
+			this.counter -= num < 1 ? 1 : num;
+			if(this.ready() && this.fn)
+				this.fn();
+		},
+		ready: function() {
+			return this.counter < 1;
 		}
 	});
 
