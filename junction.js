@@ -234,15 +234,19 @@ require("./jnServerFile.js");
 				start: function() {
 					self.respHeader.headers["Content-Type"] = self.file.mimeType;
 					self.respHeader.headers["Content-Length"] = self.file.length;
-					console.log("Written length header " + self.file.length);
+					// console.log(self.respHeader.headers);
+					// console.log("Written length header " + self.file.length);
 					self.respHeader.code = 200;
 					if(self.file.encodeType)
 						self.respHeader.headers["content-encoding"] = self.file.encodeType;
 					self.resp.writeHead(self.respHeader.code, self.respHeader.headers);
 				},
-				data: function(data) { console.log("Got data: " + data); self.file.length+=data.length; self.resp.write(data); },
+				data: function(data) {
+					// console.log("Got data: " + data);
+					self.file.length+=data.length;
+					self.resp.write(data); },
 				end: function(noCache) {
-					console.log("Connection closed");
+					// console.log("Connection closed");
 					self.resp.end();
 					if(!noCache) self.file.cacheCheck();
 				},

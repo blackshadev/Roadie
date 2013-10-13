@@ -19,7 +19,7 @@ var $jn = require("./core.js");
  */
 $jn = (function($jn) {
 	$jn.jnAbstract = $jn.TObject.extends("jnAbstract", {
-		client: null,
+		clientHeaders: null,
 		response: null,
 		bodyFn: null,
 		streamPars: null,
@@ -27,20 +27,20 @@ $jn = (function($jn) {
 		content: null,
 		create: function(serverFile, streamPars) {
 			this.streamPars = streamPars;
-			this.client = serverFile.serverRequest.getDynamicHeaders();
 			this.serverFile = serverFile;
 
 			this.content = "";
+			this.clientHeaders = new jnClient(serverFile.serverRequest);
 			this.response = new jnResponse();
 		},
 		setCookie: function(key, value, args, flags) {
-			this.response.addCookie(new $jn.TCookie(key, value, args, flags));
+			return this.response.addCookie(new $jn.TCookie(key, value, args, flags));
 		},
 		setHeader: function(key, type) { // shortcut
 			this.response.setHeader(key, type);
 		},
 		getClientHeaders: function() {
-			return serverFile.serverRequest.getDynamicHeaders();
+			return this.clientHeaders;
 		},
 		send: function() {
 			this.sendHeaders();
@@ -53,17 +53,17 @@ $jn = (function($jn) {
 			for(var key in headers)
 				respHeader.headers[key] = headers[key];
 			this.serverFile.length = this.content.length;
-			this.serverFile.mimeType = 
+			this.serverFile.mimeType =
 				respHeader.headers["Content-Type"] || "text/html";
 
 			this.streamPars.start(true);
 		},
 		sendContent: function() {
-			console.log("dataSend: " + this.content);
+			// console.log("dataSend: " + this.content);
 			this.streamPars.data(this.content);
 		}
 	});
-
+/*
 	$jn.jnFunction = $jn.jnAbstract.extends("jnFunction", {
 		fn: null,
 		create: function() {
@@ -105,7 +105,7 @@ $jn = (function($jn) {
 				self.send();
 			});
 		}
-	});
+	});*/
 	
 	$jn.jnScript = $jn.jnAbstract.extends("jnScript", {
 		fs: require('fs'),
@@ -120,16 +120,16 @@ $jn = (function($jn) {
 				print: function(data) {
 					self.content += data;
 				},
-				setHeader: self.setHeader,
-				setCookie: self.setCookie,
-				getClientHeaders: self.getClientHeaders,
-				send: self.send,
+				setHeader: function(key,val) { return self.setHeader(key, val);},
+				setCookie: function(key,val, args, flags) {
+					return self.setCookie(key, val, args, flags);
+				},
+				getClientHeaders: function() { return self.getClientHeaders(); },
+				send: function() { return self.send(); },
 				require: require
-
 			};
 			var context = self.vm.createContext();
 			$jn.extend(context, sandbox);
-			console.log(context);
 			/* Files can be cached (compiled once and stored in a Script object) */
 			self.fs.readFile(self.serverFile.fullName, function (err, data) {
 				try {
@@ -154,7 +154,7 @@ $jn = (function($jn) {
 		flags: null,
 		create: function(key, value, args, flags) {
 			if(arguments.length === 1) {
-				console.log("Cookie should be parsed: " + key);
+				// console.log("Cookie should be parsed: " + key);
 			}
 			this.key = key;
 			this.value = value;
@@ -165,10 +165,41 @@ $jn = (function($jn) {
 		toString: function() {
 			var out = this.key + "=" + this.value;
 			for(var key in this.args)
-				out += "; " + key + ":" + this.args[key];
+				out += "; " + key + "=" + this.args[key];
 			for(var iX = 0; iX < this.flags.length; iX++)
 				out += "; " + this.flags[iX];
 			return out;
+		},
+		setLifeTime: function(val) {
+			var parseTime = function(key) {
+				var m = new RegExp('\\s*(-?\\s*\\d+)\\s*' + key + '(s)?','i').exec(val);
+				return m? parseFloat(m[1].trim(),10) : 0;
+			};
+			var toTime = function(obj) {
+				return obj.sec * 1000 +
+				obj.min * 60000 +
+				obj.hour * 3600000 +
+				obj.day * 86400000 +
+				obj.week * 604800000 +
+				obj.month * 2592000000 +
+				obj.year * 31557600000;
+			};
+			var res = {
+				sec: parseTime("sec(ond)?"),
+				min: parseTime("min(ute)?"),
+				hour: parseTime("hour"),
+				day: parseTime("day"),
+				week: parseTime("week"),
+				month: parseTime("month"),
+				year: parseTime("year")
+			};
+			var date = new Date();
+			date.setTime(date.getTime() + toTime(res));
+			this.setArg("Expires", date.toUTCString());
+			return date;
+		},
+		setArg: function(key, val) {
+			this.args[key] = val;
 		}
 	});
 
@@ -192,8 +223,33 @@ $jn = (function($jn) {
 		},
 		addCookie: function(cookie) {
 			this.cookies[cookie.key] = cookie;
+			return cookie;
 		}
 	});
+
+	var jnClient = $jn.TObject.extends("jnClient", {
+		headers: null,
+		create: function(serverRequest) {
+			this.headers = serverRequest.getDynamicHeaders();
+		},
+		toString: function() {
+			return objToString(this.headers);
+		}
+	});
+
+	function objToString(obj) {
+		var str = "";
+		for (var p in obj) {
+			if (obj.hasOwnProperty(p)) {
+				if(typeof(obj[p]) === "object")
+					str += p + ': {<br />' + objToString(obj[p]) + '<br />},<br />';
+				else
+					str += p + ': ' + obj[p] + '<br />';
+			}
+		}
+		return str;
+	}
+
 	return $jn;
 })($jn);
 module.exports = $jn.jnFunction;
