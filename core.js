@@ -118,13 +118,13 @@ module.exports = $jn;
 /* Deze definities moeten ergens staan, maar waar? */
 var _bind = Function.prototype.apply.bind(Function.prototype.bind);
 Object.defineProperty(Function.prototype, 'bind', {
-    value: function(obj) {
-        var boundFunction = _bind(this, arguments);
+	value: function(obj) {
+		var boundFunction = _bind(this, arguments);
 		boundFunction.isBound = true;
-        boundFunction.boundObject = obj;
+		boundFunction.boundObject = obj;
 		boundFunction.innerFunction = this;
-        return boundFunction;
-    }
+		return boundFunction;
+	}
 });
 
 /*
@@ -133,16 +133,17 @@ Object.defineProperty(Function.prototype, 'bind', {
  * functies en is er ook niet makkelijk voor te patchen.
  */
 Object.defineProperty(Object.prototype, 'toSource', {
-    value: function() {
+	value: function() {
+		var src;
 		if (typeof this === 'string' || this instanceof String) {
 			return '"' + this + '"';
 		} else if (Array.isArray(this)) {
-			var src = '[';
+			src = '[';
 			for (var i = 0; i < this.length; i++)
 				src += this[i].toSource() + ',';
 			return src.substr(0, src.length - 1) + ']';
 		} else if (this && this.toString() === '[object Object]') {
-			var src = '{';
+			src = '{';
 			for (var key in this)
 				src += key + ':' + this[key].toSource() + ',';
 			return src.substr(0, src.length - 1) + '}';
@@ -151,6 +152,6 @@ Object.defineProperty(Object.prototype, 'toSource', {
 		} else if (this.toString) {
 			return this.toString();
 		}
-    }
+	}
 });
 

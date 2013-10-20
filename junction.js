@@ -185,7 +185,21 @@ require("./jnServerFile.js");
 		 * @instance */
 		parseRequestUrl: function() {
 			var self = this;
-			this.file = new $jn.TStaticFile(this, this.oUrl.pathname);
+
+			var classFn = this.serverFileClass();
+			this.file = new classFn(this, this.oUrl.pathname);
+		},
+		/** Determins which of the file classes to use for this file
+		*/
+		serverFileClass: function() {
+			var classFn = $jn.TStaticFile;
+			var path = this.oUrl.pathname;
+			console.log(path);
+			if(path.indexOf(this.server.dynamicUrlHook) > 0)
+				classFn = $jn.TDynamicFile;
+			else if(path.substr(path.lastIndexOf(".")+1, path.length) === "jshtml")
+				classFn = $jn.TPreprocessor;
+			return classFn;
 		},
 		/** What the server does when encountering an file error.<br />
 		 * Changes the header response code, reroutes to an other file. When the headerCode is changed
@@ -279,7 +293,6 @@ require("./jnServerFile.js");
 		fullName: "",
 		filePath: "",
 		fileName: "",
-		dynamicFile: null,
 		ext: "",
 		mimeType: "",
 		encodeMimeType: null,
@@ -291,7 +304,7 @@ require("./jnServerFile.js");
 		reroute: "", // only used if a file (directory) gets rerouted to another file 
 		fs: require("fs"),
 		/** The object which handle static file interaction
-		 * @constructor TStaticFile
+		 * @constructor TServerFile
 		 * @memberof $jn
 		 * @extends $jn.TObject
 		 * @prop {string} fullName			The full file name (with path)
@@ -308,15 +321,25 @@ require("./jnServerFile.js");
 		 * @prop {TServerRequest} serverRequest Reference to the {@link $jn.TServerRequest|TServereRequest} instance
 		 * @prop {TServer} server				Reference to the {@link $jn.TServer|TServere} instance
 		 */
-		create: function(){},
+		create: function(serverRequest, requestUri){
+			this.serverRequest = serverRequest;
+			this.server = serverRequest.server;
+		},
 		/** Implements the stream functioniality
-		 * @memberof $jn.TStaticFile
+		 * @memberof $jn.TServerFile
 		 * @instance
 		 * @param {object} destination		The destination to which the data is send
 		 * @param {object} oPar				Parameters with event handlers (eg. data, end, start)  */
 		pipe: function() {},
-		/** Parses a file by the given {@link $jn.TStaticFile#fullName|fullName} property
-		 * @memberof $jn.TStaticFile
+		/** Assigns the default fullName property with a given requestUri
+		 * @memberof $jn.TServerFile
+		 * @instance */
+		parseFilePath: function(requestUri) {
+			this.fullName = "./" + this.server.staticBaseDir +
+				this.serverRequest.oUrl.pathname;
+		},
+		/** Parses a file by the given {@link $jn.TServerFile#fullName|fullName} property
+		 * @memberof $jn.TServerFile
 		 * @instance */
 		parseFile: function() {
 			var lastDirSep = this.fullName.lastIndexOf("/");
@@ -328,17 +351,13 @@ require("./jnServerFile.js");
 				this.filePath = "/";
 			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
 			this.ext = this.fileName.substr(this.fileName.lastIndexOf(".")+1, this.fileName.length);
-
-			if (this.ext === 'jshtml') {
-				this.pipe = $jn.TPreprocessor.pipe;
-			}
 			
 			var mime = $jn.TStaticFile.mime(this.ext);
 			this.mimeType = mime[0];
 			this.encodeMimeType = mime[1];
 			this.isCache = false;
 		},
-		/** @memberOf $jn.TStaticFile
+		/** @memberOf $jn.TServerFile
 		 * @instance */
 		toString: function() {
 			return "File: " + this.fileName + "\r\n" + "Path: " + this.filePath +
@@ -351,27 +370,12 @@ require("./jnServerFile.js");
 
 	$jn.TStaticFile = $jn.TServerFile.extends("TStaticFile", {
 		create: function(serverRequest, requestUri) {
-			this.serverRequest = serverRequest;
-			this.server = serverRequest.server;
+			this.inherited().create.apply(this, arguments);
 
 			this.parseFilePath(requestUri);
 			var cache = this.followRoute();
 			this.parseFileCache(cache); // fill result in a parseFile cal if cache is empty
 
-		},
-		parseFilePath: function(requestUri) {
-			var file;
-			if(requestUri.indexOf(this.server.dynamicUrlHook) > 0) {
-				/* If dynamic, let him handle everything. 
-				 * Uses ServerFile just as interface for caches */
-				this.dynamicFile = new $jn.TDynamicFile(this,
-					this.serverRequest.oUrl.pathname);
-				this.fullName = this.dynamicFile.fullName;
-				this.pipe = this.dynamicFile.pipe;
-				return;
-			}
-			this.fullName = "./" + this.server.staticBaseDir +
-				this.serverRequest.oUrl.pathname;
 		},
 		/** parses an ile by the given entry. If entry is undefined {@link $jn.TStaticFile#parseFile|parseFile} is called.
 		* @memberof $jn.TStaticFile
@@ -531,19 +535,21 @@ require("./jnServerFile.js");
 		}
 	});
 
-	$jn.TDynamicFile = $jn.TObject.extends("TDynamicFile", {
+	$jn.TDynamicFile = $jn.TServerFile.extends("TDynamicFile", {
 		fullName: "",
-		serverFile: null,
 		server: null,
 		serverRequest: null,
 		fs: require("fs"),
 		/* Dynamic files, sets the filepath, 
 		 * Executes the dynamic file function with the clientHeaders,
 		 * Uses the output as content */
-		create: function(serverFile, filePath) {
-			this.serverFile = serverFile;
-			this.serverRequest = serverFile.serverRequest;
-			this.server = serverFile.serverRequest.server;
+		create: function(serverRequest, filePath) {
+			this.inherited().create.apply(this, arguments);
+
+			this.parseFilePath(filePath);
+			this.parseFile();
+		},
+		parseFilePath: function(filePath) {
 			var file = filePath.substr(
 				filePath.indexOf(this.server.dynamicUrlHook) +
 				this.server.dynamicUrlHook.length);
@@ -582,7 +588,13 @@ require("./jnServerFile.js");
 	/*
 	 * Executes JavaScript snippets in a jshtml file before sending it on the the browser.
 	 */
-	$jn.TPreprocessor = {
+	$jn.TPreprocessor = $jn.TServerFile.extends("TPreprocessor", {
+		create: function(serverRequest, filePath) {
+			this.inherited().create.apply(this, arguments);
+
+			this.parseFilePath(filePath);
+			this.parseFile();
+		},
 		pipe: function(req, oPar) {
 			var self = this;
 			var fs = require('fs'), vm = require('vm'),
@@ -679,7 +691,7 @@ require("./jnServerFile.js");
 				oPar.end(true);
 			});
 		}
-	};
+	});
 	/**
 	 * @memberof $jn.TStaticFile
 	 * @static

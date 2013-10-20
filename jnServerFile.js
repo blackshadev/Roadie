@@ -124,7 +124,7 @@ $jn = (function($jn) {
 				/* Globally scoped variables */
 				print: function(data) {
 					self.content += (typeof(data) === "object") ?
-						objToString(data) : data;
+						data.toSource() : data;
 				},
 				setHeader: function(key,val) { return self.setHeader(key, val);},
 				setCookie: function(key,val, args, flags) {
@@ -242,7 +242,7 @@ $jn = (function($jn) {
 			this.headers = serverRequest.getDynamicHeaders();
 		},
 		toString: function() {
-			return objToString(this.headers);
+			return this.headers.toSource();
 		}
 	});
 
@@ -268,19 +268,6 @@ $jn = (function($jn) {
 			return this.counter < 1;
 		}
 	});
-
-	function objToString(obj) {
-		var str = "";
-		for (var p in obj) {
-			if (obj.hasOwnProperty(p)) {
-				if(typeof(obj[p]) === "object")
-					str += p + ': {<br />' + objToString(obj[p]) + '<br />},<br />';
-				else
-					str += p + ': ' + obj[p] + '<br />';
-			}
-		}
-		return str;
-	}
 
 	return $jn;
 })($jn);
