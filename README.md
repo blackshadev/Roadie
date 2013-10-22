@@ -15,9 +15,14 @@ Features:
  - Request handling by multiple processes (nodeJS Cluster)
  - Auto compression (Gzip and deflate)
  - Cache currently only caches the stats, this saves 1 file access but the file that is sent is still up to date, and saves allot of memory
+ - Dynamic content given by serverside javaScript, inline and webservice based
 
  TODO:
   -	junction.js:TServerRequest::create
   	Make a specific parseUrl function which gives the request URI, and headers.
   - jnServerFile.js: Cleanup and rename some stuff
-  - junction.js::TDynamicFile, create own sandbox/vm/execute the dynamic function in its own closed enviroment with its only reference some functions (print, ect and his jnServerFile instance)
+  - jnFunctions.js: group functions together to get a better structure
+  - Inline javascript code must implement the same functions as webservices file's, with a few exceptions
+  - jnServerFile.ks&junction.js: dynamic file content compression
+  - saving the resulted .vm file from dynamic files, add them to the route, actually use that route and execute that file instead.
+  - Trowing away old junk code

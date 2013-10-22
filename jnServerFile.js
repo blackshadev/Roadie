@@ -5,14 +5,7 @@ var $jn = require("./core.js");
  * Features:
  * - Client header parsing
  * - Easy accessing of clientHeaders, response Headers, and output
- * - Output given by the return value of the given function
- *
- * Usage:
- * module.exports = function() {
- *		this.print("testje");
- *		this.send();	
- * }
- * 
+ * - Output given by the printed values
  *
  * Defaults:
  * - response::headers::Content-Type: text/html
@@ -66,6 +59,12 @@ $jn = (function($jn) {
 		sendContent: function() {
 			// console.log("dataSend: " + this.content);
 			this.streamPars.data(this.content);
+		},
+		compress: function() {
+			/* Compresses the content and sets the header
+			Checks the client supported compress methods, calls upon
+			serverFile.compress(content, flag) to compress the data
+			*/
 		}
 	});
 /*
@@ -120,23 +119,7 @@ $jn = (function($jn) {
 		},
 		exec: function() {
 			var self = this;
-			var sandbox = {
-				/* Globally scoped variables */
-				print: function(data) {
-					self.content += (typeof(data) === "object") ?
-						data.toSource() : data;
-				},
-				setHeader: function(key,val) { return self.setHeader(key, val);},
-				setCookie: function(key,val, args, flags) {
-					return self.setCookie(key, val, args, flags);
-				},
-				getClientHeaders: function() { return self.getClientHeaders(); },
-
-				send: function() { return self.send(); },
-				wait: function() { self.queue.add(); },
-				done: function() { self.queue.sub(); },
-				require: require
-			};
+			var sandbox = require('./jnFunctions.js')(this);
 			var context = self.vm.createContext();
 			$jn.extend(context, sandbox);
 			/* Files can be cached (compiled once and stored in a Script object) */
@@ -149,10 +132,6 @@ $jn = (function($jn) {
 				}
 				self.send();
 			});
-			// var stream = this.fs.createReadStream(this.serverFile.fullName);
-			// var filecontent = "";
-			// stream.on("data", function(dat) { filecontent += dat; });
-			// stream.on("end", function() { self.send(); })
 		}
 	});
 

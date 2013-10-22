@@ -582,6 +582,12 @@ require("./jnServerFile.js");
 				dynaFn.content = e+"";
 				dynaFn.send();
 			}
+		},
+		compress: function(content, flag) {
+			/*
+			The flag indicates which compressions are supported by the client
+			This function returns the compressed version of the content, indecated by the flag
+			*/
 		}
 	});
 	
