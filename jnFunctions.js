@@ -18,7 +18,7 @@ module.exports = function(self) {
 		send: function() { return self.send(); },
 		wait: function() { self.queue.add(); },
 		done: function() { self.queue.sub(); },
-		compress: function() { self.compress(); },
+		compressResponse: function(flag) { self.setCompression(flag); },
 		require: require
 	};
 };

@@ -19,9 +19,11 @@ $jn = (function($jn) {
 		serverFile: null,
 		content: null,
 		queue: null,
+		compressionFlag: false,
 		create: function(serverFile, streamPars) {
 			this.streamPars = streamPars;
 			this.serverFile = serverFile;
+			this.serverRequest = serverFile.serverRequest;
 
 			this.content = "";
 			this.clientHeaders = new jnClient(serverFile.serverRequest);
@@ -42,12 +44,16 @@ $jn = (function($jn) {
 		send: function() {
 			if(!this.queue.ready()) return;
 			this.sendHeaders();
+
+			if(this.compressionFlag) {
+				this.compressedSend();
+				return;
+			}
 			this.sendContent();
-			this.streamPars.end(true);
 		},
 		sendHeaders: function() {
 			var headers = this.response.headers();
-			var respHeader = this.serverFile.serverRequest.respHeader;
+			var respHeader = this.serverRequest.respHeader;
 			for(var key in headers)
 				respHeader.headers[key] = headers[key];
 			this.serverFile.length = this.content.length;
@@ -57,59 +63,38 @@ $jn = (function($jn) {
 			this.streamPars.start(true);
 		},
 		sendContent: function() {
-			// console.log("dataSend: " + this.content);
 			this.streamPars.data(this.content);
+			this.streamPars.end(true);
 		},
-		compress: function() {
-			/* Compresses the content and sets the header
-			Checks the client supported compress methods, calls upon
-			serverFile.compress(content, flag) to compress the data
-			*/
-		}
-	});
-/*
-	$jn.jnFunction = $jn.jnAbstract.extends("jnFunction", {
-		fn: null,
-		create: function() {
-			this.inherited().create.apply(this, arguments);
-			this.fn = require(this.serverFile.fullName);
-			if(typeof this.fn !== "function")
-				throw "Expected function, " + typeof this.fn + " given";
-		},
-		exec: function() {
-			var res = this.fn.call(this);
-		},
-		print: function(str) {
-			this.content += str;
-		}
-	});
+		/** Sets the compression flag and header, 
+		 * @param {Boolean} enabled enabled or disabled the compression
+		 */
+		setCompression: function(enabled) {
+			this.compressionFlag = enabled ?
+				this.serverRequest.getSupportedCompressionMethods() : 0;
 
-	$jn.jnFile = $jn.jnAbstract.extends("jnFile", {
-		fileName: "",
-		cp: require('child_process'),
-		child: 0,
-		create: function() {
-			this.inherited().create.apply(this, arguments);
-			this.fileName = this.serverFile.fullName;
+			// Set header value or remove it (undefined)
+			var encContent = this.compressionFlag & 1? "deflate" :
+				this.compressionFlag & 2 ? "gzip" : undefined;
+			this.response.setHeader("Content-Encoding", encContent);
+			// Close connection to let the browser know, nothing else is coming
+			this.response.setHeader("Connection","closed");
 		},
-		exec: function() {
+		/** Compresses the given content according to the compressionFlag */
+		compressedSend: function() {
 			var self = this;
-			var testVar = "test";
-			this.child = this.cp.spawn("node",[this.fileName],{
-				
-				stdio: ['ignore', null, null]
-			});
-			this.child.stdout.on("data", function(data) {
-				self.content += data;
-			});
-			this.child.stderr.on("data", function(err) {
-				self.content += err.toString();
-			});
-			this.child.on("exit", function() {
-				self.send();
-			});
+			var zlib = require("zlib");
+
+			var compressor = this.compressionFlag & 1 ?
+				zlib.createDeflate() : zlib.createGzip();
+			compressor.on("data", this.streamPars.data);
+			compressor.on("end", function() { console.log("ended"); self.streamPars.end(true); });
+
+			compressor.write(this.content);
+			compressor.end();
+
 		}
-	});*/
+	});
 	
 	$jn.jnScript = $jn.jnAbstract.extends("jnScript", {
 		fs: require('fs'),
@@ -207,6 +192,10 @@ $jn = (function($jn) {
 			return obj;
 		},
 		setHeader: function(type, value) {
+			if(value === undefined) {
+				delete this.headerObj[type];
+				return;
+			}
 			this.headerObj[type] = value;
 		},
 		addCookie: function(cookie) {

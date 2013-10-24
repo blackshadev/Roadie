@@ -5,3 +5,4 @@ print("Set cookie lifetime to: " + cookie.setLifeTime("2days 5minutes 9secs") + 
 print("<br />Client headers: <hr />");
 print(getClientHeaders());
 print("<br /><hr />Okey beter dat dit werkt");
+compressResponse(true);

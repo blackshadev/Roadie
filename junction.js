@@ -2,6 +2,9 @@ var $jn = require("./core.js");
 require("./jnServerFile.js");
 
 (function($jn) {
+	// Used regexes
+	var re = { deflate: /\bdeflate\b/, gzip: /\bgzip\b/ };
+
 	/** List of all items, with as items {@link $jn.TCacheEntry|TCacheEntry}
 	 * @memberof $jn
 	 * @constructor TServerCache
@@ -257,10 +260,10 @@ require("./jnServerFile.js");
 				},
 				data: function(data) {
 					// console.log("Got data: " + data);
-					self.file.length+=data.length;
+					self.file.length += data.length;
 					self.resp.write(data); },
 				end: function(noCache) {
-					// console.log("Connection closed");
+					console.log("Connection closed");
 					self.resp.end();
 					if(!noCache) self.file.cacheCheck();
 				},
@@ -274,8 +277,17 @@ require("./jnServerFile.js");
 				method: this.method,
 				cookies: this.reqHeaders.cookies
 			};
+		},
+		getSupportedCompressionMethods: function() {
+			/* returns the flag first bit deflate, last bit gzip */
+			var flag = 0;
+			flag |= re.deflate.test(this.req.headers['accept-encoding']) ? 1 : 0;
+			flag |= re.gzip.test(this.req.headers['accept-encoding']) ? 2 : 0;
+
+			return flag;
 		}
 	});
+
 	/** Handles errorPages ike file not found
 	 * @memberof $jn.TServerRequest 
 	 * @static */
@@ -435,11 +447,12 @@ require("./jnServerFile.js");
 			var compressedFile;
 			
 			if(cache.compressedFiles) {
-				var acceptEncoding = this.serverRequest.req.headers["accept-encoding"];
-				if(acceptEncoding.match(/\bdeflate\b/)) {
+				var supportedEnc = this.serverRequest.getSupportedCompressionMethods();
+
+				if(supportedEnc & 1) {
 					this.encodeType = "deflate";
 					compressedFile = cache.compressedFiles.deflate;
-				} else if(acceptEncoding.match(/\bgzip\b/)) {
+				} else if(supportedEnc & 2) {
 					this.encodeType = "gzip";
 					compressedFile = cahche.compressedFiles.gzip;
 				}
@@ -572,9 +585,7 @@ require("./jnServerFile.js");
 			try {
 				/* Default content-type header */
 				this.mimeType = "text/html";
-				/* Execute client function */
-				// dynaFn = new $jn.jnFunction(this, oPar);
-				// dynaFn = new $jn.jnFile(this, oPar);
+
 				dynaFn = new $jn.jnScript(this, oPar);
 				dynaFn.exec();
 			} catch(e) {
@@ -582,12 +593,6 @@ require("./jnServerFile.js");
 				dynaFn.content = e+"";
 				dynaFn.send();
 			}
-		},
-		compress: function(content, flag) {
-			/*
-			The flag indicates which compressions are supported by the client
-			This function returns the compressed version of the content, indecated by the flag
-			*/
 		}
 	});
 	
