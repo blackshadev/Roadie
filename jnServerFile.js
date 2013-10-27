@@ -43,7 +43,6 @@ $jn = (function($jn) {
 		},
 		send: function() {
 			if(!this.queue.ready()) return;
-			this.sendHeaders();
 
 			if(this.compressionFlag) {
 				this.compressedSend();
@@ -63,6 +62,7 @@ $jn = (function($jn) {
 			this.streamPars.start(true);
 		},
 		sendContent: function() {
+			this.sendHeaders();
 			this.streamPars.data(this.content);
 			this.streamPars.end(true);
 		},
@@ -78,17 +78,26 @@ $jn = (function($jn) {
 				this.compressionFlag & 2 ? "gzip" : undefined;
 			this.response.setHeader("Content-Encoding", encContent);
 			// Close connection to let the browser know, nothing else is coming
-			this.response.setHeader("Connection","closed");
+			// this.response.setHeader("Connection","closed");
 		},
-		/** Compresses the given content according to the compressionFlag */
+		/** Compresses the given content according to the compressionFlag.
+			The data needs to be compressed first, than recalculate the actual
+			size of the data before sending it.
+			Todo: Chunked sending? */
 		compressedSend: function() {
 			var self = this;
 			var zlib = require("zlib");
+			var dataBuffer = "";
 
 			var compressor = this.compressionFlag & 1 ?
 				zlib.createDeflate() : zlib.createGzip();
-			compressor.on("data", this.streamPars.data);
-			compressor.on("end", function() { console.log("ended"); self.streamPars.end(true); });
+			compressor.on("data", function(data) { dataBuffer += data.toString("binary"); });
+			compressor.on("end", function() {
+				self.content = new Buffer(dataBuffer, "binary");
+				self.length = self.content.length;
+
+				self.sendContent();
+			});
 
 			compressor.write(this.content);
 			compressor.end();

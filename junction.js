@@ -263,7 +263,7 @@ require("./jnServerFile.js");
 					self.file.length += data.length;
 					self.resp.write(data); },
 				end: function(noCache) {
-					console.log("Connection closed");
+					// console.log("Connection closed");
 					self.resp.end();
 					if(!noCache) self.file.cacheCheck();
 				},
