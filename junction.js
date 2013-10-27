@@ -61,6 +61,8 @@ require("./jnServerFile.js");
 			this.reroute = oPar.reroute;
 			this.compressedFiles = null;
 			this.isDir = oPar.isDir;
+			this.parentFile = oPar.parentFile;
+			this.isCompressed = !!oPar.isCompressed;
 		},
 		toString: function() {
 			return "TCacheEntry: ["+this.fullName+"]: reroute{"+this.reroute+"}";
@@ -141,6 +143,7 @@ require("./jnServerFile.js");
 		oUrl: null,
 		server: null,
 		method: null,
+		data: null, // data sended by the client
 		file: null,
 		header: null,
 		body: null,
@@ -159,6 +162,7 @@ require("./jnServerFile.js");
 			this.resp = resp;
 			this.method = req.method;
 			this.oUrl = require('url').parse(this.req.url, true);
+			this.data = {};
 			this.server = server;
 			this.respHeader = {
 				code: 500, // default file error 
@@ -166,7 +170,6 @@ require("./jnServerFile.js");
 			};
 
 			this.parseClientHeaders();
-			
 		},
 		/** Copy the client headers and split the cookie */
 		parseClientHeaders: function() {
@@ -182,6 +185,19 @@ require("./jnServerFile.js");
 				}
 			}
 			this.reqHeaders.cookies = cookies;
+		},
+		readClientData: function(callback) {
+			var dataStr = "";
+			this.req.on("data", function(data) {
+				dataStr += data.toString("utf8");
+			});
+
+			// parse the string
+			var self = this;
+			this.req.on("end", function() {
+				self.data = require("querystring").parse(dataStr);
+				callback();
+			});
 		},
 		/** Parses the request URL and creates a {@link $jn.TStaticFile|TStaticFile} with that parsed URL
 		 * @memberof $jn.TServerRequest
@@ -247,33 +263,36 @@ require("./jnServerFile.js");
 		start: function() {
 			var self = this;
 			this.parseRequestUrl();
-			this.file.pipe(this.resp, {
-				start: function() {
-					self.respHeader.headers["Content-Type"] = self.file.mimeType;
-					self.respHeader.headers["Content-Length"] = self.file.length;
-					// console.log(self.respHeader.headers);
-					// console.log("Written length header " + self.file.length);
-					self.respHeader.code = 200;
-					if(self.file.encodeType)
-						self.respHeader.headers["content-encoding"] = self.file.encodeType;
-					self.resp.writeHead(self.respHeader.code, self.respHeader.headers);
-				},
-				data: function(data) {
-					// console.log("Got data: " + data);
-					self.file.length += data.length;
-					self.resp.write(data); },
-				end: function(noCache) {
-					// console.log("Connection closed");
-					self.resp.end();
-					if(!noCache) self.file.cacheCheck();
-				},
-				error: function(err) { self.fileError(err); }
+			this.readClientData(function() {
+				self.file.pipe(self.resp, {
+					start: function() {
+						self.respHeader.headers["Content-Type"] = self.file.mimeType;
+						self.respHeader.headers["Content-Length"] = self.file.length;
+						// console.log(self.respHeader.headers);
+						// console.log("Written length header " + self.file.length);
+						self.respHeader.code = 200;
+						if(self.file.encodeType)
+							self.respHeader.headers["content-encoding"] = self.file.encodeType;
+						self.resp.writeHead(self.respHeader.code, self.respHeader.headers);
+					},
+					data: function(data) {
+						// console.log("Got data: " + data);
+						self.file.length += data.length;
+						self.resp.write(data); },
+					end: function(noCache) {
+						// console.log("Connection closed");
+						self.resp.end();
+						if(!noCache) self.file.cacheCheck();
+					},
+					error: function(err) { self.fileError(err); }
+				});
 			});
 		},
 		getDynamicHeaders: function() {
 			return {
 				searchQuery: this.oUrl.search,
 				query: this.oUrl.query,
+				data: this.data,
 				method: this.method,
 				cookies: this.reqHeaders.cookies
 			};
@@ -300,8 +319,8 @@ require("./jnServerFile.js");
 
 	/* Abstract of all files, each file should have these */
 	$jn.TServerFile = $jn.TObject.extends("TServerFile", {
-		serverRequest: null,
 		server: null,
+		serverRequest: null,
 		fullName: "",
 		filePath: "",
 		fileName: "",
@@ -354,20 +373,10 @@ require("./jnServerFile.js");
 		 * @memberof $jn.TServerFile
 		 * @instance */
 		parseFile: function() {
-			var lastDirSep = this.fullName.lastIndexOf("/");
-			if(lastDirSep < 0)
-				return this.error(34);
-
-			this.filePath = this.fullName.substr(0, lastDirSep);
-			if(!this.filePath)
-				this.filePath = "/";
-			this.fileName = this.fullName.substr(lastDirSep+1, this.fullName.length);
-			this.ext = this.fileName.substr(this.fileName.lastIndexOf(".")+1, this.fileName.length);
-			
-			var mime = $jn.TStaticFile.mime(this.ext);
-			this.mimeType = mime[0];
-			this.encodeMimeType = mime[1];
-			this.isCache = false;
+			var parsedFile = $jn.TServerFile.parseFile(this.fullName);
+			if(parsedFile === false)
+				return obj.error(34);
+			$jn.extend(this, parsedFile);
 		},
 		/** @memberOf $jn.TServerFile
 		 * @instance */
@@ -379,8 +388,27 @@ require("./jnServerFile.js");
 				"\r\n";
 		}
 	});
+	$jn.TServerFile.parseFile = function(fullName) {
+		var obj = { fullName: fullName };
+		var lastDirSep = fullName.lastIndexOf("/");
+			if(lastDirSep < 0)
+				return {};
+
+			obj.filePath = fullName.substr(0, lastDirSep);
+			if(!obj.filePath)
+				obj.filePath = "/";
+			obj.fileName = fullName.substr(lastDirSep+1, fullName.length);
+			obj.ext = obj.fileName.substr(obj.fileName.lastIndexOf(".")+1, obj.fileName.length);
+			
+			var mime = $jn.TStaticFile.mime(obj.ext);
+			obj.mimeType = mime[0];
+			obj.encodeMimeType = mime[1];
+			obj.isCache = false;
+		return obj;
+	};
 
 	$jn.TStaticFile = $jn.TServerFile.extends("TStaticFile", {
+		cacheEntry: null, // reference to the cacheEntry
 		create: function(serverRequest, requestUri) {
 			this.inherited().create.apply(this, arguments);
 
@@ -394,10 +422,10 @@ require("./jnServerFile.js");
 		* @instance */
 		parseFileCache: function(entry) {
 			if(!entry) { this.parseFile(); return; }
+
+			$jn.extend(this, entry);
+			this.cacheEntry = entry;
 			this.isCache = true;
-			for(var iX in entry) {
-				this[iX] = entry[iX];
-			}
 		},
 		/** Implements the stream functioniality
 		 * @memberof $jn.TStaticFile
@@ -427,8 +455,6 @@ require("./jnServerFile.js");
 		 * @instance
 		 */
 		cacheHit: function(dest, oPars) {
-			//this.followRoute();
-			//if(!this.isCache) { this.cacheMiss(dest, oPars); return; }
 			oPars.start();
 			delete oPars.start;
 
@@ -457,8 +483,7 @@ require("./jnServerFile.js");
 					compressedFile = cahche.compressedFiles.gzip;
 				}
 				if(compressedFile) {
-					this.fullName = compressedFile;
-					cache = this.server.cache.items[compressedFile];
+					cache = compressedFile;
 				}
 			}
 			return cache;
@@ -499,14 +524,23 @@ require("./jnServerFile.js");
 		 * @instance
 		 */
 		cacheCheck: function() {
-			var cacheEntry = this.server.cache.items[this.fullName];
+			var cacheEntry = this.cacheEntry;
+			var fileName = this.fullName;
+			if(!cacheEntry) return;
+			// jump to parentFile if it has one, this means it was a compressed version
+			if(cacheEntry.parentFile) {
+				cacheEntry = cacheEntry.parentFile;
+				fileName = cacheEntry.fullName;
+			}
 			var self = this;
 
-			this.fs.stat(this.fullName, function(err,stat) {
-				if(!cacheEntry || stat.mtime.getTime() > cacheEntry.lastModified) {
-					self.refreshCache(cacheEntry, stat);
-				}
-			});
+			(function(fileName, cacheEntry) {
+				self.fs.stat(fileName, function(err, stat) {
+					if(!cacheEntry || stat.mtime.getTime() > cacheEntry.lastModified || stat.size !== cacheEntry.length ) {
+						self.refreshCache(cacheEntry, stat);
+					}
+				});
+			})(fileName, cacheEntry);
 		},
 		/**
 		 * @memberof $jn.TStaticFile
@@ -519,31 +553,56 @@ require("./jnServerFile.js");
 			entry.lastModified = this.lastModified = stat.mtime;
 
 			if(!entry.reroute && !entry.isDir) {
-				entry.compressedFiles = {};
-				this.compress(entry.compressedFiles);
+				var compressedFiles = {};
+				this.compress(entry);
+				
+			}
+		},
+		addCompressEntry: function(entry, files) {
+			for(var key in files) {
+				var file = $jn.TServerFile.parseFile(files[key]);
+				file.isCompressed = true;
+				file.parentFile = entry;
+				file.encodeType = key;
+
+				(function(key, file) {
+					require('fs').stat(files[key], function(err, stat) {
+						if(err) { console.log(err); return; }
+						file.length = stat.size;
+						file.lastModified = stat.mtime;
+
+						if(!entry.compressedFiles)
+							entry.compressedFiles = {};
+
+						entry.compressedFiles[key] = file;
+					});
+				})(key, file);
 			}
 		},
 		/**
 		 * @memberof $jn.TStaticFile
 		 * @instance
 		 */
-		compress: function(obj) {
+		compress: function(entry) {
+			var obj = {};
 			var self = this;
 			var zlib = require("zlib");
 
-			console.log("compressing " + this.filePath + '/' + this.fileName);
-			var deflateStrm = this.fs.createWriteStream(this.filePath + '/' + this.fileName + ".defl" + "." + this.ext);
-			var gzipStrm = this.fs.createWriteStream(this.filePath + '/' + this.fileName + ".gzip" + "." + this.ext);
+			console.log("compressing " + entry.filePath + '/' + entry.fileName);
+			var deflateStrm = this.fs.createWriteStream(entry.filePath + '/' + entry.fileName + ".defl" + "." + entry.ext);
+			var gzipStrm = this.fs.createWriteStream(entry.filePath + '/' + entry.fileName + ".gzip" + "." + entry.ext);
 
-			var fstrm = this.fs.createReadStream(this.fullName);
+			var fstrm = this.fs.createReadStream(entry.fullName);
 			fstrm.on("open", function() {
 				fstrm.pipe(zlib.createGzip()).pipe(gzipStrm);
 				fstrm.pipe(zlib.createDeflate()).pipe(deflateStrm);
 			});
 
-			fstrm.on("end", function() {
-				obj["deflate"] = self.filePath + '/' + self.fileName + ".defl" + "." + self.ext;
-				obj["gzip"] = self.filePath + '/' + self.fileName + ".gzip" + "." + self.ext;
+			fstrm.on("close", function() {
+				obj["deflate"] = entry.filePath + '/' + entry.fileName + ".defl" + "." + entry.ext;
+				obj["gzip"] = entry.filePath + '/' + entry.fileName + ".gzip" + "." + entry.ext;
+				// makes sure the whole stream is writen
+				setTimeout(function() { self.addCompressEntry(entry, obj); }, 5);
 			});
 		}
 	});

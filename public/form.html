@@ -1,0 +1,50 @@
+<html>
+<head>
+	<title>Form testing</title>
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$("#sendBut").click(function(e) {
+				e.preventDefault();
+				sendForm($("#testForm"));
+			});
+
+			$("testForm").submit(function(e) { e.preventDefault(); });
+		});
+		
+		
+		var sendForm = function(jControl) {
+			var method = $("#contentHolder input[type='radio'][name='method']:checked").
+				val().toUpperCase();
+			var data = $("#testForm").serialize();
+			alert(method);
+			$.ajax({
+				url: "cgi-bin/form.js",
+				data: data,
+				type: method,
+				error: function(err, text) {
+					alert(text);
+				},
+				success: function(data) {
+					console.log(data);
+				}
+			});
+		};
+	</script>
+</head>
+<body>
+	<div id="contentHolder">
+		<input type="radio" name="method" value="get" /> GET<br />
+		<input type="radio" name="method" value="post" /> POST<br />
+
+		<form id="testForm">
+			<table>
+				<tr><td>Value 1</td><td><input type="text" name="val1" /></td></tr>
+				<tr><td>Value 2</td><td><input type="text" name="val2" /></td></tr>
+				<tr><td>Value 3</td><td><input type="text" name="val3" /></td></tr>
+				<tr><td></td><td><input type="button" id="sendBut" value="Send" /></td></tr>
+			</table>
+		</form>
+	</div>
+</body>
+</html>

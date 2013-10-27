@@ -39,7 +39,7 @@ $jn = (function($jn) {
 			this.response.setHeader(key, type);
 		},
 		getClientHeaders: function() {
-			return this.clientHeaders;
+			return this.clientHeaders.headers;
 		},
 		send: function() {
 			if(!this.queue.ready()) return;
