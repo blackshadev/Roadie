@@ -17,7 +17,6 @@
 			var method = $("#contentHolder input[type='radio'][name='method']:checked").
 				val().toUpperCase();
 			var data = $("#testForm").serialize();
-			alert(method);
 			$.ajax({
 				url: "cgi-bin/form.js",
 				data: data,
@@ -26,7 +25,7 @@
 					alert(text);
 				},
 				success: function(data) {
-					console.log(data);
+					$("#result").text(JSON.stringify(data));
 				}
 			});
 		};
@@ -45,6 +44,9 @@
 				<tr><td></td><td><input type="button" id="sendBut" value="Send" /></td></tr>
 			</table>
 		</form>
+		<hr /><h1>result</h1>
+		<div id="result">
+		</div>
 	</div>
 </body>
 </html>
