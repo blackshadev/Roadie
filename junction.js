@@ -290,11 +290,11 @@ require("./jnServerFile.js");
 		},
 		getDynamicHeaders: function() {
 			return {
-				searchQuery: this.oUrl.search,
-				query: this.oUrl.query,
-				data: this.data,
-				method: this.method,
-				cookies: this.reqHeaders.cookies
+				headers: $jn.extend({},this.req.headers),
+				query: $jn.extend({}, this.oUrl.query),
+				data: $jn.extend({}, this.data),
+				method: $jn.extend({}, this.method),
+				cookies: $jn.extend({}, this.reqHeaders.cookies)
 			};
 		},
 		getSupportedCompressionMethods: function() {

@@ -38,11 +38,25 @@ $jn = (function($jn) {
 		setHeader: function(key, type) { // shortcut
 			this.response.setHeader(key, type);
 		},
-		getClientHeaders: function() {
-			return this.clientHeaders.headers;
+		getClientHeader: function(which) {
+			var out = {};
+			if(which & 1)
+				$jn.extend(out.headers={}, this.clientHeaders.headers);
+			if(which & 2)
+				$jn.extend(out.data={}, this.clientHeaders.data);
+			if(which & 4)
+				$jn.extend(out.method={}, this.clientHeaders.method);
+			if(which & 8)
+				$jn.extend(out.query={}, this.clientHeaders.query);
+			if(which & 16)
+				$jn.extend(out.cookies={}, this.clientHeaders.cookies);
+			
+			if(out.keys.length == 1)
+				out = out[out.keys[0]];
+			return out;
 		},
-		send: function() {
-			if(!this.queue.ready()) return;
+		send: function(force) {
+			if(!force && !this.queue.ready()) return;
 
 			if(this.compressionFlag) {
 				this.compressedSend();
@@ -215,11 +229,26 @@ $jn = (function($jn) {
 
 	var jnClient = $jn.TObject.extends("jnClient", {
 		headers: null,
+		data: null,
+		cookies: null,
+		query: null,
+		method: null,
 		create: function(serverRequest) {
-			this.headers = serverRequest.getDynamicHeaders();
+			var rawHeaders = serverRequest.getDynamicHeaders();
+			this.headers = rawHeaders.headers;
+			this.data = rawHeaders.data;
+			this.cookies = rawHeaders.cookies;
+			this.method = rawHeaders.method;
 		},
 		toString: function() {
-			return this.headers.toSource();
+			var headers = {
+				headers: this.headers,
+				data: this.data,
+				cookies: this.cookies,
+				query: this.query,
+				method: this.method
+			};
+			return headers.toSource();
 		}
 	});
 

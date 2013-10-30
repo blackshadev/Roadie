@@ -9,16 +9,25 @@ module.exports = function(self) {
 			self.content += (typeof(data) === "object") ?
 				data.toSource() : data;
 		},
-		setHeader: function(key,val) { return self.setHeader(key, val);},
 		setCookie: function(key,val, args, flags) {
 			return self.setCookie(key, val, args, flags);
 		},
 		getClientHeaders: function() { return self.getClientHeaders(); },
-
-		send: function() { return self.send(); },
-		wait: function() { self.queue.add(); },
-		done: function() { self.queue.sub(); },
-		compressResponse: function(flag) { self.setCompression(flag); },
+		response: {
+			setHeader: function(key,val) { return self.setHeader(key, val);},
+			send: function(force) { return self.send(force); },
+			wait: function() { self.queue.add(); },
+			done: function() { self.queue.sub(); },
+			compressResponse: function(flag) { self.setCompression(flag); },
+		},
+		client: {
+			headers: function() { return self.getClientHeader(1); },
+			data: function() { return self.getClientHeader(2); },
+			method: function() { return self.getClientHeader(4); },
+			query: function() { return self.getClientHeader(8); },
+			cookies: function() { return self.getClientHeader(16); },
+			all: function() { return self.getClientHeader(31); }
+		},
 		require: require
 	};
 };
