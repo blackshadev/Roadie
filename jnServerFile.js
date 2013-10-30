@@ -45,14 +45,14 @@ $jn = (function($jn) {
 			if(which & 2)
 				$jn.extend(out.data={}, this.clientHeaders.data);
 			if(which & 4)
-				$jn.extend(out.method={}, this.clientHeaders.method);
+				out.method = this.clientHeaders.method;
 			if(which & 8)
 				$jn.extend(out.query={}, this.clientHeaders.query);
 			if(which & 16)
 				$jn.extend(out.cookies={}, this.clientHeaders.cookies);
-			
-			if(out.keys.length == 1)
-				out = out[out.keys[0]];
+
+			if(Object.keys(out).length == 1)
+				out = out[Object.keys(out)[0]];
 			return out;
 		},
 		send: function(force) {
@@ -239,6 +239,7 @@ $jn = (function($jn) {
 			this.data = rawHeaders.data;
 			this.cookies = rawHeaders.cookies;
 			this.method = rawHeaders.method;
+			this.query = rawHeaders.query;
 		},
 		toString: function() {
 			var headers = {

@@ -144,6 +144,7 @@ require("./jnServerFile.js");
 		server: null,
 		method: null,
 		data: null, // data sended by the client
+		query: null, // query usd in url
 		file: null,
 		header: null,
 		body: null,
@@ -162,7 +163,10 @@ require("./jnServerFile.js");
 			this.resp = resp;
 			this.method = req.method;
 			this.oUrl = require('url').parse(this.req.url, true);
+			
 			this.data = {};
+			this.query = this.oUrl.query;
+
 			this.server = server;
 			this.respHeader = {
 				code: 500, // default file error 
@@ -289,11 +293,12 @@ require("./jnServerFile.js");
 			});
 		},
 		getDynamicHeaders: function() {
+			console.log(this.query);
 			return {
 				headers: $jn.extend({},this.req.headers),
-				query: $jn.extend({}, this.oUrl.query),
+				query: $jn.extend({}, this.query),
 				data: $jn.extend({}, this.data),
-				method: $jn.extend({}, this.method),
+				method:  this.method,
 				cookies: $jn.extend({}, this.reqHeaders.cookies)
 			};
 		},
