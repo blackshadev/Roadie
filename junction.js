@@ -169,8 +169,8 @@ require("./jnServerFile.js");
 
 			this.server = server;
 			this.respHeader = {
-				code: 500, // default file error 
-				headers: {'Content-Type': 'text/plain'}
+				code: 200, // default file error 
+				headers: {'Content-Type': 'text/html'}
 			};
 
 			this.parseClientHeaders();
@@ -260,6 +260,7 @@ require("./jnServerFile.js");
 			}
 			this.file.mimeType = "text/html";
 			this.body = $jn.TServerRequest.errorPage(this.respHeader.code);
+			this.length = this.body.length;
 		},
 		/** Starts the file request by parsing the request URL and calling {@link $jn.TStaticFile#pipe|TStaticFile.pipe()}
 		 * @memberof $jn.TServerRequest 
@@ -268,16 +269,19 @@ require("./jnServerFile.js");
 			var self = this;
 			this.parseRequestUrl();
 			this.readClientData(function() {
-				self.file.pipe(self.resp, {
+				var streamPars = {
 					start: function() {
-						self.respHeader.headers["Content-Type"] = self.file.mimeType;
-						self.respHeader.headers["Content-Length"] = self.file.length;
+						self.respHeader.headers["Content-Type"] =
+							self.file.mimeType;
+						self.respHeader.headers["Content-Length"] =
+							self.length || self.file.length;
 						// console.log(self.respHeader.headers);
 						// console.log("Written length header " + self.file.length);
-						self.respHeader.code = 200;
 						if(self.file.encodeType)
-							self.respHeader.headers["content-encoding"] = self.file.encodeType;
-						self.resp.writeHead(self.respHeader.code, self.respHeader.headers);
+							self.respHeader.headers["content-encoding"] =
+								self.file.encodeType;
+						self.resp.writeHead(self.respHeader.code,
+							self.respHeader.headers);
 					},
 					data: function(data) {
 						// console.log("Got data: " + data);
@@ -288,12 +292,18 @@ require("./jnServerFile.js");
 						self.resp.end();
 						if(!noCache) self.file.cacheCheck();
 					},
-					error: function(err) { self.fileError(err); }
-				});
+					error: function(err) {
+						self.fileError(err);
+						streamPars.start();
+						streamPars.data(self.body);
+						streamPars.end();
+
+					}
+				};
+				self.file.pipe(self.resp, streamPars);
 			});
 		},
 		getDynamicHeaders: function() {
-			console.log(this.query);
 			return {
 				headers: $jn.extend({},this.req.headers),
 				query: $jn.extend({}, this.query),
@@ -371,7 +381,7 @@ require("./jnServerFile.js");
 		 * @memberof $jn.TServerFile
 		 * @instance */
 		parseFilePath: function(requestUri) {
-			this.fullName = "./" + this.server.staticBaseDir +
+			this.fullName = this.server.staticBaseDir +
 				this.serverRequest.oUrl.pathname;
 		},
 		/** Parses a file by the given {@link $jn.TServerFile#fullName|fullName} property
@@ -502,7 +512,6 @@ require("./jnServerFile.js");
 			var self = this;
 			var statFn = oPars.start;
 			var statErr = oPars.error;
-			delete oPars.start;
 			delete oPars.error;
 			var hasErr = false;
 
@@ -510,6 +519,7 @@ require("./jnServerFile.js");
 				if(err)
 					statErr(err);
 				else {
+					delete oPars.start;
 					if(stat.isDirectory()) {
 						statErr({errno: 28});
 						self.isDir = true;
