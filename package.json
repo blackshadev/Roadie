@@ -1,9 +1,9 @@
 {
-  "name": "Junction",
+  "name": "roadie",
   "author": "Vincent Hagen <vinnie_hagen@hotmail.com>",
   "description": "The nodeJs way of deploying webservices",
-  "version": "1.0.0",
-  "main": "junction.js",
+  "version": "0.1.0",
+  "main": "roadie.js",
   "scripts": {
     "start": "cd example && node startServer.js"
   },
@@ -17,10 +17,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:blackshadev/Junction.git"
+    "url": "git@github.com:blackshadev/Roadie.git"
   },
   "bugs": {
-    "url": "https://github.com/blackshadev/Junction/issues"
+    "url": "https://github.com/blackshadev/Roadie/issues"
   },
-  "homepage": "https://github.com/blackshadev/Junction"
+  "homepage": "https://github.com/blackshadev/Roadie",
+  "keywords": [
+    "roadie",
+    "webservices",
+    "http",
+    "server",
+    "routing"
+  ]
 }

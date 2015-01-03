@@ -1,5 +1,5 @@
-Junction is a webserver which serves content via custom created webservices.
-What set Junction appart is that not only all contect goes via these webservices but also these webservices are also created and extended via an Object Oriented manner.
+Roadie is a webserver which serves content via custom created webservices.
+What set Roadie appart is that not only all contect goes via these webservices but also these webservices are also created and extended via an Object Oriented manner.
 
 ## Features
  - Creation of webservices with nodeJs in an Object Oriented pattern

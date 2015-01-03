@@ -1,4 +1,4 @@
-var j = require("../junction.js");
+var j = require("../roadie.js");
 
 // Accepts file names with routes and json object with routes.
 // All routes are prefixed the HTTP verb (defaults to all).

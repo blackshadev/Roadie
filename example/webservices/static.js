@@ -1,5 +1,5 @@
 module.exports = (function() {
-    var WebService = require("../../junction.js").WebService;
+    var WebService = require("../../roadie.js").WebService;
     var fs = require("fs");
 
     var StaticService = WebService.extend({

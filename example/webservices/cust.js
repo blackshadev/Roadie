@@ -1,4 +1,4 @@
-var $j = require("../../junction.js");
+var $j = require("../../roadie.js");
 
 module.exports = $j.WebService.extend({
 	view: function() {
