@@ -3,7 +3,7 @@ What set Junction appart is that not only all contect goes via these webservices
 
 ## Features
  - Creation of webservices with nodeJs in an Object Oriented pattern
- - Controllable via its own config shell (examples/startConfigShell.js)
+ - Controllable via its own config shell (`node examples/configShell.js`)
  - RESTfull routing, accepting wildcards and parameters
   - note: Currently it accepts only one wildcard and only at the end of the route
 
