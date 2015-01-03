@@ -1,19 +1,26 @@
 {
   "name": "Junction",
+  "author": "Vincent Hagen <vinnie_hagen@hotmail.com>",
+  "description": "The nodeJs way of deploying webservices",
   "version": "1.0.0",
   "main": "junction.js",
   "scripts": {
-    "test": "cd example && node startServer.js"
+    "start": "cd example && node startServer.js"
   },
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {},
-  "directories": {},
+  "directories": {
+    "example": "example"
+  },
   "dependencies": {
     "sprintf": "^0.1.5"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:blackshadev/Junction.git"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/blackshadev/Junction/issues"
+  },
+  "homepage": "https://github.com/blackshadev/Junction"
 }
