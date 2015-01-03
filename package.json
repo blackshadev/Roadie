@@ -1,0 +1,19 @@
+{
+  "name": "Junction",
+  "version": "1.0.0",
+  "main": "junction.js",
+  "scripts": {
+    "test": "cd example && node startServer.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {},
+  "directories": {},
+  "dependencies": {
+    "sprintf": "^0.1.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:blackshadev/Junction.git"
+  }
+}
