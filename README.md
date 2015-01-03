@@ -1,3 +1,9 @@
+-- Note --
+This is an old, none functional version of junction. Look at the master branch
+for the current upto date version of junction
+
+*****
+
 Imagine you could make a serverside backend for your website written in JS. No clucky PHP, Python or Ruby, no Microsoft logic and languages. Just JS with the extension of nodeJS.
 This project is there to make that happen
 
