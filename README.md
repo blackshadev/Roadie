@@ -6,6 +6,7 @@ What set Roadie appart is that not only all contect goes via these webservices b
  - Controllable via its own config shell (`node examples/configShell.js`)
  - RESTfull routing, accepting wildcards and parameters
   - note: Currently it accepts only one wildcard and only at the end of the route
+ - HTTPS integration
 
 ### Routing
 Routing is done with Astar, it "searches" the correct route for you via a route
@@ -16,6 +17,5 @@ Routing is done with Astar, it "searches" the correct route for you via a route
 
 
 ## ToDo
- - HTTPS intergration
  - Add more default webservices such as the staticService
  - More routing options with wildcards

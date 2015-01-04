@@ -6,10 +6,13 @@
 var $o = require("./core.js");
 var RouteMap = require('./Routing.js').RouteMap;
 var Resource = require("./Resource.js").Resource;
-var Http = require("./Http.js");
-var http = require("http");
-var net = require("net");
-var path = require("path");
+var Http  = require("./Http.js");
+
+var http  = require("http");
+var https = require("https");
+var path  = require("path");
+var fs    = require("fs");
+var EventEmitter = require("events").EventEmitter;
 
 module.exports = (function($o) {
 
@@ -19,6 +22,11 @@ module.exports = (function($o) {
         routemap: null, // Reference to the RouteMap
         root: "./scripts/", // root for all routes
         
+        // For ssl either provide a cert and key or a pfx
+        useHttps: false,
+        tslOptions: null, // options for tsl server (https)
+        
+        isReady : false, // Ready to start?
         isPaused: false, // Boolean to keep track whenever the server is paused
         queue: null,  // When paused, queue all Contexts in a queue
 
@@ -28,6 +36,8 @@ module.exports = (function($o) {
         onCreate: function() {},
         onStart: function() {},
         create: function(oPar) {
+            EventEmitter.call(this);
+
             this._root = path.relative(__dirname, process.cwd());
             var r = oPar.root || this.root;
             this.root = (r[0] === ".") ? path.join(this._root, r) : path.relative(__dirname, r);
@@ -35,10 +45,11 @@ module.exports = (function($o) {
             this.port = oPar.port || this.port;
             this.configPort = oPar.configPort || this.configPort;
             this.localConfigOnly = oPar.localConfigOnly || this.localConfigOnly;
+            
+            this.useHttps = !!oPar.useHttps;
+            this.tslOptions = oPar.tslOptions;
 
-            var h = this.handleRequest.bind(this);
-
-            this.server = http.createServer(h);
+            this.createServer();
             
             this._routes = [];
 
@@ -46,6 +57,22 @@ module.exports = (function($o) {
             this.queue = [];
 
             this.onCreate();
+        },
+        // Creates the http(s) server
+        createServer: function() {
+            var h = this.handleRequest.bind(this);
+            var self = this;
+
+            if(this.useHttps) {
+                // Use https
+                console.log("Using https");
+                self.server = https.createServer(this.tslOptions, h);
+                self.isReady = true;
+            } else {
+                // Regular http server
+                this.server = http.createServer(h);
+                this.isReady = true;
+            }
         },
         // Pause the server
         pause: function() { this.isPaused = true; },
@@ -87,7 +114,8 @@ module.exports = (function($o) {
             res.run(ctx);
         },
         // Starts the server
-        start: function() {
+        start: function() { 
+
             console.log("Stated listening on port " + this.port);
             this.server.listen(this.port);
 
