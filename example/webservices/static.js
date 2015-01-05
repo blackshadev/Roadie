@@ -31,10 +31,13 @@ module.exports = (function() {
             this.send();
         },
         send: function() {
-            if(this.error) this.ctx.err(this.error);
+            if(this.error) return this.ctx.error(this.error);
             this.ctx.response.header("Content-Type", this.mimeType);
             this.ctx.response.data(this._data, true);
             this.ctx.response.send();
+        },
+        html: function() {
+            console.log("Html served");
         }
     });
     StaticService.GuessMimeType = function(fname) {

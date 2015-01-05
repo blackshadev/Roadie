@@ -24,14 +24,11 @@ module.exports = (function() {
 				this.text = err.text;
 				this.code = err.code;
             } else if(err instanceof Error) {
-                this.code = 500;
-                this.extra = err.toString();
-			} else if(typeof(err) === "object")  {
 				var errDescr = HttpError.translateErrNo(err.errno);
 
 				this.code = errDescr.http || 500;
 				
-				this.extra = errDescr.description;
+				this.extra = errDescr ? errDescr.description : err.toString();
 			} else if(arguments.length === 2 && typeof(errtxt) === "string") {
 				this.code = err;
 				this.extra = errtxt;
@@ -83,6 +80,7 @@ module.exports = (function() {
     var HttpResponse = $o.Object.extend({
         headers: null,
         statusCode: 200,
+        eos: false, // stream has ended
         _res: null,
         _data: null,
         create: function(res) {
@@ -119,10 +117,12 @@ module.exports = (function() {
         },
         /* Sends the headers and content of the response */
         send: function() {
+            if(this.eos) throw "Stream already ended";
             this._res.writeHead(this.statusCode, this.headers);
             console.log("[server] sending: " + typeof(this._data) + " of length " + this._data.length);
             this._res.write(this._data);
             this._res.end();
+            this.eos = true;
         }
     });
 
