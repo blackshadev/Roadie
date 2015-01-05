@@ -34,6 +34,10 @@ module.exports = (function($o) {
             n.cost = this.cost;
 
             return n;
+        },
+        // for debug purposes
+        toString: function() {
+            return "[State] " + this.path.join("::") + "\t" + this.cost;
         }
     });
 

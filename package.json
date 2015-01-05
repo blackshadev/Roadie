@@ -2,7 +2,7 @@
   "name": "roadie",
   "author": "Vincent Hagen <vinnie_hagen@hotmail.com>",
   "description": "The nodeJs way of deploying webservices",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "roadie.js",
   "scripts": {
     "start": "cd example && node startServer.js"
@@ -27,6 +27,7 @@
     "roadie",
     "webservices",
     "http",
+    "https",
     "server",
     "routing"
   ]

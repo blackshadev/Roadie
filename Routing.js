@@ -12,6 +12,10 @@ module.exports = (function($o) {
 
     var parRe = /\{(\w+)\}/i
 
+    function escapeRegex(str) {
+        return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    }
+
     // Routing is based upon parts of the url, these are looked up in a map
     var Route = $o.Object.extend({
         name: "", // part of the routing
@@ -21,12 +25,11 @@ module.exports = (function($o) {
         //isValid: true, // Not used?
         routes: null, // Child routes
         resources: null, // Object of { verb: resourceFile } with resources bound to this route
-        params: null, // array with all paramters within route
+        _regex: null, // used if route is a wildcard to match the path
         create: function(oPar) {
             $o.extend(this, oPar);
 
             this.routes = {};
-            this.params = [];
             this.resources = {};
 
             var m = parRe.exec(this.name);
@@ -35,7 +38,26 @@ module.exports = (function($o) {
 
             this.isParameter = !!this.parameter;
 
-            this.isWildcard = this.name === '*';
+            this.isWildcard = this.name.indexOf('*') > -1;
+            if(this.isWildcard) {
+                var re = "^" + escapeRegex(this.name).replace("\\*", ".*") + "$";
+                this._regex = new RegExp(re, 'i');
+                
+            }
+
+        },
+        /* Returns whenever the given urlpart matches this Route
+         * urlpart: The urlpart which we need to match
+         * resturl: The url left to match including urlpart */
+        match: function(urlpart, resturl) {
+            // Parameter can always match
+            if(this.isParameter) return true;
+            // Static path can match
+            if(this.name === urlpart) return true;
+            // wildcard match
+            if(this._regex) return this._regex.test(resturl);
+            
+            return false 
         },
         /* Adds a resource to this route 
          * verbs: Array of HTTP verbs which are bound to fname
@@ -102,7 +124,6 @@ module.exports = (function($o) {
                 // Route point doesnt exists, add it
                 if(!r.routes[ p[i] ]) {
                     var nr =  new Route({ name: p[i] });
-                    if(nr.isParameter) r.params.push(nr);
 
                     r.routes[ p[i] ] = nr;
                 }
@@ -122,12 +143,14 @@ module.exports = (function($o) {
             // Gets the possible routes taken from a given route point
             // r:       current routing context,
             // part:    one part of the url we look for
-            function getPossibleRoutes(r, part) {
+            // rest:    rest url including the part
+            function getPossibleRoutes(r, part, rest) {
                 var arr = [];
 
-                if(r.routes[part]) arr.push(r.routes[part]);
-                if(r.params) arr = arr.concat(r.params);
-                if(r.routes['*']) arr.push(r.routes['*']);
+                for(var k in r.routes) {
+                    if(r.routes[k].match(part, rest))
+                        arr.push(r.routes[k]);
+                }
 
                 return arr;
             }
@@ -158,8 +181,9 @@ module.exports = (function($o) {
                     
                     var r = s.data;
                     var n = s.left.shift();
+                    var rest = s.length ? n + "/" + s.left.join("/") : n;
 
-                    var arr = getPossibleRoutes(r, n);
+                    var arr = getPossibleRoutes(r, n, rest);
                     
                     var self = this;
                     var states = arr.map(function(e) {
@@ -176,18 +200,25 @@ module.exports = (function($o) {
                         }
 
                         if(e.isWildcard) {
-                            /* Because the "left" array is emptied, we need to 
-                                apply a penalty of + ns.left.length to make sure
-                                it ranks as high as normal urls,  + 2*left+2 
-                                will rank it always higher than urls and params 
-                            */
-                            ns.penalty += 2 * ns.left.length + 2;
-                            
                             // Store the leftover routing
-                            ns.uri = ns.left.length ? n + "/" + ns.left.join("/") : n;
+                            ns.uri = rest;
+
+                            /* Because the "left" array is emptied, we need to 
+                                apply a penalty that is greater than all other
+                                routes, but are less the more specific the 
+                                route is. We use character count in that case.
+                                A wildcard starts always with a * and the rest
+                                of the string is a specific match.
+                            */
+                            ns.penalty += ns.uri.length - (e.name.length - 1)
+                            
+                            
 
                             ns.left.length = 0;
                         }
+
+                        // Route debugging
+                        // console.log(sprintf('[Routing] %-25s: %s', ns.path.join("/"), ns.penalty));
 
                         return ns;
                     });

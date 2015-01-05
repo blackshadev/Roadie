@@ -1,3 +1,4 @@
 {
-    "/test/{id}/": "cust.js:view"
+    "/test/{id}/": "cust.js:view",
+    "[GET]/statics/*.html": "static.js:html"
 }
