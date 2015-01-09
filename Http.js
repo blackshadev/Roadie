@@ -26,7 +26,7 @@ module.exports = (function() {
             } else if(err instanceof Error) {
 				var errDescr = HttpError.translateErrNo(err.errno);
 
-				this.code = errDescr.http || 500;
+				this.code = errDescr && errDescr.http ? errDescr.http : 500;
 				
 				this.extra = errDescr ? errDescr.description : err.toString();
 			} else if(arguments.length === 2 && typeof(errtxt) === "string") {
