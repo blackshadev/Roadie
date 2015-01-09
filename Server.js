@@ -104,7 +104,6 @@ module.exports = (function($o) {
             // 404 comment not found
             if(!found) {
                 ctx.error(new Http.HttpError(404));
-                ctx.response.send();
                 return;
             }
 
