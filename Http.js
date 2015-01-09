@@ -117,7 +117,8 @@ module.exports = (function() {
         },
         /* Sends the headers and content of the response */
         send: function() {
-            if(this.eos) throw "Stream already ended";
+            if(this.eos) return console.log("Request already send");
+
             this._res.writeHead(this.statusCode, this.headers);
             console.log("[server] sending: " + typeof(this._data) + " of length " + this._data.length);
             this._res.write(this._data);
