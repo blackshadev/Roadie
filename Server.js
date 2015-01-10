@@ -24,7 +24,7 @@ module.exports = (function($o) {
         
         // For ssl either provide a cert and key or a pfx
         useHttps: false,
-        tslOptions: null, // options for tsl server (https)
+        tlsOptions: null, // options for tls server (https)
         
         isReady : false, // Ready to start?
         isPaused: false, // Boolean to keep track whenever the server is paused
@@ -47,7 +47,7 @@ module.exports = (function($o) {
             this.localConfigOnly = oPar.localConfigOnly || this.localConfigOnly;
             
             this.useHttps = !!oPar.useHttps;
-            this.tslOptions = oPar.tslOptions;
+            this.tlsOptions = oPar.tlsOptions;
 
             this.createServer();
             
@@ -66,7 +66,7 @@ module.exports = (function($o) {
             if(this.useHttps) {
                 // Use https
                 console.log("Using https");
-                self.server = https.createServer(this.tslOptions, h);
+                self.server = https.createServer(this.tlsOptions, h);
                 self.isReady = true;
             } else {
                 // Regular http server

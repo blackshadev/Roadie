@@ -12,7 +12,7 @@ var server = new j.Server({port: 8080, root: "./webservices/" });
 var server = new j.Server({
         port: 8080, root: "./webservices/",
         useHttps: true,
-        tslOptions: {
+        tlsOptions: {
             // For all options see http://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener
             key : fs.readFileSync("./ssl/server.key"),
             cert: fs.readFileSync("./ssl/server.crt")
