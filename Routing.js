@@ -8,7 +8,7 @@ var $o = require("./core.js");
 var sprintf = require("sprintf").sprintf;
 
 module.exports = (function($o) {
-    var $s = require("./Astar.js");
+    var $s = require("./Search.js");
 
     var parRe = /\{(\w+)\}/i
 
@@ -155,14 +155,14 @@ module.exports = (function($o) {
                 return arr;
             }
 
-            // Search the Route with AStar where our path is the taken url parts
-            // the cost is the path + Url_parts_left  + a penalty
+            // Search the Route with Greedy search where our path is the taken 
+            // url parts the cost is the path to that state + a penalty
             // The penalty is used to enforce a ranking within the routing where
             // static urls are prefered, after that parameters 
             // and the least preffered routes are wildcards 
-            var search = new $s.AStar({
+            var search = new $s.GreedySearch({
                 cost: function(s) {
-                    return s.path.length + s.left.length + s.penalty;
+                    return s.path.length + s.penalty;
                 },
                 // Initial state
                 initial: function() {

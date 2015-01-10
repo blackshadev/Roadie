@@ -3,14 +3,11 @@
  *  Uses:
  *   - Arrays.js : SortedArray.js
  *  
- *  A js implementation of the Astar search algorithm.
+ *  A js implementation of the Greedy search algorithm.
  *
- *  AStar is a search algorithm that searches over the states as follows.
+ *  Search algorithm that searches over the states as follows:
  *  Each state has a cost, it has cost to go to that state from the start ~g(x) 
- *  and a estimate function which estimates the cost from that state to a goal
- *  state ~h(x). The combined function ~f(x) = g(x) + h(x). Is how AStar chooses
- *  which states to expant. A imported note is that the estimate may not be 
- *  higher than the actual cost from a state to the goal state.
+ *  The state space is traversed in the order from least costing to more costly.
  */
 
 module.exports = (function($o) {
@@ -41,12 +38,12 @@ module.exports = (function($o) {
         }
     });
 
-    // Actual implementation of the AStar search algorithm 
-    var AStar = $o.Object.extend({
+    // Actual implementation of the Greedy search algorithm 
+    var GreedySearch = $o.Object.extend({
         stateClass: State,
         // -- UserDefined
         // returns the cost of a state
-        cost: function(state) { return this.left.length + this.path.length; /* f(x) = g(x) + h(x) */ },
+        cost: function(state) { return this.path.length; },
         // returns true when the goal is reached
         goal: function(state) { return true; },
         // Returns the new states possible from given state
@@ -95,5 +92,5 @@ module.exports = (function($o) {
         }
     });
 
-    return { AStar: AStar, State: State };
+    return { GreedySearch: GreedySearch, State: State };
 })(require("./core.js"));

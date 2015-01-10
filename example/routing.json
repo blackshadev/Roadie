@@ -1,4 +1,6 @@
 {
-    "/test/{id}/": "cust.js:view",
+    "[GET]/test/{id}/": "test.js:view",
+    "[POST]/test/{id}/": "test.js:edit",
+    "/test/new/": "test.js:new",
     "[GET]/statics/*.html": "static.js:html"
 }

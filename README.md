@@ -10,7 +10,7 @@ What set Roadie appart is that not only all contect goes via these webservices b
  - HTTPS integration
 
 ### Routing
-Routing is done with Astar, it "searches" the correct route for you via a route
+Routing is done with a greedy search algoritm, it "searches" the correct route for you via a route
  table. A good thing to note is that the route is split up in segements, 
  currently these segments are seperated in the url with a "/". This means
  that you cannot have a parameter surrounded by "/"s and not a wildcard at the 
