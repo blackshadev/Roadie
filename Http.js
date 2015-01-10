@@ -8,6 +8,7 @@ module.exports = (function() {
 	var $o = require("./core.js");
 	var EventEmitter = require("events").EventEmitter;
 	var errno = require("./ErrNo.js").errno
+    var http = require("http");
 
 
 	/* An http Error can be constructed with a nodeJs Error object as the first argument
@@ -67,13 +68,7 @@ module.exports = (function() {
 	});
 	HttpError.translateErrNo = function(no) { return errno[no]; };
 	HttpError.httpStatusText = function(no) {
-        // Incomplete, should have more of these
-		switch(no) {
-			case 200: return "OK";
-			case 404: return "Not found";
-			case 403: return "Forbidden";
-			default:  return "Internal Server error";
-		}
+        return http.STATUS_CODES[no]
 	};
 
     // Wrapper class for the HTTP response
@@ -134,14 +129,14 @@ module.exports = (function() {
         uri: "", // Left over URI, only set when the route endnode is a wildcard
         routePath: "", // Route taken with request url
         // private
-        isLoaded: false,  // Boolean to check whenever the body is loaded
-        events: null, // EventEmitter for the loadend event 
+        _isLoaded: false,  // Boolean to check whenever the body is loaded
+        _events: null, // EventEmitter for the loadend event 
         _req: null, // NodeJs request object
         _data: null, // _data contained in the body of the HTTP request
         create: function(req) {
             this._req = req;
             this.headers = req.headers;
-            this.events = new EventEmitter();
+            this._events = new EventEmitter();
 
             var self = this;
             this._data = new Buffer(0);
@@ -150,18 +145,18 @@ module.exports = (function() {
                 self._data = Buffer.concat([self._data, dat]);
             });
             req.on("end", function() {
-                self.isLoaded = true;
-                self.events.emit("loadend", self._data);
+                self._isLoaded = true;
+                self._events.emit("loadend", self._data);
             });
         },
         /* Gets the body of the request.
            cb: function which is called after getting the body as first argument
            bin: When set to true the body isn't casted to a string */
         body: function(cb, bin) {
-            if(this.isLoaded)
+            if(this._isLoaded)
                 cb(bin ? this._data : this._data.toString());
             else
-                this.events.once("loadend", this.body.bind(this, cb, bin));
+                this._events.once("loadend", this.body.bind(this, cb, bin));
         },
         /* Returns one of the header contents
             k: The header type to return */
@@ -180,11 +175,9 @@ module.exports = (function() {
         method: 'GET',
         url: '/',
         // Privates
-        foundResource: null, // reference to the resource whch is bound to the given url
-        uri: null,
+        _foundResource: null, // reference to the resource whch is bound to the given url
         response: null, // store for all data to send
         parameters: null,  
-        uri: null, // Stores the rest of the URI
         _req: null,
         _res: null,
         _server: null, 
@@ -211,9 +204,9 @@ module.exports = (function() {
             this.request.uri = tmp.uri;
             this.request.routePath = tmp.path.join("/");
             
-            this.foundResource = tmp.resource;
+            this._foundResource = tmp.resource;
 
-            return !!this.foundResource;
+            return !!this._foundResource;
         },
         error: function(err) {
         	if(!( err instanceof HttpError))

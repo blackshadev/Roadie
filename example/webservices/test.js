@@ -1,21 +1,41 @@
-var $j = require("../../roadie.js");
+var $r = require("../../roadie.js");
 
-module.exports = $j.WebService.extend({
-	view: function() {
-		this.ctx.response.data("Tester<br />");
-		this.ctx.response.append(this.ctx.request.parameters);
-		this.ctx.response.send();
-	},
-    new: function() {
-        this.ctx.response.data("<h1>Want a new Test?</h1>");
+module.exports = $r.WebService.extend({
+    // Accessible in the example by /test/hallo/world/
+    halloworld: function() {
+        this.ctx.response.data("HalloWorld");
         this.ctx.response.send();
     },
-	edit: function() {
-        var id = this.ctx.request.parameters.id;
-        this.ctx.response.header("Content-Type", "application/json")
-        this.ctx.response.data(JSON.stringify({"type": "edit", "userid": id}));
+    // Accessible in the example by /test/{id}/
+    paramExample: function() {
+        this.ctx.response.data("<h1>Below a list of your route params</h1>");
+        var p  = this.ctx.request.parameters;
+        // List all parameters
+        for(var k in p) 
+            this.ctx.response.append(k + ": " + p[k] + "</ br>");
+        
         this.ctx.response.send();
+    },
+    // Accessible in the example by /test/json/
+    getJson: function() {
+        var p = this.ctx.request.parameters;
+        this.ctx.response.header("Content-Type", "application/json");
+        this.ctx.response.data({"hallo": "world", "params": p});
+        this.ctx.response.send();
+    },
+    // Accessible in the example by /test/error/
+    error: function() {
+        var err = new $r.HttpError(403, "You will not pass!");
+        this.ctx.error(err);
+    },
+    // Accessible in example by /test/ with the post request
+    post: function() {
+        var ctx = this.ctx;
+        ctx.response.data("I got: <br />");
+
+        this.request.body(function(dat) {
+            ctx.response.append(dat);
+            ctx.response.send();
+        });
     }
 });
-
-

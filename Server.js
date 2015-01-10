@@ -107,9 +107,9 @@ module.exports = (function($o) {
                 return;
             }
 
-            console.log("[Server] foundResource:" + ctx.foundResource);
+            console.log("[Server] foundResource:" + ctx._foundResource);
             
-            var res = Resource.create(this.root + ctx.foundResource);
+            var res = Resource.create(this.root + ctx._foundResource);
             res.run(ctx);
         },
         // Starts the server

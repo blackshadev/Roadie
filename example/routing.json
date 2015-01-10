@@ -1,6 +1,8 @@
 {
-    "[GET]/test/{id}/": "test.js:view",
-    "[POST]/test/{id}/": "test.js:edit",
-    "/test/new/": "test.js:new",
+    "[GET]/test/{id}/"    : "test.js:paramExample",
+    "[GET]/test/error/"   : "test.js:error",
+    "/test/hallo/world/"  : "test.js:halloworld",
+    "[GET,PUT]/test/json/": "test.js:getJson",
+    "[POST]/test/"        : "test.js:post",
     "[GET]/statics/*.html": "static.js:html"
 }
