@@ -1,6 +1,9 @@
 Roadie is a webserver which serves content via custom created webservices.
 What set Roadie appart is that not only all contect goes via these webservices but also these webservices are also created and extended via an Object Oriented manner.
 
+TL;DR
+Serve content with simple webservices. See working example bellow.
+
 ## Features
  - Creation of webservices with nodeJs in an Object Oriented pattern
  - Controllable via its own config shell (`node examples/configShell.js`)
@@ -20,3 +23,46 @@ Routing is done with a greedy search algoritm, it "searches" the correct route f
 ## ToDo
  - Add more default webservices such as the staticService
  - More routing options with wildcards
+
+## Lets do this
+See Wiki more details
+start.js
+```javascript
+var $r = require("roadie");
+
+var routes = ["routing.json", { "[GET,POST]/statics/*" : "static.js" }]
+
+// HTTP server
+var server = new $r.Server({port: 8080, root: "./webservices/" });
+var config = new $r.ConfigServer(server, { port: 4242 });
+
+// Add the routes
+server.addRoutes(routes);
+
+console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html");
+
+server.start();
+config.start();
+```
+routing.json
+```json
+{
+    "[GET]/test/{id}/" : "test.js:gId",
+    "[GET]/test/hallo/": "test.js:hallo",
+}
+```
+webservices/test.js
+```javascript
+var $r = require("roadie");
+
+module.exports = $r.WebService.extend({
+    hallo: function() { 
+        this.ctx.response.data("HAAY!");
+        this.ctx.response.send();
+    },
+    gId: function() {
+        var id = this.ctx.request.parameters.id;
+        this.ctx.response.data("got: " + id);
+    }
+});
+```
