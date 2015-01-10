@@ -12,7 +12,7 @@ module.exports = $r.WebService.extend({
         var p  = this.ctx.request.parameters;
         // List all parameters
         for(var k in p) 
-            this.ctx.response.append(k + ": " + p[k] + "</ br>");
+            this.ctx.response.append(k + ": " + p[k] + "<br />");
         
         this.ctx.response.send();
     },

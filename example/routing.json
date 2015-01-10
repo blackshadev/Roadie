@@ -1,5 +1,6 @@
 {
     "[GET]/test/{id}/"    : "test.js:paramExample",
+    "[GET]/test/{1}/{2}/" : "test.js:paramExample",
     "[GET]/test/error/"   : "test.js:error",
     "/test/hallo/world/"  : "test.js:halloworld",
     "[GET,PUT]/test/json/": "test.js:getJson",
