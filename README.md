@@ -64,6 +64,7 @@ module.exports = $r.WebService.extend({
     gId: function() {
         var id = this.ctx.request.parameters.id;
         this.ctx.response.data("got: " + id);
+        this.ctx.response.send();
     }
 });
 ```
