@@ -5,6 +5,7 @@ TL;DR
 Serve content with simple webservices. See working example bellow.
 
 ## Features
+ - No breaking changes are made from 0.2.0 fowards, only new features and tweaks are introduced.
  - Creation of webservices with nodeJs in an Object Oriented pattern
  - Controllable via its own config shell (`node examples/configShell.js`)
  - RESTfull routing, accepting wildcards and parameters
