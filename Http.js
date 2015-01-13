@@ -78,9 +78,15 @@ module.exports = (function() {
         eos: false, // stream has ended
         _res: null,
         _data: null,
+        _isBinary: false, // Whenever data is a binary buffer
         create: function(res) {
             this._res = res;
-            this.headers = { 'Content-Type': "text/html" };
+            this.headers = { 
+                "Content-Type": "text/html", 
+                "Connection"  : "close",
+                "X-Powered-By": "Roadie"
+            };
+            this.startTime = new Date();
         },
         /* Set the statuscode of the response
          * code: the HTTP status code */
@@ -94,9 +100,10 @@ module.exports = (function() {
             this.headers[t] = c;
         },
         /* Set the data of the response
-         * dat: Data to set, can be a json object which is stringified
-         * bin: if set to true no conversions performed in dat */
-        data: function(dat, bin) {
+         * dat: Data to set, string, buffer or json object
+         */
+        data: function(dat) {
+            var bin = dat instanceof Buffer;
             if(!bin && typeof(dat) === "object") {
                 dat = JSON.stringify(dat);
                 this.header("Content-Type", "application/json");
@@ -106,19 +113,27 @@ module.exports = (function() {
         },
         /* Appends data */
         append: function(dat) {
-            if(typeof(dat) === "object")
+            var bin = dat instanceof Buffer;
+            if(!bin && typeof(dat) === "object") 
                 dat = JSON.stringify(dat);
+            
             this._data += dat;
         },
         /* Sends the headers and content of the response */
         send: function() {
             if(this.eos) return console.log("Request already send");
 
+            var len = this._data.length;
+            this.headers["Content-Length"] = len;
+            this.headers["Date"] = new Date();
+
             this._res.writeHead(this.statusCode, this.headers);
-            console.log("[server] sending: " + typeof(this._data) + " of length " + this._data.length);
-            this._res.write(this._data);
-            this._res.end();
+            this._res.end(this._data);
             this.eos = true;
+
+            var t = new Date() - this.startTime;
+            console.log("[server] send: " + typeof(this._data) +
+                " of length " + len + " bytes, took " + t + "ms");
         }
     });
 

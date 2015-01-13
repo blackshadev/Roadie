@@ -33,7 +33,7 @@ module.exports = (function() {
         send: function() {
             if(this.error) return this.ctx.error(this.error);
             this.ctx.response.header("Content-Type", this.mimeType);
-            this.ctx.response.data(this._data, true);
+            this.ctx.response.data(this._data);
             this.ctx.response.send();
         },
         html: function() {
