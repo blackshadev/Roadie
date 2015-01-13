@@ -77,7 +77,7 @@ module.exports = (function() {
         statusCode: 200,
         eos: false, // stream has ended
         _res: null,
-        _data: null,
+        _data: "",
         _isBinary: false, // Whenever data is a binary buffer
         create: function(res) {
             this._res = res;
