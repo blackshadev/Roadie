@@ -35,7 +35,7 @@ var $r = require("roadie");
 var routes = ["routing.json", { "[GET,POST]/statics/*" : "static.js" }]
 
 // HTTP server
-var server = new $r.Server({port: 8080, root: "./webservices/" });
+var server = new $r.Server({port: 8080, webserviceDir: "webservices/", root: __dirname  });
 var config = new $r.ConfigServer(server, { port: 4242 });
 
 // Add the routes
