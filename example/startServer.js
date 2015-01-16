@@ -7,7 +7,7 @@ var fs = require("fs");
 var routes = ["routing.json", { "[GET,POST]/statics/*" : "static.js" }]
 
 // HTTP server
-var server = new j.Server({port: 8080, root: "./webservices/" });
+var server = new j.Server({port: 8080, webserviceDir: "webservices/", root: __dirname });
 // HTTPS server
 // var server = new j.Server({
 //         port: 8080, root: "./webservices/",

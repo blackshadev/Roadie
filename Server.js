@@ -20,7 +20,8 @@ module.exports = (function($o) {
     var Server = $o.Object.extend({
         port: 8080, // port to listen to
         routemap: null, // Reference to the RouteMap
-        root: "./scripts/", // root for all routes
+        root: "", // root for all files, defaults to process.cwd()
+        webserviceDir: "./scripts/", // Dir for all webservices to be in, relative to root
         
         // For ssl either provide a cert and key or a pfx
         useHttps: false,
@@ -35,16 +36,18 @@ module.exports = (function($o) {
         // handles
         onCreate: function() {},
         onStart: function() {},
+        onError: function(err) { console.log("[Error] " + err); },
         create: function(oPar) {
             EventEmitter.call(this);
 
-            this._root = path.relative(__dirname, process.cwd());
             var r = oPar.root || this.root;
-            this.root = (r[0] === ".") ? path.join(this._root, r) : path.relative(__dirname, r);
+            this.root = oPar.root || process.cwd();
 
             this.port = oPar.port || this.port;
             this.configPort = oPar.configPort || this.configPort;
             this.localConfigOnly = oPar.localConfigOnly || this.localConfigOnly;
+            this.onError = oPar.onError || this.onError;
+            this.webserviceDir = oPar.webserviceDir || oPar.webServiceDir || this.webserviceDir;
             
             this.useHttps = !!oPar.useHttps;
             this.tlsOptions = oPar.tlsOptions;
@@ -109,7 +112,7 @@ module.exports = (function($o) {
 
             console.log("[Server] foundResource:" + ctx._foundResource);
             
-            var res = Resource.create(this.root + ctx._foundResource);
+            var res = Resource.create(this.root + "/" + this.webserviceDir + "/" + ctx._foundResource);
             res.run(ctx);
         },
         // Starts the server
@@ -117,6 +120,9 @@ module.exports = (function($o) {
 
             console.log("Stated listening on port " + this.port);
             this.server.listen(this.port);
+            
+            console.log(this.onError);
+            process.on("uncaughtException", this.onError);
 
             this.onStart();
         },
@@ -141,7 +147,7 @@ module.exports = (function($o) {
 
             // file
             if(typeof(a) === "string") {
-                var fname = require.resolve(this._root + "\\" + a);
+                var fname = require.resolve(this.root + "/" + a);
                 if(!fname) console.log("[Routes] can't find file " + a);
 
                 if(!reload) this._routes.push(a);

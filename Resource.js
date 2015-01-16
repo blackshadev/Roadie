@@ -15,6 +15,7 @@ module.exports = (function() {
 		fname: null, // file name of the resource.
 		isLoaded: false, // Is the file loaded
 		create: function(fname) {
+
 			this.fname = fname;
 
 			this.load();
