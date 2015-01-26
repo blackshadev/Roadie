@@ -156,6 +156,10 @@ module.exports = (function($o) {
                 if(!reload) this._routes.push(a);
 
                 this.routemap.load(a);
+
+            // function
+            } else if(typeof(a) === "function") {
+                this.routemap.load(a());
             }
         },
         listResources: function() { return Resource.list(); },
