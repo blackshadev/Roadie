@@ -121,7 +121,6 @@ module.exports = (function($o) {
             console.log("Stated listening on port " + this.port);
             this.server.listen(this.port);
             
-            console.log(this.onError);
             process.on("uncaughtException", this.onError);
 
             this.onStart();
