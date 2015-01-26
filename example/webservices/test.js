@@ -28,6 +28,7 @@ module.exports = $r.WebService.extend({
         var err = new $r.HttpError(403, "You will not pass!");
         this.ctx.error(err);
     },
+    fatal: function() { throw new Error("Fatal error"); },
     // Accessible in example by /test/ with the post request
     post: function() {
         var ctx = this.ctx;

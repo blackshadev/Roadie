@@ -9,6 +9,7 @@ module.exports = (function() {
 	var o = require("./core.js");
 	var net = require("net");
     var rl = require('readline');
+    var cp = require("child_process");
 
 	// A ConfigServer is bound to a junction server and listens for config clients
 	var cs = o.Object.extend({
@@ -74,6 +75,12 @@ module.exports = (function() {
 
                     sock.write(str);
                     return;
+                case 'ping':
+                    sock.write("PONG");
+                    break;
+                case 'startfile':
+                    sock.write(process.argv[1]);
+                    break;
                 default: 
                     sock.write("Unreconized request");
                 break;
@@ -91,6 +98,7 @@ module.exports = (function() {
         create: function(oPar) {
             this.port = oPar.port || null;
             this.host = oPar.host || null;
+            this.onError = oPar.onError || (function() {});
 
 
             this.prompt = rl.createInterface(process.stdin, process.stdout);
@@ -131,25 +139,49 @@ module.exports = (function() {
             p();
 
         },
+        onError: function() {},
+        connTries: 0, // Tries taken to connect
         // Tries to connect to the server with the given hostname and port
         connect: function() {
             this.socket = new net.Socket();
             var self = this;
 
+            this.connTries++;
+            this.socket.on("error", function(err) {
+                self.onError(err);
+                console.log("[Error] " + err);
+                self.retry();
+            });
             this.socket.connect(this.port, this.host, function() {
+                self.connTries = 1;
                 console.log("Connected to " + self.host + ":" + self.port);
+                self.send("startfile", function(d) { 
+                    self._heartBeatFile = d; 
+                    console.log("Server started with " + d);
+                    self.query();
+                })
 
-                self.query();
+                // self.query();
             });
         },
+        retry: function() {
+            console.log(this.connTries % 3);
+            if(this._heartBeatFile && this.connTries % 3 === 0)
+                this.startServer();
+
+            console.log("Try " + this.connTries + " failed, Retrying connection in 5 seconds");
+            setTimeout(this.connect.bind(this), 5000);
+
+        },
         // Sends a message to the server
-        send: function(mess) {
+        send: function(mess, cb) {
             this.socket.write(mess);
             var self = this;
 
             // Wait for response and echo the response before quering for input
             this.socket.once("data", function(d) {
                 console.log("[server] " + d.toString());
+                if(cb) cb(d);
                 self.query();
             });
         },
@@ -176,10 +208,30 @@ module.exports = (function() {
                     this.send('LIST ' + (cmd[1] || "")); return;
                 case 'reload':
                     this.send('RELOAD'); return;
+                case 'ping':
+                    this.send("PING"); return;
+                case 'heartbeat':
+                    this.heartbeat(cmd[1], cmd[2]); return;
                 default:
                     console.log("Unreconized request, try use the \'help\' command"); break;
             }
 
+            this.query();
+        },
+        _heartBeatFile: null,
+        heartbeat: function(a, b) {
+            if(a === "disable")
+                return this._heartBeatFile = null;
+            else if(a === "enable") {
+                this._heartBeatFile = b || "startServer.js";
+            }
+
+            this.query();
+        },
+        // Forces the server to start
+        startServer: function() {
+            console.log("Trying to start the server")
+            cp.exec("start node " + this._heartBeatFile);
             this.query();
         },
         // Output the available commands
@@ -188,7 +240,9 @@ module.exports = (function() {
                     "help\t\tPrint out this text\n" + 
                     "exit\t\tExit this program\n" +
                     "reload\t\tReloads the server\n" +
-                    "list {resources|routes}\t\tLists the loaded resources or routes"
+                    "list {resources|routes}\t\tLists the loaded resources or routes\n" +
+                    "ping\t\tPings the server" +
+                    "heartbeat {enable|disable} {js}\tRestarts the server if needed with given js file to execute\n" +
                     "\n";
         }
     });

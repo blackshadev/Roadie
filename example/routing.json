@@ -2,6 +2,7 @@
     "[GET]/test/{id}/"    : "test.js:paramExample",
     "[GET]/test/{1}/{2}/" : "test.js:paramExample",
     "[GET]/test/error/"   : "test.js:error",
+    "[GET]/test/fatal/"   : "test.js:fatal",
     "/test/hallo/world/"  : "test.js:halloworld",
     "[GET,PUT]/test/json/": "test.js:getJson",
     "[POST]/test/"        : "test.js:post",
