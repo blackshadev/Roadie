@@ -3,7 +3,7 @@ module.exports = (function() {
     var fs = require("fs");
 
     var StaticService = WebService.extend({
-        root: "../statics/", // path to statics
+        root: "./statics/", // path to statics
         mimeType: "text/plain",
         isOpen: false,
         error: null,

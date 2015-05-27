@@ -14,6 +14,8 @@ var path  = require("path");
 var fs    = require("fs");
 var EventEmitter = require("events").EventEmitter;
 
+var log = require("./log.js");
+
 module.exports = (function($o) {
 
     // Server which serves the content
@@ -36,7 +38,7 @@ module.exports = (function($o) {
         // handles
         onCreate: function() {},
         onStart: function() {},
-        onError: function(err) { console.log("[Error] " + err); },
+        onError: function(err) { log("Error", err); },
         create: function(oPar) {
             EventEmitter.call(this);
 
@@ -110,7 +112,7 @@ module.exports = (function($o) {
                 return;
             }
 
-            console.log("[Server] foundResource:" + ctx._foundResource);
+            log("Server", "foundResource:" + ctx._foundResource);
             
             var res = Resource.create(this.root + "/" + this.webserviceDir + "/" + ctx._foundResource);
             res.run(ctx);
@@ -118,10 +120,10 @@ module.exports = (function($o) {
         // Starts the server
         start: function() { 
 
-            console.log("Stated listening on port " + this.port);
+            log("Server", "Stated listening on port " + this.port);
             this.server.listen(this.port);
             
-            process.on("uncaughtException", this.onError);
+            // process.on("uncaughtException", this.onError);
 
             this.onStart();
         },
@@ -147,7 +149,7 @@ module.exports = (function($o) {
             // file
             if(typeof(a) === "string") {
                 var fname = require.resolve(this.root + "/" + a);
-                if(!fname) console.log("[Routes] can't find file " + a);
+                if(!fname) log("Routes", "Can't find file " + a);
 
                 if(!reload) this._routes.push(a);
                 else delete require.cache[fname];
@@ -172,5 +174,5 @@ module.exports = (function($o) {
     });
 
 
-    return { Server: Server };
+    return { Server: Server, log: log };
 })($o);
