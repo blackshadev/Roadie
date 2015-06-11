@@ -13,6 +13,9 @@ Serve content with simple webservices. See working example bellow.
   - note: Currently it accepts only one wildcard and only at the end of the route
  - HTTPS integration
 
+### Change log
+ - Fixed the length calculation where it counts the number of bytes instead of the number of characters.
+
 ### Routing
 Routing is done with a greedy search algoritm, it "searches" the correct route for you via a route
  table. A good thing to note is that the route is split up in segements, 
