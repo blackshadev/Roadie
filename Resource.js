@@ -7,6 +7,7 @@ module.exports = (function() {
 	var o = require("./core.js");
 	var fs = require("fs");
 	var HttpError = require("./Http.js").HttpError;
+	var log = require("./log.js");
 
 	var Resource, StaticResource, ScriptResource;
 
@@ -56,7 +57,7 @@ module.exports = (function() {
 	/* Constructor function to create an resource, resources with an ":" in 
 		their name are considerd a ScriptResource, the rest a Static Resource */
 	Resource.create = function(fname, uri) {
-		console.log("[Resource] creating: " + fname);
+		log("Resource", "Creating: " + fname);
 
 		// Get the method out the fname if it has any
 		var idx = fname.lastIndexOf(".js:");

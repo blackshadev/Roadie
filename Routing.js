@@ -181,7 +181,7 @@ module.exports = (function($o) {
                     
                     var r = s.data;
                     var n = s.left.shift();
-                    var rest = s.length ? n + "/" + s.left.join("/") : n;
+                    var rest = s.left.length ? n + "/" + s.left.join("/") : n;
 
                     var arr = getPossibleRoutes(r, n, rest);
                     

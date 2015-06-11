@@ -9,7 +9,7 @@ module.exports = (function() {
 	var EventEmitter = require("events").EventEmitter;
 	var errno = require("./ErrNo.js").errno
     var http = require("http");
-
+    var log = require("./log.js");
 
 	/* An http Error can be constructed with a nodeJs Error object as the first argument
 	 	or an other HttpError as argument
@@ -125,7 +125,7 @@ module.exports = (function() {
         },
         /* Sends the headers and content of the response */
         send: function() {
-            if(this.eos) return console.log("Request already send");
+            if(this.eos) return log("server", "Request already send");
 
             var len =  typeof(this._data) === "string" ? Buffer.byteLength(this._data, this._encoding) : this._data.length;
             this.headers["Content-Length"] = len;
@@ -136,7 +136,7 @@ module.exports = (function() {
             this.eos = true;
 
             var t = new Date() - this.startTime;
-            console.log("[server] send: " + typeof(this._data) +
+            log("server", " send: " + typeof(this._data) +
                 " of length " + len + " bytes, took " + t + "ms");
         }
     });
