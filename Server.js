@@ -7,6 +7,7 @@ var $o = require("./core.js");
 var RouteMap = require('./Routing.js').RouteMap;
 var Resource = require("./Resource.js").Resource;
 var Http  = require("./Http.js");
+var toobusy = require("toobusy-js");
 
 var http  = require("http");
 var https = require("https");
@@ -94,6 +95,12 @@ module.exports = (function($o) {
          * res: NodeJs OutgoingMessage object from the HttpServer
          */
         handleRequest: function(req, res) {
+            if(toobusy()) {
+                res.writeHead(503, {});
+                res.end("Server to busy");
+                return;
+            }
+
             var ctx = new Http.HttpContext(this, req, res);
 
             if(this.isPaused)
