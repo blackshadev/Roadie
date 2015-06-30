@@ -78,6 +78,7 @@ module.exports = (function() {
         eos: false, // stream has ended
         _res: null,
         _data: "",
+        _encoding: "utf8", // used to calculate the length of string data
         _isBinary: false, // Whenever data is a binary buffer
         create: function(res) {
             this._res = res;
@@ -87,6 +88,9 @@ module.exports = (function() {
                 "X-Powered-By": "Roadie"
             };
             this.startTime = new Date();
+        },
+        encoding: function(enc) {
+            this._encoding = enc;
         },
         /* Set the statuscode of the response
          * code: the HTTP status code */
@@ -123,7 +127,7 @@ module.exports = (function() {
         send: function() {
             if(this.eos) return log("server", "Request already send");
 
-            var len = this._data.length;
+            var len =  typeof(this._data) === "string" ? Buffer.byteLength(this._data, this._encoding) : this._data.length;
             this.headers["Content-Length"] = len;
             this.headers["Date"] = new Date();
 
