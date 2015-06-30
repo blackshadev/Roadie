@@ -80,8 +80,11 @@ module.exports = (function() {
         _data: "",
         _encoding: "utf8", // used to calculate the length of string data
         _isBinary: false, // Whenever data is a binary buffer
-        create: function(res) {
+        _ctx: null,
+        create: function(ctx, res) {
+            this._ctx = ctx;
             this._res = res;
+
             this.headers = { 
                 "Content-Type": "text/html", 
                 "Connection"  : "close",
@@ -134,6 +137,7 @@ module.exports = (function() {
             this._res.writeHead(this.statusCode, this.headers);
             this._res.end(this._data);
             this.eos = true;
+            this._ctx._server.openConnections--;
 
             var t = new Date() - this.startTime;
             log("server", " send: " + typeof(this._data) +
@@ -152,7 +156,9 @@ module.exports = (function() {
         _events: null, // EventEmitter for the loadend event 
         _req: null, // NodeJs request object
         _data: null, // _data contained in the body of the HTTP request
-        create: function(req) {
+        _ctx: null,
+        create: function(ctx, req) {
+            this._ctx = ctx;
             this._req = req;
             this.headers = req.headers;
             this._events = new EventEmitter();
@@ -204,8 +210,8 @@ module.exports = (function() {
             this._req = req;
             this._res = res;
             this._server = server;
-            this.response = new HttpResponse(res);
-            this.request = new HttpRequest(req);
+            this.response = new HttpResponse(this, res);
+            this.request = new HttpRequest(this, req);
 
             this.method = req.method;
             this.url = req.url;

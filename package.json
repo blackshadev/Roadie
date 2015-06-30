@@ -2,7 +2,7 @@
   "name": "roadie",
   "author": "Vincent Hagen <vinnie_hagen@hotmail.com>",
   "description": "The nodeJs way of deploying webservices",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "main": "roadie.js",
   "scripts": {
     "start": "cd example && node startServer.js"
@@ -13,8 +13,7 @@
     "example": "example"
   },
   "dependencies": {
-    "sprintf": "^0.1.5",
-    "toobusy-js": "^0.4.2"
+    "sprintf": "^0.1.5"
   },
   "repository": {
     "type": "git",

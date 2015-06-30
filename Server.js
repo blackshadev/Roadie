@@ -7,7 +7,6 @@ var $o = require("./core.js");
 var RouteMap = require('./Routing.js').RouteMap;
 var Resource = require("./Resource.js").Resource;
 var Http  = require("./Http.js");
-var toobusy = require("toobusy-js");
 
 var http  = require("http");
 var https = require("https");
@@ -15,12 +14,15 @@ var path  = require("path");
 var fs    = require("fs");
 var EventEmitter = require("events").EventEmitter;
 
+
 var log = require("./log.js");
 
 module.exports = (function($o) {
 
     // Server which serves the content
     var Server = $o.Object.extend({
+        openConnections: 0,
+        maxOpenConnections: 512, // will return 503 when maxOpenConnections is reached, set to -1 to do not perform the check
         port: 8080, // port to listen to
         routemap: null, // Reference to the RouteMap
         root: "", // root for all files, defaults to process.cwd()
@@ -36,6 +38,7 @@ module.exports = (function($o) {
 
         _root: "", // proccess cwd relative to the junction dir
         _routes: null, // Backup of all routes set via addRoute(a) 
+        _toobusy: function(){return this.maxOpenConnections > 0 && this.openConnections > this.maxOpenConnections;}, // generated function to check MaxOpenConnections 
         // handles
         onCreate: function() {},
         onStart: function() {},
@@ -51,6 +54,8 @@ module.exports = (function($o) {
             this.localConfigOnly = oPar.localConfigOnly || this.localConfigOnly;
             this.onError = oPar.onError || this.onError;
             this.webserviceDir = oPar.webserviceDir || oPar.webServiceDir || this.webserviceDir;
+            this.maxOpenConnections = oPar.maxOpenConnections || 512;
+
             
             this.useHttps = !!oPar.useHttps;
             this.tlsOptions = oPar.tlsOptions;
@@ -95,13 +100,12 @@ module.exports = (function($o) {
          * res: NodeJs OutgoingMessage object from the HttpServer
          */
         handleRequest: function(req, res) {
-            if(toobusy()) {
-                res.writeHead(503, {});
-                res.end("Server to busy");
-                return;
-            }
+            this.openConnections++; // openConnections are decremented in Http.js::HttpResponse::send
 
             var ctx = new Http.HttpContext(this, req, res);
+            if(this._toobusy())
+                return ctx.error(503);
+
 
             if(this.isPaused)
                 this.queue.push(ctx);
