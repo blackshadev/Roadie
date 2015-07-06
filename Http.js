@@ -10,6 +10,7 @@ module.exports = (function() {
 	var errno = require("./ErrNo.js").errno
     var http = require("http");
     var log = require("./log.js");
+    var $url = require("url");
 
 	/* An http Error can be constructed with a nodeJs Error object as the first argument
 	 	or an other HttpError as argument
@@ -147,8 +148,11 @@ module.exports = (function() {
 
     // Wrapper for a http request
     var HttpRequest = $o.Object.extend({
-        headers: null, // Http headers
-        parameters: null, // Parameters set within the routing
+        headers: null, // Http headers as dictionary
+        queryParams: null, // Dictionary of query string items
+        urlPath: null, // parsed path, without hostname and query string
+
+        parameters: null, // Parameters as dictionary, set within the routing
         uri: "", // Left over URI, only set when the route endnode is a wildcard
         routePath: "", // Route taken with request url
         // private
@@ -162,6 +166,10 @@ module.exports = (function() {
             this._req = req;
             this.headers = req.headers;
             this._events = new EventEmitter();
+
+            var url_pars = $url.parse(req.url, true);
+            this.queryParams = url_pars.query || {};
+            this.urlPath = url_pars.pathname;
 
             var self = this;
             this._data = new Buffer(0);
@@ -192,6 +200,11 @@ module.exports = (function() {
             k: key/name of the parameter */
         parameter: function(k) {
             return this.parameters[k];
+        },
+        /*  Gets a parameter from given url query.
+            k: Key value of the query parameter */
+        query: function(k) {
+            return this.queryParams[k];
         }
     });
 
@@ -214,14 +227,13 @@ module.exports = (function() {
             this.request = new HttpRequest(this, req);
 
             this.method = req.method;
-            this.url = req.url;
 
         },
         /* Resolves the request URL in the routing map and fills the 
             HttpRequest object. Returns true if a resource was found.  */
         resolveUrl: function() {
             var rm = this._server.routemap;
-            var tmp = rm.getRoute(this.url, this.method);
+            var tmp = rm.getRoute(this.request.urlPath, this.method);
 
             if(!tmp) return false;
             
