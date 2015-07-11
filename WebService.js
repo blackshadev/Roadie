@@ -10,7 +10,9 @@ module.exports = (function() {
     // Basic WebService, all webservices should extend this class 
 	var WebService = o.Object.extend({
 		ctx: null, // HttpContext 
-		create: function(ctx) { this.ctx = ctx; }
+		_method: null, // method name to call
+		isReady: true, // Server will call the method by default
+		create: function(ctx, method) { this.ctx = ctx; this._method = method; }
 	});
 
 

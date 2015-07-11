@@ -90,7 +90,7 @@ module.exports = (function() {
 		},
 		// Loads the ScriptResource by requiring the given file
 		load: function() {
-			this._classDef = require(this.fname);
+			this.ClassDef = require(this.fname);
 			ScriptResource.all[this.fname] = true;
 
 			this.inherited().load.call(this);
@@ -105,8 +105,8 @@ module.exports = (function() {
 			var self = this;
 			var svc;
 			try {
-				svc = new this._classDef(ctx);
-				if(this.method) svc[this.method]();
+				svc = new this.ClassDef(ctx, this.method);
+				if(this.method && svc.isReady) svc[this.method]();
 			} catch(err) {
 				self.error = err;
 				ctx.error(err);
@@ -128,5 +128,5 @@ module.exports = (function() {
 	};
 	
 
-	return { Resource: Resource, StaticResource: StaticResource, ScriptResource: ScriptResource };
+	return { Resource: Resource, ScriptResource: ScriptResource };
 })();
