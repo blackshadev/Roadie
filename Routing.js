@@ -70,7 +70,7 @@ module.exports = (function($o) {
     });
     
     // Availible verbs
-    Route.verbs = ['GET', 'POST', 'DELETE', 'PUT'];
+    Route.verbs = ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS', 'HEAD', 'TRACE'];
     /* Devides a given url into segments
      * url: the url with the verb, eg [GET]/cust/11/view */
     Route.urlParts = function(url) {
@@ -133,39 +133,40 @@ module.exports = (function($o) {
 
             r.addResource(verbs, fname);
         },
-        /* Gets the route node given by our url and verb
-         * url: url to match against our routes
-         * verb: verb used to request the url */
-        getRoute: function(url, verb) {
+        /* Generates a search function based on given url and verb
+         * url: Url to search for
+         * verb: HTTP verb or null
+         */
+        searchRoutes: function (url, verb) {
             var parts = Route.urlParts(url)[1];
             var self = this;
-
+            
             // Gets the possible routes taken from a given route point
             // r:       current routing context,
             // part:    one part of the url we look for
             // rest:    rest url including the part
             function getPossibleRoutes(r, part, rest) {
                 var arr = [];
-
-                for(var k in r.routes) {
-                    if(r.routes[k].match(part, rest))
+                
+                for (var k in r.routes) {
+                    if (r.routes[k].match(part, rest))
                         arr.push(r.routes[k]);
                 }
-
+                
                 return arr;
             }
-
+            
             // Search the Route with Greedy search where our path is the taken 
             // url parts the cost is the path to that state + a penalty
             // The penalty is used to enforce a ranking within the routing where
             // static urls are prefered, after that parameters 
             // and the least preffered routes are wildcards 
-            var search = new $s.GreedySearch({
-                cost: function(s) {
+            return new $s.GreedySearch({
+                cost: function (s) {
                     return s.path.length + s.penalty;
                 },
                 // Initial state
-                initial: function() {
+                initial: function () {
                     var s = new this.stateClass();
                     s.left = parts.slice(0);
                     s.cost = parts.length;
@@ -173,36 +174,36 @@ module.exports = (function($o) {
                     s.penalty = 0;
                     s.params = {};
                     s.uri = ""; // contains the left over url after the wildcard
-
+                    
                     return [s];
                 },
                 // Move by getting the possible routes and creating states
-                move: function(s) {
+                move: function (s) {
                     
                     var r = s.data;
                     var n = s.left.shift();
                     var rest = s.left.length ? n + "/" + s.left.join("/") : n;
-
+                    
                     var arr = getPossibleRoutes(r, n, rest);
                     
                     var self = this;
-                    var states = arr.map(function(e) {
+                    var states = arr.map(function (e) {
                         // s = state, ns= newstate
                         var ns = s.clone();
                         ns.data = e;
                         ns.path.push(e.name);
-
+                        
                         ns.penalty = s.penalty;
                         ns.params = $o.extend({}, s.params);
-                        if(e.isParameter) {
+                        if (e.isParameter) {
                             ns.penalty += 1;
                             ns.params[e.name.slice(1, e.name.length - 1)] = n;
                         }
-
-                        if(e.isWildcard) {
+                        
+                        if (e.isWildcard) {
                             // Store the leftover routing
                             ns.uri = rest;
-
+                            
                             /* Because the "left" array is emptied, we need to 
                                 apply a penalty that is greater than all other
                                 routes, but are less the more specific the 
@@ -213,25 +214,33 @@ module.exports = (function($o) {
                             ns.penalty += ns.uri.length - (e.name.length - 1)
                             
                             
-
+                            
                             ns.left.length = 0;
                         }
-
+                        
                         // Route debugging
                         // console.log(sprintf('[Routing] %-25s: %s', ns.path.join("/"), ns.penalty));
-
+                        
                         return ns;
                     });
-
+                    
                     return states;
                 },
                 /* A goal state is reached when we have no more urlparts to go
                  * and the given state has a resource bound with our given verb 
                  */
-                goal: function(s) {
-                    return !s.left.length && s.data.resources[verb];
+                goal: function (s) {
+                    return !s.left.length && (!verb || s.data.resources[verb]);
                 }
             });
+
+
+        },
+        /* Gets the route node given by our url and verb
+         * url: url to match against our routes
+         * verb: verb used to request the url */
+        getRoute: function(url, verb) {
+            var search = this.searchRoutes(url, verb);
             
             // Get the first match and if present the resource
             var node = search.next();
