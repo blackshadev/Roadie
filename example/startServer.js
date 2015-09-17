@@ -1,4 +1,5 @@
-var j = require("../roadie.js");
+"use strict";
+var j = require("../");
 var fs = require("fs");
 
 // Accepts file names with routes and json object with routes.

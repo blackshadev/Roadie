@@ -1,7 +1,8 @@
+"use strict";
+var WebService = require("../../roadie.js").WebService;
+var fs = require("fs");
+
 module.exports = (function() {
-    "use strict";
-    var WebService = require("../../roadie.js").WebService;
-    var fs = require("fs");
 
     var StaticService = WebService.extend({
         root: "./statics/", // path to statics

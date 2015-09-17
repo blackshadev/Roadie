@@ -224,10 +224,10 @@ module.exports = (function() {
         _heartBeatFile: null,
         heartbeat: function(a, b) {
             if(a === "disable")
-                return this._heartBeatFile = null;
-            else if(a === "enable") {
+                this._heartBeatFile = null;
+            else if(a === "enable")
                 this._heartBeatFile = b || "startServer.js";
-            }
+            
 
             this.query();
         },
@@ -244,7 +244,7 @@ module.exports = (function() {
                     "exit\t\tExit this program\n" +
                     "reload\t\tReloads the server\n" +
                     "list {resources|routes}\t\tLists the loaded resources or routes\n" +
-                    "ping\t\tPings the server" +
+                    "ping\t\tPings the server\n" +
                     "heartbeat {enable|disable} {js}\tRestarts the server if needed with given js file to execute\n" +
                     "\n";
         }
