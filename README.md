@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/blackshadev/Roadie.svg)](https://travis-ci.org/blackshadev/Roadie)
 ## TL;DR
 Serve content with simple webservices. See working example bellow.
 
