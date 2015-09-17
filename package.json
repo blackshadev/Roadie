@@ -10,6 +10,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "request": "^2.62.0",
     "vows": "^0.8.1"
   },
   "directories": {
