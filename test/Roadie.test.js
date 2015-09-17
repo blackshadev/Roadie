@@ -9,11 +9,10 @@ var serv;
 
 vows.describe("Roadie websererver").addBatch({
 	"Webserver": {
-		topic: function() {
+		"start": function() {
 			serv = new roadie.Server({port: 8080, webserviceDir: "webservices/", root: path.normalize(__dirname + "/../example/")  });
 			serv.addRoutes(require("../example/routing.json"));
-			serv.start();	
-			return serv;
+			serv.start();
 		},
 		"HalloWorld request": {
 			topic: function() {
