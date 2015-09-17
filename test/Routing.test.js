@@ -1,3 +1,7 @@
+/** Routing.test.js 
+ *  Testes the functionallity of the routing system
+ */
+
 "use strict";
 var vows = require('vows'),
     assert = require('assert'),

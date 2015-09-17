@@ -1,3 +1,6 @@
+/** Roadie.test.js 
+ *  Testes the roadie server, starting, page request
+ */
 "use strict";
 var vows = require('vows'),
     assert = require('assert'),
@@ -62,6 +65,31 @@ vows.describe("Roadie websererver").addBatch({
 				if(err) throw err;
 				assert.ok(
 					resp.statusCode === 404
+				);
+			}
+		},
+		"Param request": {
+			topic: function() {
+				http_call("http://localhost:8080/test/testerrrr", this.callback);
+			},
+			"result": function(err, resp, body) {
+				if(err) throw err;
+				assert.ok(
+					resp.statusCode === 200 
+				 && body === "<h1>Below a list of your route params</h1>id: testerrrr<br />"
+				);
+			}
+		},
+		"Static file": {
+			topic: function() {
+				http_call("http://localhost:8080/statics/test.html", this.callback);
+			},
+			"result": function(err, resp, body) {
+				if(err) throw err;
+				var content = require("fs").readFileSync(path.normalize(__dirname + "/../example/statics/test.html"), { encoding: "utf8" });
+				assert.ok(
+					resp.statusCode === 200 
+				 && body === content
 				);
 			}
 		},
