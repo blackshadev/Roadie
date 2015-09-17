@@ -5,7 +5,8 @@
   "version": "1.0.1",
   "main": "roadie.js",
   "scripts": {
-    "start": "cd example && node startServer.js"
+    "start": "cd example && node startServer.js",
+    "test": "vows --specs"
   },
   "license": "MIT",
   "devDependencies": {},

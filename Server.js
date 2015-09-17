@@ -142,6 +142,12 @@ module.exports = (function($o) {
 
             this.onStart();
         },
+        stop: function() {
+            this.pause();
+            this.routemap.clear();
+            Resource.reloadAll();
+            this.server.close();
+        },
         // Reloads both all resources and routemaps
         reload: function() {
             this.pause();
