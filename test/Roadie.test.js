@@ -6,6 +6,10 @@ var vows = require('vows'),
 	request = require("request");
 
 var serv;
+process.on('uncaughtException', function(err) {
+	console.log('Caught exception: ' + err.stack);
+});
+
 
 vows.describe("Roadie websererver").addBatch({
 	"Webserver": {
