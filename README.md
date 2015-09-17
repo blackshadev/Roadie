@@ -2,7 +2,7 @@
 ## TL;DR
 Serve content with simple webservices. See working example bellow.
 
-# Raodie
+# Roadie
 Roadie is a webserver which serves content via custom created webservices.
 What set Roadie appart is that not only all contect goes via these webservices but also these webservices are also created and extended via an Object Oriented manner.
 
