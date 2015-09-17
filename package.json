@@ -9,7 +9,9 @@
     "test": "vows --specs"
   },
   "license": "MIT",
-  "devDependencies": {},
+  "devDependencies": {
+    "vows": "^0.8.1"
+  },
   "directories": {
     "example": "example"
   },
