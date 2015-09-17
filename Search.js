@@ -9,8 +9,9 @@
  *  Each state has a cost, it has cost to go to that state from the start ~g(x) 
  *  The state space is traversed in the order from least costing to more costly.
  */
-
+"use strict";
 module.exports = (function($o) {
+    
     var SortedArray = require("./Arrays.js").SortedArray;
 
     /* A bare implementation of a State within a search space */

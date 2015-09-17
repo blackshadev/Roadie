@@ -3,9 +3,11 @@
  *  
  *  General WebService implemetation
  */
+"use strict";
+var o = require("./core.js");
+
 
 module.exports = (function() {
-	var o = require("./core.js");
 
     // Basic WebService, all webservices should extend this class 
 	var WebService = o.Object.extend({

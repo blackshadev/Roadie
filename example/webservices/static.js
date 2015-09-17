@@ -1,4 +1,5 @@
 module.exports = (function() {
+    "use strict";
     var WebService = require("../../roadie.js").WebService;
     var fs = require("fs");
 
@@ -8,7 +9,7 @@ module.exports = (function() {
         isOpen: false,
         error: null,
         create: function(ctx) {
-            this.inherited().create.call(this, ctx);
+            _super(StaticService).create.call(this, ctx);
 
             this.fname = this.ctx.request.uri;
             this.root = ctx.cwd() + "/" + this.root;

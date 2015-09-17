@@ -3,10 +3,10 @@
  *  
  *  Some Array implementation which aren't default present in js
  */
+"use strict";
+var $o = require("./core.js");
 
 module.exports = (function() {
-    var $o = require("./core.js");
-
     /* A simple sorted array, all elements in array property are sorted 
         with the given key function on a ascending order. */
     var SortedArray = $o.Object.extend({
@@ -25,7 +25,7 @@ module.exports = (function() {
         search: function(val) {
             var a = this.array;
             var l = 0, h = a.length - 1;
-            var m;
+            var m, v;
 
             while(l <= h) {
                 // mid = (low + high) / 2

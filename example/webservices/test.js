@@ -1,6 +1,9 @@
-var $r = require("../../roadie.js");
+"use strict";
+
+var $r = require("../../roadie.js");    
 
 module.exports = $r.WebService.extend({
+       
     // Accessible in the example by /test/hallo/world/
     halloworld: function() {
         this.ctx.response.data("HalloWorld");

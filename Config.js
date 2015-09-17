@@ -5,11 +5,14 @@
 
  */
 
+"use strict";
+
+var o = require("./core.js");
+var net = require("net");
+var rl = require('readline');
+var cp = require("child_process");
+
 module.exports = (function() {
-	var o = require("./core.js");
-	var net = require("net");
-    var rl = require('readline');
-    var cp = require("child_process");
 
 	// A ConfigServer is bound to a junction server and listens for config clients
 	var cs = o.Object.extend({

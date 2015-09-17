@@ -14,7 +14,8 @@ Serve content with simple webservices. See working example bellow.
  - HTTPS integration
 
 ### Change log
- - Fixed the length calculation where it counts the number of bytes instead of the number of characters.
+ - 1.0.0  Fixed core lib such that it does not use arguments.caller.callee anymore, this change will ensure compatibility with strict mode and increase performance. (This does mean that all webservices can no longer use `this.inherited()`.)
+ - 0.4.0  Fixed the length calculation where it counts the number of bytes instead of the number of characters.
 
 ### Routing
 Routing is done with a greedy search algoritm, it "searches" the correct route for you via a route

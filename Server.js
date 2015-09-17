@@ -3,6 +3,8 @@
  *
  *  The Junction Server.
  */
+ "use strict";
+ 
 var $o = require("./core.js");
 var RouteMap = require('./Routing.js').RouteMap;
 var Resource = require("./Resource.js").Resource;
@@ -18,6 +20,7 @@ var EventEmitter = require("events").EventEmitter;
 var log = require("./log.js");
 
 module.exports = (function($o) {
+
 
     // Server which serves the content
     var Server = $o.Object.extend({

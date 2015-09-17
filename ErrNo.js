@@ -1,7 +1,7 @@
 /** NodeJs Error Numbers with description 
  *  Source: https://github.com/rvagg/node-errno
  */
-
+"use strict";
 var all = module.exports.all = [
  {
   "errno": -1,

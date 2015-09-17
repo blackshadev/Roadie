@@ -1,6 +1,7 @@
 /** junction.js
  * The main entrypoint for a require call. Wraps up all required packages
  */
+"use strict";
 var o = require("./core.js")
 var s = require("./Server.js");
 var w = require("./WebService.js");

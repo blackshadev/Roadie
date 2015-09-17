@@ -3,11 +3,12 @@
  *
  *  Implementation for the routing of urls
  */
-
+"use strict";
 var $o = require("./core.js");
 var sprintf = require("sprintf").sprintf;
 
 module.exports = (function($o) {
+    
     var $s = require("./Search.js");
 
     var parRe = /\{(\w+)\}/i
@@ -96,7 +97,7 @@ module.exports = (function($o) {
     var RouteMap = Route.extend({
         //isValid: false, // not used?
         create: function() {
-            this.inherited().create.apply(this, arguments);
+            _super(RouteMap).create.apply(this, arguments);
         },
         /* Load in a json map of routes
          * json: json object as routes { url: fname }

@@ -1,4 +1,6 @@
-(function($o) {
+"use strict";
+module.exports = (function() {
+    var $o = {};
     $o.Object = function () { };
     $o.Object.prototype.create = function () { };
     $o.Object.prototype.destroy = function() { };
@@ -7,12 +9,11 @@
 
     $o.Object.override = function (procname, fn) {
         this.prototype[procname] = fn;
-        fn.$inherited = this.prototype.superClass;
     };
 
-    $o.Object.prototype.inherited = function () {
-        return arguments.callee.caller.$inherited;
-    };
+    GLOBAL._super = function(classDef) {
+        return classDef.prototype.__proto__;
+    }
 
     $o.Object.extend = function (def) {
         var classDef = function () { 
@@ -22,7 +23,6 @@
         proto.superClass = superClass;
         for (var n in def) {
             var item = def[n];
-            if ((item instanceof Function) && (this.prototype[n])) item.$inherited = superClass;
             proto[n] = item;
         }
         proto.tag = null;
@@ -149,5 +149,5 @@
         return a;
     };
 
-
-})(exports);
+    return $o;
+})();

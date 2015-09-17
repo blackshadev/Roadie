@@ -3,14 +3,15 @@
  *
  *  Wrappers for nodeJs Http objects
  */
+"use strict";
+var $o = require("./core.js");
+var EventEmitter = require("events").EventEmitter;
+var errno = require("./ErrNo.js").errno
+var http = require("http");
+var log = require("./log.js");
+var $url = require("url");
 
 module.exports = (function() {
-	var $o = require("./core.js");
-	var EventEmitter = require("events").EventEmitter;
-	var errno = require("./ErrNo.js").errno
-    var http = require("http");
-    var log = require("./log.js");
-    var $url = require("url");
 
 	/* An http Error can be constructed with a nodeJs Error object as the first argument
 	 	or an other HttpError as argument

@@ -3,11 +3,14 @@
  *
  * 	Wraps resources in Junction, allows them to be read (static) or executed
  */
+"use strict";
+var o = require("./core.js");
+var fs = require("fs");
+var HttpError = require("./Http.js").HttpError;
+var log = require("./log.js");
+
+
 module.exports = (function() {
-	var o = require("./core.js");
-	var fs = require("fs");
-	var HttpError = require("./Http.js").HttpError;
-	var log = require("./log.js");
 
 	var Resource, StaticResource, ScriptResource;
 
@@ -84,7 +87,7 @@ module.exports = (function() {
 		method: null, // Method to execute
 		_classDef: null, // reference to the required class
 		create: function(fname, method) {
-			this.inherited().create.call(this, fname);
+			_super(ScriptResource).create.call(this, fname);
 			
 			this.method = method;
 		},
@@ -93,14 +96,14 @@ module.exports = (function() {
 			this.ClassDef = require(this.fname);
 			ScriptResource.all[this.fname] = true;
 
-			this.inherited().load.call(this);
+			_super(ScriptResource).load.call(this);
 		},
 		/* Runs the method of the given script by instanciating the class
 		 * and running the given method of that instance with the context.
 		 * ctx: HttpContext of the connecting client
 		 */
 		run: function(ctx) {
-			if(this.inherited().run.call(this, ctx) === false) return false;
+			if(_super(ScriptResource).run.call(this, ctx) === false) return false;
 
 			var self = this;
 			var svc;
