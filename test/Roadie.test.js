@@ -3,13 +3,37 @@ var vows = require('vows'),
     assert = require('assert'),
 	roadie = require("../"),
 	path = require("path"),
-	request = require("request");
+	http = require("http"),
+	$url = require("url");
 
 var serv;
-process.on('uncaughtException', function(err) {
-	console.log('Caught exception: ' + err.stack);
-});
+// process.on('uncaughtException', function(err) {
+// 	console.log('Caught exception: ' + err.stack);
+// });
 
+function http_call(url, cb) {
+	var o = $url.parse(url);
+	o.method = "GET";
+	var req = http.request(o, function(resp) {
+		var str = "";
+
+		var isDone = false;
+		resp.setEncoding("utf8");
+		resp.on("data", function(c) { str += c; });
+		resp.on("error", function(err) { 
+			if(isDone) return;
+			isDone = true;
+			cb(err, resp, null);
+		});
+		resp.on("end", function() { 
+			if(isDone) return;
+			isDone = true;
+			cb(null, resp, str);
+		});
+
+	});
+	req.end();
+}
 
 vows.describe("Roadie websererver").addBatch({
 	"Webserver": {
@@ -20,9 +44,10 @@ vows.describe("Roadie websererver").addBatch({
 		},
 		"HalloWorld request": {
 			topic: function() {
-				request("http://localhost:8080/test/hallo/world", this.callback);
+				http_call("http://localhost:8080/test/hallo/world", this.callback);
 			},
 			"result": function(err, resp, body) {
+				if(err) throw err;
 				assert.ok(
 					resp.statusCode === 200
 				 && body === "HalloWorld"
@@ -31,9 +56,10 @@ vows.describe("Roadie websererver").addBatch({
 		},
 		"Dead link": {
 			topic: function() {
-				request("http://localhost:8080/doesnt/exists", this.callback);
+				http_call("http://localhost:8080/doesnt/exists", this.callback);
 			},
 			"result": function(err, resp, body) {
+				if(err) throw err;
 				assert.ok(
 					resp.statusCode === 404
 				);
