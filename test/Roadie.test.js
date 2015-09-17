@@ -16,11 +16,7 @@ vows.describe("Roadie websererver").addBatch({
 		},
 		"HalloWorld request": {
 			topic: function() {
-				var cb = this.callback;
-				request("http://localhost:8080/test/hallo/world", function(err, resp, body) {
-					cb(err, resp, body);
-				})
-					
+				request("http://localhost:8080/test/hallo/world", this.callback);
 			},
 			"result": function(err, resp, body) {
 				assert.ok(
@@ -31,10 +27,7 @@ vows.describe("Roadie websererver").addBatch({
 		},
 		"Dead link": {
 			topic: function() {
-				var cb = this.callback;
-				request("http://localhost:8080/doesnt/exists", function(err, resp, body) {
-					cb(err, resp, body);
-				})
+				request("http://localhost:8080/doesnt/exists", this.callback);
 			},
 			"result": function(err, resp, body) {
 				assert.ok(
