@@ -10,6 +10,7 @@ var errno = require("./ErrNo.js").errno
 var http = require("http");
 var log = require("./log.js");
 var $url = require("url");
+var raw_body = require("raw-body");
 
 module.exports = (function() {
 
@@ -173,15 +174,20 @@ module.exports = (function() {
             this.urlPath = url_pars.pathname;
 
             var self = this;
-            this._data = new Buffer(0);
+            var opts = {
+				length: this.headers['content-length']
+			};
 
-            req.on("data", function(dat) {
-                self._data = Buffer.concat([self._data, dat]);
-            });
-            req.on("end", function() {
-                self._isLoaded = true;
-                self._events.emit("loadend", self._data);
-            });
+			raw_body(self._req, opts, function(err, body) {
+				if(err) {
+					self.error(new HttpError(500, err.toString()));
+					return;
+				}
+
+				self._data = body;
+				self._isLoaded = true;
+				self._events.emit("loadend", self._data);
+			});
         },
         /* Gets the body of the request.
            cb: function which is called after getting the body as first argument

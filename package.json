@@ -13,6 +13,7 @@
     "example": "example"
   },
   "dependencies": {
+    "raw-body": "^2.1.2",
     "sprintf": "^0.1.5"
   },
   "repository": {

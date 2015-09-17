@@ -39,6 +39,7 @@ module.exports = (function($o) {
         isPaused: false, // Boolean to keep track whenever the server is paused
         queue: null,  // When paused, queue all Contexts in a queue
 
+        server: null, // nodeJs http server
         _root: "", // proccess cwd relative to the junction dir
         _routes: null, // Backup of all routes set via addRoute(a) 
         _toobusy: function(){return this.maxOpenConnections > 0 && this.openConnections > this.maxOpenConnections;}, // generated function to check MaxOpenConnections 
