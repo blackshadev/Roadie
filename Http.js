@@ -248,9 +248,9 @@ module.exports = (function() {
             this.request.uri = tmp.uri;
             this.request.routePath = tmp.path.join("/");
             
-            this._foundResource = tmp.resource;
+            this.resource = tmp.resource;
 
-            return !!this._foundResource;
+            return !!this.resource;
         },
         error: function(err) {
         	if(!( err instanceof HttpError))

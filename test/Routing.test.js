@@ -18,13 +18,13 @@ vows.describe("Routemap").addBatch({
 			 && Router.routes.test.routes["{param}"] 
 			 && Router.routes.test.routes["{param}"].isParameter
 			 && Router.routes.test.routes["{param}"].parameter === "param"
-			 && Router.routes.test.routes["{param}"].resources.GET === "param.js"
-			 && Router.routes.test.routes["{param}"].resources.POST === "param.js"
-			 && Router.routes.test.routes["{param}"].resources.DELETE === "param.js"
-			 && Router.routes.test.routes["{param}"].resources.PUT === "param.js"
-			 && Router.routes.test.routes["{param}"].resources.OPTIONS === "param.js"
-			 && Router.routes.test.routes["{param}"].resources.HEAD === "param.js"
-			 && Router.routes.test.routes["{param}"].resources.TRACE === "param.js"
+			 && Router.routes.test.routes["{param}"].resources.GET.script === "param.js"
+			 && Router.routes.test.routes["{param}"].resources.POST.script === "param.js"
+			 && Router.routes.test.routes["{param}"].resources.DELETE.script === "param.js"
+			 && Router.routes.test.routes["{param}"].resources.PUT.script === "param.js"
+			 && Router.routes.test.routes["{param}"].resources.OPTIONS.script === "param.js"
+			 && Router.routes.test.routes["{param}"].resources.HEAD.script === "param.js"
+			 && Router.routes.test.routes["{param}"].resources.TRACE.script === "param.js"
 			);
 		},
 		"Specifing verb": function(Router) {
@@ -32,7 +32,7 @@ vows.describe("Routemap").addBatch({
 		
 			assert.ok(
 				Router.routes.test
-			 && Router.routes.test.resources.GET === "get.js"
+			 && Router.routes.test.resources.GET.script === "get.js"
 			);
 		},
 		"Searching route": function(Router) {
@@ -42,7 +42,7 @@ vows.describe("Routemap").addBatch({
 			assert.ok(
 				res
 			 && res.params.to === "2"
-			 && res.resource === "test.js"	
+			 && res.resource.script === "test.js"	
 			);
 		},
 		"Searching wildcard route": function(Router) {
@@ -53,9 +53,35 @@ vows.describe("Routemap").addBatch({
 			assert.ok(
 				res
 			 && Object.keys(res.params).length === 0
-			 && res.resource === "test.js"	
+			 && res.resource.script === "test.js"	
 			 && res.uri === "for"
 			);
+		},
+		"Getting custom data": function(Router) {
+			var cust_dat = { customProp: true, isTest: true };
+			Router.addRoute("[GET]/my/custom/data", "test.js", cust_dat);	
+
+			var res = Router.getRoute("/my/custom/data", "GET");
+
+			assert.ok(
+				res
+			 && Object.keys(res.params).length === 0
+			 && res.resource.script === "test.js"	
+			 && res.resource.data === cust_dat
+			);	
+		},
+		"Setting function as script": function(Router) {
+			var fn = function(ctx) {};
+			Router.addRoute("[GET]/my/custom/function", fn);	
+
+			var res = Router.getRoute("/my/custom/function", "GET");
+
+			assert.ok(
+				res
+			 && Object.keys(res.params).length === 0
+			 && res.resource.script === fn
+			 && res.resource.isFunction === true
+			);	
 		}
 	}
 

@@ -127,10 +127,12 @@ module.exports = (function($o) {
                 return;
             }
 
-            log("Server", "foundResource:" + ctx._foundResource);
-            
-            var res = Resource.create(this.root + "/" + this.webserviceDir + "/" + ctx._foundResource);
-            res.run(ctx);
+            log("Server", "foundResource: " + ctx.resource.name);
+            if(!ctx.resource.isFunction) {
+                var res = Resource.create(this.root + "/" + this.webserviceDir + "/" + ctx.resource.script);
+                res.run(ctx);
+            } else
+                ctx.resource.script(ctx);
         },
         // Starts the server
         start: function() { 
@@ -158,6 +160,14 @@ module.exports = (function($o) {
             Resource.reloadAll();
             
             this.resume();
+        },
+        /* Adds a singular route with allong with custom data
+         * url: url to add
+         * script: Script name or function to execute
+         * data: custom data to bind to the route
+         */
+        addRoute: function(url, script, data) {
+            this.routemap.addRoute(url, script, data);
         },
         /* Adds given routes to the routemap
          * a: array like with filenames or json Objects of the routes to incl

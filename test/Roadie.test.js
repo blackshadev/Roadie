@@ -43,6 +43,15 @@ vows.describe("Roadie websererver").addBatch({
 		"start": function() {
 			serv = new roadie.Server({port: 8080, webserviceDir: "webservices/", root: path.normalize(__dirname + "/../example/")  });
 			serv.addRoutes(require("../example/routing.json"));
+			serv.addRoute(
+				"[GET]/my/custom/data", "test.js:cust_dat", { customData: true }
+			);
+			serv.addRoute(
+				"[GET]/my/custom/function", function(ctx) { 
+					ctx.response.data("HERE");  
+					ctx.response.send(); 
+				}
+			);
 			serv.start();
 		},
 		"HalloWorld request": {
@@ -90,6 +99,30 @@ vows.describe("Roadie websererver").addBatch({
 				assert.ok(
 					resp.statusCode === 200 
 				 && body === content
+				);
+			}
+		},
+		"Custom data": {
+			topic: function() {
+				http_call("http://localhost:8080/my/custom/data", this.callback);
+			},
+			"result": function(err, resp, body) {
+				if(err) throw err;
+				assert.ok(
+					resp.statusCode === 200
+				 && body === JSON.stringify({ customData: true })
+				);
+			}
+		},
+		"Function as script": {
+			topic: function() {
+				http_call("http://localhost:8080/my/custom/function", this.callback);
+			},
+			"result": function(err, resp, body) {
+				if(err) throw err;
+				assert.ok(
+					resp.statusCode === 200
+				 && body === "HERE"
 				);
 			}
 		},

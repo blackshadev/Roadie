@@ -41,5 +41,10 @@ module.exports = $r.WebService.extend({
             ctx.response.append(dat);
             ctx.response.send();
         });
+    },
+    
+    cust_dat: function() {
+        this.ctx.response.data(this.ctx.resource.data);
+        this.ctx.response.send();
     }
 });

@@ -6,6 +6,7 @@
 "use strict";
 var $o = require("./core.js");
 var sprintf = require("sprintf").sprintf;
+var Resource = require("./Resource.js").Resource;
 
 module.exports = (function($o) {
     
@@ -16,6 +17,19 @@ module.exports = (function($o) {
     function escapeRegex(str) {
         return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
     }
+
+    var Endpoint = $o.Object.extend({
+        name: "", // function or scriptname
+        script: "", // script name or function
+        isFunction: false,
+        data: null, // user defined data
+        create: function(script, data) {
+            this.script = script;
+            this.data = data;
+            this.isFunction = typeof(script) === "function";
+            this.name = this.isFunction ? "[Function]" : script;
+        }
+    })
 
     // Routing is based upon parts of the url, these are looked up in a map
     var Route = $o.Object.extend({
@@ -62,10 +76,12 @@ module.exports = (function($o) {
         },
         /* Adds a resource to this route 
          * verbs: Array of HTTP verbs which are bound to fname
-         * fname: The resource bound to this route */
-        addResource: function(verbs, fname) {
+         * fname: The scriptname bound to this route 
+         * data : Optional user data bound with the endpoint
+         */
+        addEndpoint: function(verbs, fname, data) {
             for(var iX = 0; iX < verbs.length; iX++) 
-                this.resources[verbs[iX]] = fname;
+                this.resources[verbs[iX]] = new Endpoint(fname, data);
             
         }
     });
@@ -109,7 +125,7 @@ module.exports = (function($o) {
         /* Adds a route with given url and fname
          * url: route bound to the fname
          * fname: filename of the resource bound to the url */
-        addRoute: function(url, fname) {
+        addRoute: function(url, fname, data) {
             var r = this;
             var tmp = Route.urlParts(url);
 
@@ -132,7 +148,7 @@ module.exports = (function($o) {
                 r = r.routes[ p[i] ];
             }
 
-            r.addResource(verbs, fname);
+            r.addEndpoint(verbs, fname, data);
         },
         /* Generates a search function based on given url and verb
          * url: Url to search for
