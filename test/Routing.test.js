@@ -8,7 +8,7 @@ var vows = require('vows'),
 	Routing = require("../Routing.js");
 
 vows.describe("Routemap").addBatch({
-	"Routemap": {
+	"Routemap": { 
 		topic: new Routing.RouteMap(),
 		"Adding route with parameter": function(Router) {
 			Router.addRoute("/test/{param}/", "param.js");
