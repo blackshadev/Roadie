@@ -42,8 +42,18 @@ start.js
 "use strict";
 var $r = require("roadie");
 
-// Routes in routing.js and add a inline route.
-var routes = ["routing.json", { "[GET,POST]/statics/*" : "static.js" }]
+
+// create routes by providing a file name containing the routes
+// or by adding them inline
+var routes = ["routing.json", { 
+    "[GET,POST]/statics/*" : "static.js",
+    "[GET]/query/": function(ctx) {
+        // echo the parameters in the search query of the URL
+        ctx.response.data(ctx.request.queryParams);
+        ctx.response.send();
+    }
+}];
+
 
 // HTTP server with (optional) config server
 var server = new $r.Server({port: 8080, webserviceDir: "webservices/", root: __dirname  });

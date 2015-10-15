@@ -2,10 +2,18 @@
 var j = require("../");
 var fs = require("fs");
 
-// Accepts file names with routes and json object with routes.
+// Accepts file names  with routes and json object with routes.
 // All routes are prefixed the HTTP verb (defaults to all).
 // The route itsef can contain a wildcard (*) and parameters ({paramName})
-var routes = ["routing.json", { "[GET,POST]/statics/*" : "static.js" }]
+// The route must map to a js file containing the webservice or a function which to execute
+var routes = ["routing.json", { 
+	"[GET,POST]/statics/*" : "static.js",
+	"[GET]/query/": function(ctx) {
+		// echo the parameters in the search query of the URL
+		ctx.response.data(ctx.request.queryParams);
+		ctx.response.send();
+	}
+}];
 
 // HTTP server
 var server = new j.Server({port: 8080, webserviceDir: "webservices/", root: __dirname });
