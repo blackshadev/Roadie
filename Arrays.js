@@ -1,13 +1,13 @@
 /** Arrays.js
  *  Author: Vincent Hagen
- *  
+ *
  *  Some Array implementation which aren't default present in js
  */
 "use strict";
 var $o = require("./core.js");
 
 module.exports = (function() {
-    /* A simple sorted array, all elements in array property are sorted 
+    /* A simple sorted array, all elements in array property are sorted
         with the given key function on a ascending order. */
     var SortedArray = $o.Object.extend({
         array: null,
@@ -19,9 +19,9 @@ module.exports = (function() {
             this.array = [];
         },
         /* Binary searchest the given value, returns the index within the array
-         When the exact value is not present it returns the index where the 
-         given value sould be inserted -- the last index where the given value 
-         is lower than the item's. */ 
+         When the exact value is not present it returns the index where the
+         given value sould be inserted -- the last index where the given value
+         is lower than the item's. */
         search: function(val) {
             var a = this.array;
             var l = 0, h = a.length - 1;
@@ -37,7 +37,7 @@ module.exports = (function() {
                 else if(v > val)
                     h = m - 1;
                 else
-                    return m;                
+                    return m;
             }
 
             return l;

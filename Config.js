@@ -33,7 +33,7 @@ module.exports = (function() {
 
 		},
         /* Handles a incomming connection
-         * sock: net.Socket instance of the incomming connection */ 
+         * sock: net.Socket instance of the incomming connection */
 		handleConnection: function(sock) {
 			if(this.localConfigOnly && !isLocalIp(sock.remoteAddress)) {
                 console.log("[Config] Refused client " + sock.remoteAddress);
@@ -57,7 +57,7 @@ module.exports = (function() {
          * mess: a string representation of the send message */
 		handleMessage: function(sock, mess) {
 			var cmd = mess.trim().split(' ');
-            
+
             // Handle the message as a command
             switch(cmd[0].toLowerCase()) {
                 case 'reload':  // reloads the server, routemaps and resources
@@ -84,7 +84,7 @@ module.exports = (function() {
                 case 'startfile':
                     sock.write(process.argv[1]);
                     break;
-                default: 
+                default:
                     sock.write("Unreconized request");
                 break;
             }
@@ -94,7 +94,7 @@ module.exports = (function() {
 
 	// a ConfigClient is used to config a junction server
 	var cc = o.Object.extend({
-        host: null, 
+        host: null,
         port: 0,
         socket: null,
         prompt: null,
@@ -127,7 +127,7 @@ module.exports = (function() {
                 if(!q) return done();
                 // skip if the property is already set
                 if(self[q[1]]) return p();
-                
+
                 self.prompt.question(q[0], function(dat) {
                     self[q[1]] = dat;
 
@@ -158,8 +158,8 @@ module.exports = (function() {
             this.socket.connect(this.port, this.host, function() {
                 self.connTries = 1;
                 console.log("Connected to " + self.host + ":" + self.port);
-                self.send("startfile", function(d) { 
-                    self._heartBeatFile = d; 
+                self.send("startfile", function(d) {
+                    self._heartBeatFile = d;
                     console.log("Server started with " + d);
                     self.query();
                 })
@@ -227,7 +227,7 @@ module.exports = (function() {
                 this._heartBeatFile = null;
             else if(a === "enable")
                 this._heartBeatFile = b || "startServer.js";
-            
+
 
             this.query();
         },
@@ -239,8 +239,8 @@ module.exports = (function() {
         },
         // Output the available commands
         help: function() {
-            return  "Available commands:\n" + 
-                    "help\t\tPrint out this text\n" + 
+            return  "Available commands:\n" +
+                    "help\t\tPrint out this text\n" +
                     "exit\t\tExit this program\n" +
                     "reload\t\tReloads the server\n" +
                     "list {resources|routes}\t\tLists the loaded resources or routes\n" +
@@ -254,9 +254,9 @@ module.exports = (function() {
 	function isLocalIp(ip) {
         var p = ip.split(".").map(function(x) { return parseInt(x); });
 
-        return  ip === "127.0.0.1" || 
-                p[0] === 10 || 
-                (p[0] === 192 && p[1] === 168) || 
+        return  ip === "127.0.0.1" ||
+                p[0] === 10 ||
+                (p[0] === 192 && p[1] === 168) ||
                 (p[0] === 172 && p[1] > 15 && p[1] < 32);
     }
 
