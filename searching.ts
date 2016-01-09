@@ -1,16 +1,16 @@
 ﻿import { SortedArray, IValueOf} from "./collections";
 
 
-class State implements IValueOf {
+export class State<T> implements IValueOf {
     // Path of states to this state
-    path: State[];
-    left: State[];
+    path: State<T>[];
+    left: State<T>[];
     cost: number;
 
     // user definable data
-    data: any;
+    data: T;
 
-    constructor(data: any) {
+    constructor(data: T) {
         this.data = data;
         this.path = [];
         this.left = []; 
@@ -22,7 +22,7 @@ class State implements IValueOf {
     }
 }
 
-abstract class GreedySearch<S extends State> {
+export abstract class GreedySearch<S extends State<any>> {
 
     /**
      * Returns possible moves from given state
