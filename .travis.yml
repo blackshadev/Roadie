@@ -7,3 +7,6 @@ node_js:
   - "1.8"
   - "4.1"
 sudo: false
+branches:
+  only:
+    - master
