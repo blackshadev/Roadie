@@ -16,11 +16,21 @@
 # sftp configuration file
 sftp-config.json
 
+### TypeScript
+*.js
+*.js.map
 
 ### Node ###
 # Logs
 logs
 *.log
+
+### VisualStudio
+*.suo
+bin/
+obj/
+.vs/
+.ntvs_analysis.dat
 
 # Runtime data
 pids
