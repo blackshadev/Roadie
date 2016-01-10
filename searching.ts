@@ -3,13 +3,13 @@
 import { SortedArray, IValueOf} from "./collections";
 
 
-export class State<T> implements IValueOf {
+export class State<P, T> implements IValueOf {
     // Path of states to this state
-    path: State<T>[];
-    left: State<T>[];
-    cost: number;
+    path: P[];
+    left: P[];
+    get cost(): number { return this.path.length; };
 
-    // user definable data
+    // user definable data, the clone function copies this by reference, watch out mutating it
     data: T;
 
     constructor(data: T) {
@@ -18,13 +18,25 @@ export class State<T> implements IValueOf {
         this.left = []; 
     }
 
+    clone(): State<P, T> {
+        let s = new State<P, T>(this.data);
+        s.path = this.path.slice(0);
+        s.left = this.left.slice(0);
+        
+        return s;
+    }
 
     valueOf() : number {
         return this.cost;
     }
 }
 
-export abstract class GreedySearch<S extends State<any>> {
+export abstract class GreedySearch<S extends State<any, any>> {
+    nodes: SortedArray<S>;
+
+    constructor() {
+        this.nodes = new SortedArray<S>();
+    }
 
     /**
      * Returns possible moves from given state
@@ -43,26 +55,28 @@ export abstract class GreedySearch<S extends State<any>> {
      */
     protected abstract initial(): S[];
 
-    /**
-     * Calculates the cost of a state
-     */
-    protected cost(state: S) { return state.path.length; }
-    
+    reset(): void {
+        this.nodes.clear();
+        this.nodes.addAll(this.initial());
+    }
+
+    first(): S {
+        this.reset();
+        return this.next();
+    }
 
     next(): S {
-        let nodes = new SortedArray<S>(this.initial());
-
-        while (nodes.length > 0) {
-            let state = nodes.items.shift();
+        
+        while (this.nodes.length > 0) {
+            let state = this.nodes.items.shift();
 
             // Is goal state?
             if (this.goal(state)) return state;
 
             let arr = this.move(state);
-            arr.forEach((e) => { e.cost = this.cost(e); });
 
             // Add the new states to our possible moves
-            nodes.addAll(arr);
+            this.nodes.addAll(arr);
         }
 
         // no more states

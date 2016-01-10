@@ -105,3 +105,16 @@ export class Map<K, V> {
     }
 
 }
+
+
+export let extend: (target: {}, source: {}) => {};
+extend = (<any>Object).assign;
+if (!extend) {
+    extend = function (target: {}, source: {}): {} {
+        for (let k in source) {
+            target[k] = source[k];
+        }
+
+        return target;
+    };
+}
