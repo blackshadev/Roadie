@@ -4,9 +4,6 @@ export interface IValueOf {
     valueOf(): number;
 }
 
-
-
-
 export class SortedArray<T extends IValueOf> {
     
 

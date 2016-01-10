@@ -48,6 +48,18 @@ describe("Routing: ", () => {
         );
     });
 
+    it("Multiple verbs", () => {
+        Router.addRoute("[POST,PUT,DELETE]/a/static/url", "poster.js");
+        let res = Router.getRoute("/a/static/url", "POST");
+        assert.ok(
+            res && res.resource.script === "poster.js",
+            "Didn't match the correct route"
+        );
+
+        res = Router.getRoute("/a/static/url", "GET");
+        assert.ok(!res, "Matched a route while expecting it to not match");
+    });
+
     it("Searching wildcard route", () => {
         Router.addRoute("[GET]/url/to/search/*", "test.js");
 
@@ -86,6 +98,23 @@ describe("Routing: ", () => {
             && Object.keys(res.params).length === 0
             && res.resource.script === fn
         );
+    });
+
+    it("Search precidence", () => {
+        Router.addRoute("[PUT]/some/{a}/{b}", "1");
+        Router.addRoute("[PUT]/some/{a}/url", "2");
+        Router.addRoute("[PUT]/some/custom/url", "3");
+
+        let res = Router.getRoute("/some/custom/url", "PUT");
+        assert.ok(res && res.resource.script === "3", "Static precidence failt");
+
+        res = Router.getRoute("/some/B/url", "PUT");
+        assert.ok(res && res.resource.script === "2" && res.params["a"] === "b");
+
+        res = Router.getRoute("/some/custom/A", "PUT");
+        assert.ok(res && res.resource.script === "1" && res.params["a"] === "custom" && res.params["b"] === "a");
+        
+
     });
 
 });

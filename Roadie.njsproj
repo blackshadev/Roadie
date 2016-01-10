@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{afe0c5e6-101b-4854-9d8e-7135e09d32db}</ProjectGuid>
     <ProjectHome />
-    <ProjectView>ShowAllFiles</ProjectView>
+    <ProjectView>ProjectFiles</ProjectView>
     <StartupFile>
     </StartupFile>
     <WorkingDirectory>.</WorkingDirectory>
@@ -45,7 +45,9 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="collections.ts" />
+    <TypeScriptCompile Include="endpoints.ts" />
     <TypeScriptCompile Include="routemap.ts" />
+    <TypeScriptCompile Include="route_search.ts" />
     <TypeScriptCompile Include="searching.ts" />
     <TypeScriptCompile Include="test\collections.ts">
       <SubType>Code</SubType>
