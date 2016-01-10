@@ -1,4 +1,6 @@
-﻿import { SortedArray, IValueOf} from "./collections";
+﻿"use strict";
+
+import { SortedArray, IValueOf} from "./collections";
 
 
 export class State<T> implements IValueOf {

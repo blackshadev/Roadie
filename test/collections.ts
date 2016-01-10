@@ -1,4 +1,5 @@
-﻿import assert = require('assert');
+﻿"use strict";
+import assert = require('assert');
 import { SortedArray } from '../collections';
 
 describe("SortedArray", () => {

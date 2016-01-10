@@ -6,7 +6,7 @@
   "main": "roadie.js",
   "scripts": {
     "start": "cd example && node startServer.js",
-    "test": "vows --specs"
+    "test": "mocha"
   },
   "license": "MIT",
   "devDependencies": {

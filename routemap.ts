@@ -1,4 +1,6 @@
-﻿import { State, GreedySearch } from "./searching";
+﻿"use strict";
+import { Map } from "./collections";
+import { State, GreedySearch } from "./searching";
 
 
 
@@ -12,13 +14,17 @@ interface Routes {
     [name: string]: Route
 }
 
-class Endpoint {
-    constructor(fname, data) {
+class Endpoint<T> {
+    script: string;
+    data: T;
 
+    constructor(fname : string, data : T) {
+        this.script = fname;
+        this.data = data;
     }
 }
 
-enum HttpVerbs {
+export enum HttpVerbs {
     "GET" = 0,
     "POST",
     "PUT",
@@ -26,20 +32,12 @@ enum HttpVerbs {
     "UPGRADE",
     "TRACE",
     "HEAD",
+    "OPTIONS",
     "UPDATE"
 }
 
-interface Endpoints {
-    "GET"?: Endpoint;
-    "POST"?: Endpoint;
-    "PUT"?: Endpoint;
-    "DELETE"?: Endpoint;
-    "UPGRADE"?: Endpoint;
-    "TRACE"?: Endpoint;
-    "HEAD"?: Endpoint;
-    "UPDATE"?: Endpoint;
-}
-
+class Endpoints extends Map<HttpVerbs, Endpoint<any>> { }
+    
 function escapeRegex(str) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
@@ -49,10 +47,11 @@ interface IRouteMap {
     addEndpoint(verbs: HttpVerbs[], fname:any, data:any);
 }
 
-abstract class Route implements IRouteMap {
+export abstract class Route implements IRouteMap {
     static allVerbs: HttpVerbs[] = (() => {
         let arr: HttpVerbs[] = [];
         for (var k in HttpVerbs) {
+            if (typeof (HttpVerbs.GET) !== typeof (HttpVerbs[k])) continue;
             arr.push(<any>HttpVerbs[k]);
         }
         
@@ -71,6 +70,8 @@ abstract class Route implements IRouteMap {
 
     constructor(name: string) {
         this.name = name;
+        this.routes = {};
+        this.endpoints = new Endpoints();
     }
 
     /**
@@ -82,7 +83,7 @@ abstract class Route implements IRouteMap {
 
     addEndpoint(verbs: HttpVerbs[], fname: any, data: any) {
         for (let i = 0; i < verbs.length; i++)
-            this.endpoints[i] = new Endpoint(fname, data);
+            this.endpoints.set(verbs[i], new Endpoint(fname, data));
     }
 
     /**
@@ -126,7 +127,7 @@ abstract class Route implements IRouteMap {
 /**
  * Static named routes
  */
-class StaticRoute extends Route {
+export class StaticRoute extends Route {
     match(urlPart: string, restUrl: string): boolean {
         return this.name === urlPart;
     }
@@ -135,8 +136,8 @@ class StaticRoute extends Route {
 /**
  * Named parameter routes
  */
-class ParameterRoute extends Route {
-    static ParameterRegExp = /\{\w+\}/i;
+export class ParameterRoute extends Route {
+    static ParameterRegExp = /\{(\w+)\}/i;
     
     match(urlPart: string, restUrl: string): boolean { return true; }
 }
@@ -144,7 +145,7 @@ class ParameterRoute extends Route {
 /**
  * Routes with a wildcard
  */
-class WildcardRoute extends Route {
+export class WildcardRoute extends Route {
     regex: RegExp;
 
     constructor(name: string) {
@@ -173,7 +174,9 @@ export class RouteMap implements IRouteMap {
     }
 
     addRoute(url: string, resource: any, data?: any) {
-        const [verbs, urlParts] = Route.splitURL(url);
+        const tmp = Route.splitURL(url);
+        const verbs = tmp[0];
+        const urlParts = tmp[1];
 
         let r: IRouteMap = this;
         for (let i = 0; i < urlParts.length; i++) {

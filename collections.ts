@@ -1,4 +1,5 @@
-﻿
+﻿"use strict";
+
 export interface IValueOf {
     valueOf(): number;
 }
@@ -79,4 +80,28 @@ export class SortedArray<T extends IValueOf> {
     clear(): void {
         this._items.length = 0;
     }
+}
+
+
+
+/**
+ * Own Map class
+ */
+export class Map<K, V> {
+    private items: { [name: string]: V };
+
+    protected key(key: K): string { return key.toString(); }
+
+    constructor() {
+        this.items = {};
+    }
+
+    set(key: K, value: V): void {
+        this.items[this.key(key)] = value;
+    }
+
+    get(key: K): V {
+        return this.items[this.key(key)];
+    }
+
 }
