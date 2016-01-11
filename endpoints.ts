@@ -1,5 +1,8 @@
-﻿
-export class Endpoint<T, K> {
+﻿import { HttpContext } from "./http"; 
+
+export type WebFunction = ((ctx: HttpContext) => void);
+
+export abstract class Endpoint<T, K> {
     script: T;
     data: K;
 
@@ -13,16 +16,27 @@ export class Endpoint<T, K> {
             case "function": return new FunctionEndpoint<T>(<WebFunction>script, data);
             case "string": return new ScriptEndpoint<T>(<string>script, data);
         }
-        return;
+        throw new Error("Unknown endpoint type");
     }
+
+    abstract execute(ctx: HttpContext): void;
+
+
 }
 
 export class ScriptEndpoint<K> extends Endpoint<string, K> {
 
+    execute(ctx: HttpContext): void {
+
+    }
+
 }
 
-export type WebFunction = ((ctx: any) => void);
+
 
 export class FunctionEndpoint<K> extends Endpoint<WebFunction, K> {
+    
+
+    execute(ctx: HttpContext): void { this.script(ctx); }
 
 }

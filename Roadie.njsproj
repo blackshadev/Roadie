@@ -46,6 +46,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="collections.ts" />
     <TypeScriptCompile Include="endpoints.ts" />
+    <TypeScriptCompile Include="http.ts" />
     <TypeScriptCompile Include="routemap.ts" />
     <TypeScriptCompile Include="route_search.ts" />
     <TypeScriptCompile Include="searching.ts" />
