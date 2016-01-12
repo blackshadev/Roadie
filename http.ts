@@ -1,21 +1,77 @@
 ﻿import { IncomingMessage, ServerResponse, Server as HttpServer, createServer as createHttpServer } from "http"
 import { Server as HttpsServer, createServer as createHttpsServer } from "https"
 
-
-declare interface HttpRequest {
-    url: string;
-    method: string;
-    header(headerName: string): string;
-    readBody(cb: (data: Buffer) => void): void;
+export enum ReadingState {
+    empty,
+    reading,
+    read,
+    closed
 }
 
-declare interface HttpResponse {
+class HttpRequest {
+
+    get url(): string { return this.req.url; };
+    get method(): string { return this.req.method; }
+
+    header(headerName: string): string { return this.req.headers[headerName]; };
+
+    private _data_len: number;
+    private _data_iX: number;
+    private _data: Buffer;
+    protected readState: ReadingState = ReadingState.empty;
+    readBody(cb: (data: Buffer) => void): void {
+        switch (this.readState) {
+            case ReadingState.read:
+                cb(this._data);
+                break;
+            case ReadingState.empty:
+                this.readState = ReadingState.reading;
+                let len = parseInt(this.header("content-length"));
+                this._data_len = isNaN(len) ? 0 : len;
+                this._data = new Buffer(this._data_len);
+                this._data_iX = 0;
+                this.req.on("data", (chk: Buffer) => {
+                    let len = Math.min(this._data_len - this._data_iX, chk.length);
+                    chk.copy(this._data, this._data_iX, 0, len);
+                    this._data_iX += len;
+                    this.req.on("end", () => this.readState = ReadingState.read);
+                });
+                // fall through
+            case ReadingState.reading:
+                this.req.on("end", () => cb(this._data));
+                break;
+        }
+
+    };
+
+    protected req: IncomingMessage;
+
+    constructor(req: IncomingMessage) {
+        this.req = req;
+        this.readBody((data: Buffer) => {
+            console.log(data);
+        });
+    }
+}
+
+class HttpResponse {
+
+    protected resp: ServerResponse;
+
+    constructor(resp: ServerResponse) {
+        this.resp = resp;
+    }
 
 }
 
-export interface HttpContext {
+export class HttpContext {
     request: HttpRequest;
     response: HttpResponse;
+
+    constructor(req: IncomingMessage, resp: ServerResponse) {
+        this.request = new HttpRequest(req);
+        this.response = new HttpResponse(resp);
+    }
 }
 
 
@@ -58,7 +114,7 @@ export class RoadieServer {
 
     protected createServer(): HttpsServer | HttpServer {
         const _h = (req: IncomingMessage, resp: ServerResponse) => {
-            console.log(req, resp);
+            let ctx = new HttpContext(req, resp);
         };
         
         if (this.useHttps)
