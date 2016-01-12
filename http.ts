@@ -40,7 +40,7 @@ export class RoadieServer {
     protected rootDir: string = process.cwd();
     protected webserviceDir: string = "webservices";
     protected tlsOptions: {};
-
+    protected server: HttpsServer | HttpServer;
     
 
     constructor(oPar: IRoadieServerParameters) {
@@ -51,19 +51,29 @@ export class RoadieServer {
 
         this.tlsOptions = oPar.tlsOptions;
 
-
+        this.server = this.createServer();
     }
 
 
 
-    protected server(): HttpsServer | HttpServer {
+    protected createServer(): HttpsServer | HttpServer {
         const _h = (req: IncomingMessage, resp: ServerResponse) => {
-
+            console.log(req, resp);
         };
-
-        return this.useHttps ? createHttpServer(_h) : createHttpsServer(this.tlsOptions, _h);
+        
+        if (this.useHttps)
+            return createHttpsServer(this.tlsOptions, _h);
+        else
+            return createHttpServer(_h)
+        
     }
 
+    start(): void {
+        this.server.listen(this._port, this._host);
+        console.log("listening on port " + this._host + ":" + this._port);
+    }
+
+    
 
 
 }

@@ -6,8 +6,7 @@
     <ProjectGuid>{afe0c5e6-101b-4854-9d8e-7135e09d32db}</ProjectGuid>
     <ProjectHome />
     <ProjectView>ProjectFiles</ProjectView>
-    <StartupFile>
-    </StartupFile>
+    <StartupFile>start.ts</StartupFile>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
@@ -50,6 +49,7 @@
     <TypeScriptCompile Include="routemap.ts" />
     <TypeScriptCompile Include="route_search.ts" />
     <TypeScriptCompile Include="searching.ts" />
+    <TypeScriptCompile Include="start.ts" />
     <TypeScriptCompile Include="test\collections.ts">
       <SubType>Code</SubType>
       <TestFramework>Mocha</TestFramework>
