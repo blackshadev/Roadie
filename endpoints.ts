@@ -1,5 +1,7 @@
-﻿import { HttpVerb, HttpContext } from "./http"; 
-import { Map } from "./collections";
+﻿import { HttpVerb, HttpContext } from "./http";
+import { Map, constructorOf } from "./collections";
+import { WebService } from "./webservice";
+
 
 export type WebFunction = ((ctx: HttpContext) => void);
 
@@ -23,14 +25,27 @@ export abstract class Endpoint<T, K> {
     }
 
     abstract execute(ctx: HttpContext): void;
-
-
+    
 }
 
-export class ScriptEndpoint<K> extends Endpoint<string, K> {
+export class ScriptEndpoint<K> extends Endpoint<constructorOf<WebService>, K> {
+    fileName: string;
+    method: string;
+
+
+    constructor(script: string, data: K) {
+        let parts = script.split(":");
+        this.fileName = parts[0];
+        this.method = parts[1];
+
+        let svc: constructorOf<WebService> = require(this.fileName);
+        super(svc, data);
+
+        
+    }
 
     execute(ctx: HttpContext): void {
-
+        
     }
 
 }

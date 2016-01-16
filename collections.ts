@@ -79,7 +79,9 @@ export class SortedArray<T extends IValueOf> {
     }
 }
 
-
+export interface constructorOf<T> {
+    new(...rest: any[]): T
+}
 
 /**
  * Own Map class
