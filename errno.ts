@@ -4,10 +4,14 @@
 "use strict";
 
 export interface IError {
-    errno: number;
-    code: string;
-    description: string;
-    http?: number;
+    // Internal error number
+    errno: number; 
+    // HTTP character code
+    code: string;  
+    // description
+    description: string; 
+    // Http StatusCode
+    http?: number; 
 }
 
 export const all: IError[] = [

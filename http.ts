@@ -1,39 +1,58 @@
 ﻿import { IncomingMessage, ServerResponse, Server as HttpServer, createServer as createHttpServer, STATUS_CODES } from "http"
 import { Server as HttpsServer, createServer as createHttpsServer } from "https"
 import { BufferReader } from "./BufferReader";
-
+import { IDictionary } from "./collections";
 import { errno, IError } from "./errno";
+import { RouteMap, IRoutingResult } from "./routemap";
+import { WebFunction } from "./endpoints";
 
-export enum ReadingState {
-    empty,
-    reading,
-    read,
-    closed
+export enum HttpVerb {
+    "GET" = 0,
+    "POST",
+    "PUT",
+    "DELETE",
+    "UPGRADE",
+    "TRACE",
+    "HEAD",
+    "OPTIONS",
+    "UPDATE"
 }
 
-class HttpRequest {
+export function parseHttpVerb(verb: string) {
+    let v: HttpVerb = HttpVerb[verb];
+    if (typeof (HttpVerb.GET) !== typeof (v)) throw new Error("Invalid HttpVerb");
+    return v;
+}
 
+
+class HttpRequest {
     get url(): string { return this.req.url; };
     get method(): string { return this.req.method; }
+    get parameters(): IDictionary<string> { return this._parameters; };
+    get ctx() { return this._ctx; }
+    
 
-    header(headerName: string): string { return this.req.headers[headerName]; };
-
-    private _data_len: number;
-    private _data_iX: number;
-    private _data: Buffer;
-    protected readState: ReadingState = ReadingState.empty;
-    readBody(cb: (data: Buffer) => void): void {
-        this.reader.read(cb);
-    };
-
+    protected _parameters: IDictionary<string>;
     protected req: IncomingMessage;
     protected reader: BufferReader;
+    protected _ctx: HttpContext;
+    
 
-    constructor(req: IncomingMessage) {
+    constructor(ctx: HttpContext, route: IRoutingResult, req: IncomingMessage) {
+        this._ctx = ctx;
         this.req = req;
+        this._parameters = route.params;
         this.reader = new BufferReader(parseInt(this.header("content-length")), req);
         
     }
+
+    readBody(cb: (data: Buffer) => void): void {
+        this.reader.read(cb);
+    }
+
+    header(headerName: string): string { return this.req.headers[headerName]; }
+
+    parameter(paramName: string): string { return this._parameters[paramName]; }
 }
 
 class HttpResponse {
@@ -47,7 +66,11 @@ class HttpResponse {
     protected _data: Buffer | string;
     protected _startTime: number;
 
-    constructor(resp: ServerResponse) {
+    protected _ctx: HttpContext;
+    get ctx() { return this._ctx; }
+
+    constructor(ctx: HttpContext, resp: ServerResponse) {
+        this._ctx = ctx;
         this.resp = resp;
         this.headers = {};
         this._startTime = Date.now();
@@ -57,6 +80,7 @@ class HttpResponse {
         this.statusCode = code;
     }
 
+    set contentType(val: string) { this.headers["Content-Type"] = val; }
     header(headerName: string, value: string) : void {
         this.headers[headerName] = value;
     }
@@ -101,8 +125,17 @@ class HttpResponse {
 
 export class HttpError {
     static translateErrNo(no: string): IError { return errno[no]; };
-    static httpStatusText(no: string): string {
+    static httpStatusText(no: string|number): string {
         return STATUS_CODES[no];
+    }
+
+    static send(ctx: HttpContext, httpStatus: number, extra?: string) {
+        let err = HttpError.httpStatusText(httpStatus);
+
+        ctx.response.status(httpStatus);
+        ctx.response.data(err);
+        ctx.response.send();
+
     }
 
 }
@@ -110,24 +143,24 @@ export class HttpError {
 export class HttpContext {
     request: HttpRequest;
     response: HttpResponse;
+    route: IRoutingResult;
 
     get url(): string { return this.request.url; } 
     get method(): string { return this.request.method; } 
+    
+    protected _server: RoadieServer;
+    constructor(serv: RoadieServer, route: IRoutingResult,  req: IncomingMessage, resp: ServerResponse) {
+        this._server = serv;
+        this.route = route;
+        this.request = new HttpRequest(this, route, req);
+        this.response = new HttpResponse(this, resp);
+    }
 
-
-    constructor(req: IncomingMessage, resp: ServerResponse) {
-        this.request = new HttpRequest(req);
-        this.response = new HttpResponse(resp);
-
-        setTimeout(() => {
-            this.response.data({
-                testVal: true,
-                more: { less:true }
-            });
-            this.response.send();
-
-        })
-
+    execute(): void {
+        if (this.route.resource)
+            this.route.resource.execute(this);
+        else
+            HttpError.send(this, 404);
     }
 }
 
@@ -138,6 +171,10 @@ interface IRoadieServerParameters {
     root?: string;
     webserviceDir?: string;
     tlsOptions?: {}
+}
+
+export interface IRoutes {
+    [route: string]: WebFunction | string;
 }
 
 export class RoadieServer {
@@ -154,24 +191,27 @@ export class RoadieServer {
     protected webserviceDir: string = "webservices";
     protected tlsOptions: {};
     protected server: HttpsServer | HttpServer;
-    
+    protected routemap: RouteMap;
 
     constructor(oPar: IRoadieServerParameters) {
         this._port = oPar.port || this._port;
         this._host = oPar.host || this._host;
         this.webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this.rootDir = oPar.root || this.rootDir;
+        this.routemap = new RouteMap();
 
         this.tlsOptions = oPar.tlsOptions;
 
         this.server = this.createServer();
     }
-
-
-
+    
     protected createServer(): HttpsServer | HttpServer {
         const _h = (req: IncomingMessage, resp: ServerResponse) => {
-            let ctx = new HttpContext(req, resp);
+            let verb = parseHttpVerb(req.method);
+            let route = this.getRoute(req.url, verb);
+            
+            let ctx = new HttpContext(this, route, req, resp);
+            ctx.execute();
         };
         
         if (this.useHttps)
@@ -186,7 +226,18 @@ export class RoadieServer {
         console.log("listening on port " + this._host + ":" + this._port);
     }
 
+    getRoute(url: string, verb: HttpVerb) : IRoutingResult {
+        return this.routemap.getRoute(url, verb);
+    }
+
+    addRoute(route: string, endpoint: WebFunction | string, data?: any) {
+        this.routemap.addRoute(route, endpoint, data);
+    }
+
+    addRoutes(routes: IRoutes) : void {
+        for (var k in routes) 
+            this.addRoute(k, routes[k]);
+        
+    }
     
-
-
 }

@@ -1,5 +1,6 @@
 ﻿import { State, GreedySearch } from "./searching";
-import { RouteType, Route, RouteMap, HttpVerb } from "./routemap";
+import { RouteType, Route, RouteMap } from "./routemap";
+import { HttpVerb } from "./http";
 import { extend } from "./collections";
 
 

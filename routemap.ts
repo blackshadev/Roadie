@@ -1,8 +1,10 @@
 ﻿"use strict";
-import { Map, extend } from "./collections";
+import { Map, extend, IDictionary } from "./collections";
 import { State, GreedySearch } from "./searching";
-import { Endpoint, WebFunction, FunctionEndpoint, ScriptEndpoint } from './endpoints';
+import { Endpoint, WebFunction, FunctionEndpoint, ScriptEndpoint, Endpoints } from './endpoints';
 import { RouteSearch, RoutingState } from "./route_search";
+import { HttpVerb } from "./http";
+
 
 
 export enum RouteType {
@@ -16,20 +18,6 @@ interface Routes {
     [name: string]: Route
 }
 
-
-export enum HttpVerb {
-    "GET" = 0,
-    "POST",
-    "PUT",
-    "DELETE",
-    "UPGRADE",
-    "TRACE",
-    "HEAD",
-    "OPTIONS",
-    "UPDATE"
-}
-
-class Endpoints extends Map<HttpVerb, Endpoint<any, any>> { }
     
 function escapeRegex(str) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -174,6 +162,13 @@ export interface IUserRoutes {
     [route: string]: string
 }
 
+export interface IRoutingResult {
+    path: string[],
+    params: IDictionary<string>
+    resource: Endpoint<any, any>,
+    uri: string 
+}
+
 export class RouteMap {
     root: Route;
     get routes(): Routes {
@@ -215,17 +210,14 @@ export class RouteMap {
         return r;
     }
 
-    getRoute(url: string, verb: string): { path: string[], params: {}, resource: Endpoint<any, any>, uri: string }  {
-        let v: HttpVerb = HttpVerb[verb];
-        if (typeof (HttpVerb.GET) !== typeof (v)) throw new Error("Invalid HttpVerb");
-
-        let s = this.searchRoute(v, url);
+    getRoute(url: string, verb: HttpVerb): IRoutingResult  {
+        let s = this.searchRoute(verb, url);
         let end: Endpoint<any, any>;
 
         if (s)
-            end = s.data.endpoints.get(v);
+            end = s.data.endpoints.get(verb);
 
-        if (!end) return;
+        if (!end) return { path: null, resource: null, uri: null, params: {} };
         return {
             path: s.path,
             params: s.params,

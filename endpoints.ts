@@ -1,6 +1,9 @@
-﻿import { HttpContext } from "./http"; 
+﻿import { HttpVerb, HttpContext } from "./http"; 
+import { Map } from "./collections";
 
 export type WebFunction = ((ctx: HttpContext) => void);
+
+export class Endpoints extends Map<HttpVerb, Endpoint<any, any>> { }
 
 export abstract class Endpoint<T, K> {
     script: T;

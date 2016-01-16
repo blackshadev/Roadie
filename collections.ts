@@ -103,6 +103,7 @@ export class Map<K, V> {
 
 }
 
+export interface IDictionary<V> { [key: string]: V }
 
 export let extend: (target: {}, source: {}) => {};
 extend = (<any>Object).assign;
