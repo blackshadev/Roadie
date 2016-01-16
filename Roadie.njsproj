@@ -23,6 +23,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
     <Content Include=".travis.yml" />
+    <TypeScriptCompile Include="errno.ts" />
     <Content Include="package.json" />
     <Content Include="LICENSE.md" />
     <Content Include="README.md" />
@@ -43,6 +44,7 @@
     <Folder Include="typings\node\" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="BufferReader.ts" />
     <TypeScriptCompile Include="collections.ts" />
     <TypeScriptCompile Include="endpoints.ts" />
     <TypeScriptCompile Include="http.ts" />
