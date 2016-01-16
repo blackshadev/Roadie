@@ -122,22 +122,49 @@ class HttpResponse {
 
 }
 
+export interface IHttpError {
+    extra?: string;
+    text?: string;
+    code: number;
+}
+export class HttpError implements IHttpError {
 
-export class HttpError {
-    static translateErrNo(no: string): IError { return errno[no]; };
+    extra: string;
+
+    text: string;
+
+    // HTTP statuscode
+    code: number = 500;
+
+    constructor(err: IHttpError | Error | number, errtxt?: string, extra?: string) {
+        if (err instanceof HttpError) {
+            this.code = err.code;
+            this.text = err.text;
+            this.extra = err.extra;
+        } else if (err instanceof Error) {
+            let errDescr: IError = HttpError.translateErrNo((<NodeJS.ErrnoException>err).errno);
+            this.code = errDescr && errDescr.http ? errDescr.http : 500;
+            this.text = errDescr ? errDescr.description : err.name;
+            this.extra = err.toString();
+        } else if (typeof (err) === "number") {
+            this.code = <number>err;
+            this.text = errtxt ? errtxt : HttpError.httpStatusText(this.code);
+            if (extra) this.extra = extra;
+        }
+    }
+
+    send(ctx: HttpContext) {
+        ctx.response.status(this.code);
+        ctx.response.data("<h1>" + this.code + " " + this.text + "</h1>");
+        if (this.extra) ctx.response.append(this.extra);
+        ctx.response.send();
+    }
+
+    static translateErrNo(no: number): IError { return errno[no]; };
     static httpStatusText(no: string|number): string {
         return STATUS_CODES[no];
     }
-
-    static send(ctx: HttpContext, httpStatus: number, extra?: string) {
-        let err = HttpError.httpStatusText(httpStatus);
-
-        ctx.response.status(httpStatus);
-        ctx.response.data(err);
-        ctx.response.send();
-
-    }
-
+    
 }
 
 export class HttpContext {
@@ -160,17 +187,28 @@ export class HttpContext {
         if (this.route.resource)
             this.route.resource.execute(this);
         else
-            HttpError.send(this, 404);
+            this.error(404);
     }
+
+    error(err: IHttpError | Error | number, errtxt?: string, extra?: string): void {
+        let error = new HttpError(err, errtxt, extra);
+
+        if (this._server.onError) this._server.onError(error, this);
+        else error.send(this);
+    }
+
+    cwd(): string { return this._server.cwd; }
 }
 
-
+type ErrorHandle = (err: HttpError, ctx: HttpContext) => void;
 interface IRoadieServerParameters {
     port?: number;
     host?: string
     root?: string;
     webserviceDir?: string;
     tlsOptions?: {}
+    // User definable error handler
+    onError?: (err: HttpError, ctx: HttpContext) => void
 }
 
 export interface IRoutes {
@@ -184,6 +222,7 @@ export class RoadieServer {
     protected _host: string;
     get host(): string { return this._host; };
 
+    get cwd(): string { return this.rootDir; }
 
     get useHttps(): boolean { return !!this.tlsOptions; }
 
@@ -217,9 +256,11 @@ export class RoadieServer {
         if (this.useHttps)
             return createHttpsServer(this.tlsOptions, _h);
         else
-            return createHttpServer(_h)
-        
+            return createHttpServer(_h)   
     }
+    
+    onError: ErrorHandle;
+    
 
     start(): void {
         this.server.listen(this._port, this._host);
@@ -237,7 +278,6 @@ export class RoadieServer {
     addRoutes(routes: IRoutes) : void {
         for (var k in routes) 
             this.addRoute(k, routes[k]);
-        
     }
     
 }

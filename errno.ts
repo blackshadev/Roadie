@@ -315,7 +315,7 @@ export const all: IError[] = [
 ];
 
 
-export const errno: { [errno: string]: IError } = {
+export const errno: { [errno: number]: IError } = {
     '-1': all[0]
   , '0': all[1]
   , '1': all[2]
