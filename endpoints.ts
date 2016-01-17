@@ -1,6 +1,6 @@
 ﻿import { HttpVerb, HttpContext } from "./http";
 import { Map, constructorOf } from "./collections";
-import { WebService } from "./webservice";
+import  WebService from "./webservice";
 
 
 export type WebFunction = ((ctx: HttpContext) => void);
@@ -19,7 +19,7 @@ export abstract class Endpoint<T, K> {
     static Create<T>(script: string | WebFunction, data: T): Endpoint<any, T> {
         switch (typeof (script)) {
             case "function": return new FunctionEndpoint<T>(<WebFunction>script, data);
-            case "string": return new ScriptEndpoint<T>(<string>script, data);
+            case "string": return new ScriptEndpoint<T>(<string>script, data);            
         }
         throw new Error("Unknown endpoint type");
     }
@@ -28,7 +28,7 @@ export abstract class Endpoint<T, K> {
     
 }
 
-export class ScriptEndpoint<K> extends Endpoint<constructorOf<WebService>, K> {
+export class ScriptEndpoint<K> extends Endpoint<string, K> {
     fileName: string;
     method: string;
 
@@ -38,8 +38,8 @@ export class ScriptEndpoint<K> extends Endpoint<constructorOf<WebService>, K> {
         this.fileName = parts[0];
         this.method = parts[1];
 
-        let svc: constructorOf<WebService> = require(this.fileName);
-        super(svc, data);
+        //let svc: constructorOf<WebService> = require(this.fileName);
+        super(script, data);
 
         
     }
@@ -49,7 +49,6 @@ export class ScriptEndpoint<K> extends Endpoint<constructorOf<WebService>, K> {
     }
 
 }
-
 
 
 export class FunctionEndpoint<K> extends Endpoint<WebFunction, K> {

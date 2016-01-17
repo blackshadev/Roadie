@@ -33,6 +33,11 @@
     <Content Include="example\statics\test.html" />
     <Compile Include="example\webservices\static.js" />
     <Compile Include="example\webservices\test.js" />
+    <TypeScriptCompile Include="test\webservice.ts">
+      <SubType>Code</SubType>
+      <TestFramework>Mocha</TestFramework>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="webservice.ts" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="example" />

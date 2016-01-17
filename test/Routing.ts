@@ -58,7 +58,7 @@ describe("Routing: ", () => {
         );
 
         res = Router.getRoute("/a/static/url", HttpVerb.GET);
-        assert.ok(!res, "Matched a route while expecting it to not match");
+        assert.ok(!res.resource, "Matched a route while expecting it to not match");
     });
 
     it("Searching wildcard route", () => {
