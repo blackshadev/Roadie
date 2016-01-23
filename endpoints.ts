@@ -1,9 +1,13 @@
-﻿import { HttpVerb, HttpContext } from "./http";
+﻿import { HttpVerb, HttpContext, RoadieServer } from "./http";
+
 import { Map, constructorOf } from "./collections";
-import  WebService from "./webservice";
+import { WebService } from "./webservice";
 
 
 export type WebFunction = ((ctx: HttpContext) => void);
+export interface WebServiceClass {
+    new (ctx: HttpContext, method: string): WebService
+}
 
 export class Endpoints extends Map<HttpVerb, Endpoint<any, any>> { }
 
@@ -16,7 +20,7 @@ export abstract class Endpoint<T, K> {
         this.data = data;
     }
 
-    static Create<T>(script: string | WebFunction, data: T): Endpoint<any, T> {
+    static Create<T>(script: string | WebFunction, data?: T): Endpoint<any, T> {
         switch (typeof (script)) {
             case "function": return new FunctionEndpoint<T>(<WebFunction>script, data);
             case "string": return new ScriptEndpoint<T>(<string>script, data);            
@@ -32,20 +36,22 @@ export class ScriptEndpoint<K> extends Endpoint<string, K> {
     fileName: string;
     method: string;
 
-
+    protected _class: WebServiceClass;
+    protected _server: RoadieServer;
     constructor(script: string, data: K) {
         let parts = script.split(":");
         this.fileName = parts[0];
         this.method = parts[1];
-
-        //let svc: constructorOf<WebService> = require(this.fileName);
-        super(script, data);
-
         
+        super(script, data);
     }
 
     execute(ctx: HttpContext): void {
-        
+        if (!this._class)
+            this._class = require(ctx.server.webserviceDir + "/" + this.fileName);
+
+        let svc = new this._class(ctx, this.method);
+        if (svc.isReady) svc[this.method]();
     }
 
 }

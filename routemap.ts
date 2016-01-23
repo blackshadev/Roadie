@@ -67,9 +67,9 @@ export abstract class Route implements IRouteMap {
      */
     abstract match(urlPart: string, restUrl: string) : boolean;
 
-    addEndpoint(verbs: HttpVerb[], script: any, data: any) {
+    addEndpoint(verbs: HttpVerb[], endpoint: Endpoint<any,any>) {
         for (let i = 0; i < verbs.length; i++)
-            this.endpoints.set(verbs[i], Endpoint.Create(script, data));
+            this.endpoints.set(verbs[i], endpoint);
     }
 
     /**
@@ -178,14 +178,9 @@ export class RouteMap {
     constructor() {
         this.root = new RootRoute();
     }
+    
 
-    addEndpoint(verbs: HttpVerb[], fname: any, data: any) { throw new Error("Should not come here"); }
-
-    load(json: IUserRoutes) {
-        for (var k in json) this.addRoute(k, json[k]);
-    }
-
-    addRoute(url: string, resource: any, data?: any) {
+    addRoute(url: string, endpoint: Endpoint<any, any>) {
         const tmp = Route.splitURL(url);
         const verbs = tmp[0];
         const urlParts = tmp[1];
@@ -199,7 +194,7 @@ export class RouteMap {
             r = r.routes[urlPart];
         }
 
-        r.addEndpoint(verbs, resource, data);
+        r.addEndpoint(verbs, endpoint);
     }
 
     searchRoute(verb: HttpVerb, url: string): RoutingState {

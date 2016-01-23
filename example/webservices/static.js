@@ -1,5 +1,5 @@
 "use strict";
-var WebService = require("../../roadie.js").WebService;
+var WebService = require("../../").WebService;
 var fs = require("fs");
 
 module.exports = (function() {

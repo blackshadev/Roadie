@@ -4,7 +4,11 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { errno, IError } from "./errno";
 import { RouteMap, IRoutingResult } from "./routemap";
-import { WebFunction } from "./endpoints";
+import { WebFunction, Endpoint } from "./endpoints";
+import { parse as urlParse } from "url";
+
+
+type TInputRoutes = IRoutes | string;
 
 export enum HttpVerb {
     "GET" = 0,
@@ -26,31 +30,51 @@ export function parseHttpVerb(verb: string) {
 
 
 class HttpRequest {
-    get url(): string { return this.req.url; };
-    get method(): string { return this.req.method; }
+    get url(): string { return this._req.url; };
+    get method(): string { return this._req.method; }
     get parameters(): IDictionary<string> { return this._parameters; };
     get ctx() { return this._ctx; }
-    
+    get uri() { return this._uri; } 
+
+    get queryParams(): IDictionary<string> { return this._queryParameters; };
+
+
 
     protected _parameters: IDictionary<string>;
-    protected req: IncomingMessage;
-    protected reader: BufferReader;
+    protected _req: IncomingMessage;
+    protected _reader: BufferReader;
     protected _ctx: HttpContext;
+    protected _uri: string;
+
+    protected _queryString: string;
+    protected _queryParameters: IDictionary<string>;
     
 
     constructor(ctx: HttpContext, route: IRoutingResult, req: IncomingMessage) {
         this._ctx = ctx;
-        this.req = req;
+        this._req = req;
         this._parameters = route.params;
-        this.reader = new BufferReader(parseInt(this.header("content-length")), req);
-        
+        this._uri = route.uri; 
+        this._reader = new BufferReader(parseInt(this.header("content-length")), req);
+
+        this.parseUrl();
     }
+
+    private parseUrl(): void {
+        const oPar = urlParse(this._req.url, true);
+        this._queryString = oPar.search;
+        this._queryParameters = oPar.query;
+    }
+
+
 
     readBody(cb: (data: Buffer) => void): void {
-        this.reader.read(cb);
+        this._reader.read(cb);
     }
 
-    header(headerName: string): string { return this.req.headers[headerName]; }
+    header(headerName: string): string { return this._req.headers[headerName]; }
+
+    queryParameter(paramName: string): string { return this._queryParameters[paramName]; } 
 
     parameter(paramName: string): string { return this._parameters[paramName]; }
 }
@@ -173,8 +197,9 @@ export class HttpContext {
     route: IRoutingResult;
 
     get url(): string { return this.request.url; } 
-    get method(): string { return this.request.method; } 
-    
+    get method(): string { return this.request.method; }
+    get server(): RoadieServer { return this._server; }
+
     protected _server: RoadieServer;
     constructor(serv: RoadieServer, route: IRoutingResult,  req: IncomingMessage, resp: ServerResponse) {
         this._server = serv;
@@ -222,26 +247,28 @@ export class RoadieServer {
     protected _host: string;
     get host(): string { return this._host; };
 
-    get cwd(): string { return this.rootDir; }
+    get cwd(): string { return this._rootDir; }
 
-    get useHttps(): boolean { return !!this.tlsOptions; }
+    get webserviceDir(): string { return this._rootDir + "/" + this._webserviceDir; } 
 
-    protected rootDir: string = process.cwd();
-    protected webserviceDir: string = "webservices";
-    protected tlsOptions: {};
-    protected server: HttpsServer | HttpServer;
-    protected routemap: RouteMap;
+    get useHttps(): boolean { return !!this._tlsOptions; }
+
+    protected _rootDir: string = process.cwd();
+    protected _webserviceDir: string = "webservices";
+    protected _tlsOptions: {};
+    protected _server: HttpsServer | HttpServer;
+    protected _routemap: RouteMap;
 
     constructor(oPar: IRoadieServerParameters) {
         this._port = oPar.port || this._port;
         this._host = oPar.host || this._host;
         this.webserviceDir = oPar.webserviceDir || this.webserviceDir;
-        this.rootDir = oPar.root || this.rootDir;
-        this.routemap = new RouteMap();
+        this._rootDir = oPar.root || this._rootDir;
+        this._routemap = new RouteMap();
 
-        this.tlsOptions = oPar.tlsOptions;
+        this._tlsOptions = oPar.tlsOptions;
 
-        this.server = this.createServer();
+        this._server = this.createServer();
     }
     
     protected createServer(): HttpsServer | HttpServer {
@@ -254,7 +281,7 @@ export class RoadieServer {
         };
         
         if (this.useHttps)
-            return createHttpsServer(this.tlsOptions, _h);
+            return createHttpsServer(this._tlsOptions, _h);
         else
             return createHttpServer(_h)   
     }
@@ -263,21 +290,38 @@ export class RoadieServer {
     
 
     start(): void {
-        this.server.listen(this._port, this._host);
+        this._server.listen(this._port, this._host);
         console.log("listening on port " + this._host + ":" + this._port);
     }
 
-    getRoute(url: string, verb: HttpVerb) : IRoutingResult {
-        return this.routemap.getRoute(url, verb);
+    getRoute(url: string, verb: HttpVerb): IRoutingResult {
+        url = urlParse(url).pathname;
+        return this._routemap.getRoute(url, verb);
     }
 
     addRoute(route: string, endpoint: WebFunction | string, data?: any) {
-        this.routemap.addRoute(route, endpoint, data);
-    }
 
-    addRoutes(routes: IRoutes) : void {
-        for (var k in routes) 
-            this.addRoute(k, routes[k]);
+        //if (typeof (endpoint) === "string")
+        //    endpoint = this.webserviceDir + "/" + endpoint;
+
+        this._routemap.addRoute(route, Endpoint.Create(endpoint, data));
+    }
+    
+    addRoutes(routes: TInputRoutes | TInputRoutes[]): void {
+        if (routes instanceof Array) {
+            for (var i = 0; i < routes.length; i++)
+                this.addRoutes(routes[i]);
+            return;
+        }
+
+        if (typeof (routes) === "string")
+            routes = require(`${this._rootDir}/${routes}`);
+        
+        if (typeof (routes) !== "object")
+            throw new Error("Invalid route argument given");
+
+        for (var k in <IRoutes>routes) 
+            this.addRoute(k, (<IRoutes>routes)[k]);
     }
     
 }

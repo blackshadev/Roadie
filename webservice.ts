@@ -2,10 +2,10 @@
 import { constructorOf } from "./collections";
 
 
-function _super(o: Object) { return Object.getPrototypeOf(o).prototype; };
+function _super(o: any) { return o.prototype.__proto__; };
 (<any>global)._super = _super;
 
-export default class WebService {
+export class WebService {
     protected ctx: HttpContext;
     protected _method: string;
     get method(): string { return this._method; };
@@ -27,7 +27,7 @@ export default class WebService {
         let fn = function (ctx: HttpContext, method: string) {
             WebService.prototype.constructor.call(this, ctx, method);
         };
-        fn.prototype = Object.create(this);
+        fn.prototype = Object.create(this.prototype);
         for (let k in oPar)
             fn.prototype[k] = oPar[k];
 

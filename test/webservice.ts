@@ -1,5 +1,5 @@
 ﻿import assert = require('assert');
-import WebService from '../webservice';
+import { WebService } from '../webservice';
 import { HttpContext } from '../http';
 import { constructorOf } from '../collections';
 
@@ -19,7 +19,7 @@ class NewWebservice extends WebService {
     }
 }
 
-declare const _super: (o: WebService) => WebService;
+declare const _super: (o: constructorOf<WebService>) => WebService;
 
 describe("Webservice", () => {
 
@@ -28,7 +28,7 @@ describe("Webservice", () => {
         let svc = WebService.extend({
             create: function (ctx: HttpContext, method: string) {
                 constructed = true;
-                _super(this).create.call(this, ctx, method);
+                _super(svc).create.call(this, ctx, method);
             },
             test: function () {
                 this.ctx.response.data("Test Webservice");

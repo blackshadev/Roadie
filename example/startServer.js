@@ -27,10 +27,9 @@ var server = new j.Server({port: 8080, webserviceDir: "webservices/", root: __di
 //             cert: fs.readFileSync("./ssl/server.crt")
 //         }
 //     });
-var config = new j.ConfigServer(server, { port: 4242 });
+//var config = new j.ConfigServer(server, { port: 4242 });
     
 server.addRoutes(routes);
 
 console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html")
 server.start();
-config.start();

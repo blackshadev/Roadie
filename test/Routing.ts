@@ -1,6 +1,8 @@
 ﻿"use strict";
 import assert = require('assert');
 import { RouteMap, StaticRoute, ParameterRoute, WildcardRoute } from "../routemap";
+import { Endpoint } from "../endpoints";
+
 import { HttpVerb } from "../http";
 
 describe("Routing: ", () => {
@@ -12,7 +14,7 @@ describe("Routing: ", () => {
     });
 
     it("Adding route with parameter", () => {
-        Router.addRoute("/test/{param}/", "param.js");
+        Router.addRoute("/test/{param}/", Endpoint.Create("param.js"));
         
         assert.ok(
             Router.routes["test"] instanceof StaticRoute
@@ -29,7 +31,7 @@ describe("Routing: ", () => {
     });
 
     it("Specifing verb", () => {
-        Router.addRoute("[GET]/test/", "get.js");
+        Router.addRoute("[GET]/test/", Endpoint.Create("get.js"));
 
         assert.ok(
             Router.routes['test']
@@ -39,7 +41,7 @@ describe("Routing: ", () => {
     });
 
     it("Searching route", () => {
-        Router.addRoute("[POST]/url/{to}/search", "test.js");
+        Router.addRoute("[POST]/url/{to}/search", Endpoint.Create("test.js"));
 
         var res = Router.getRoute("/url/2/search", HttpVerb.POST);
         assert.ok(
@@ -50,7 +52,7 @@ describe("Routing: ", () => {
     });
 
     it("Multiple verbs", () => {
-        Router.addRoute("[POST,PUT,DELETE]/a/static/url", "poster.js");
+        Router.addRoute("[POST,PUT,DELETE]/a/static/url", Endpoint.Create("poster.js"));
         let res = Router.getRoute("/a/static/url", HttpVerb.POST);
         assert.ok(
             res && res.resource.script === "poster.js",
@@ -62,7 +64,7 @@ describe("Routing: ", () => {
     });
 
     it("Searching wildcard route", () => {
-        Router.addRoute("[GET]/url/to/search/*", "test.js");
+        Router.addRoute("[GET]/url/to/search/*", Endpoint.Create("test.js"));
 
         var res = Router.getRoute("/url/to/search/for", HttpVerb.GET);
 
@@ -76,7 +78,7 @@ describe("Routing: ", () => {
 
     it("Getting custom data", () => {
         var cust_dat = { customProp: true, isTest: true };
-        Router.addRoute("[GET]/my/custom/data", "test.js", cust_dat);
+        Router.addRoute("[GET]/my/custom/data", Endpoint.Create("test.js", cust_dat));
 
         var res = Router.getRoute("/my/custom/data", HttpVerb.GET);
 
@@ -90,7 +92,7 @@ describe("Routing: ", () => {
 
     it("Setting function as script", () => {
         var fn = function (ctx) { };
-        Router.addRoute("[GET]/my/custom/function", fn);
+        Router.addRoute("[GET]/my/custom/function", Endpoint.Create(fn));
 
         var res = Router.getRoute("/my/custom/function", HttpVerb.GET);
 
@@ -102,9 +104,9 @@ describe("Routing: ", () => {
     });
 
     it("Search precidence", () => {
-        Router.addRoute("[PUT]/some/{a}/{b}", "1");
-        Router.addRoute("[PUT]/some/{a}/url", "2");
-        Router.addRoute("[PUT]/some/custom/url", "3");
+        Router.addRoute("[PUT]/some/{a}/{b}", Endpoint.Create("1"));
+        Router.addRoute("[PUT]/some/{a}/url", Endpoint.Create("2"));
+        Router.addRoute("[PUT]/some/custom/url", Endpoint.Create("3"));
 
         let res = Router.getRoute("/some/custom/url", HttpVerb.PUT);
         assert.ok(res && res.resource.script === "3", "Static precidence failt");

@@ -51,7 +51,7 @@ export class RouteSearch extends GreedySearch<RoutingState> {
     }
 
     goal(s: RoutingState): boolean {
-        return !s.left.length && (!this.verb || !!s.data.endpoints.get(this.verb));
+        return s.left.length === 0 && (this.verb === undefined || !!s.data.endpoints.get(this.verb));
     }
 
     initial(): RoutingState[] {
