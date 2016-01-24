@@ -1,7 +1,11 @@
 ﻿import assert = require('assert');
 import { WebService } from '../webservice';
-import { HttpContext } from '../http';
+import { HttpContext, RoadieServer, WebMethod, HttpVerb } from '../http';
+import { WebMethodEndpoint } from '../endpoints';
+
 import { constructorOf } from '../collections';
+import { RouteMap } from '../routemap';
+
 
 class NewWebservice extends WebService {
     
@@ -55,4 +59,44 @@ describe("Webservice", () => {
 
     });
     
+});
+
+describe("server", () => {
+    let serv: RoadieServer;
+
+    before(() => {
+        serv = new RoadieServer({ root: __dirname + "/../", webserviceDir: "webservices" });
+    });
+
+    it("Webservice decorators", () => {
+
+        class WebSvc extends WebService {
+            @WebMethod("[GET]/ha/lo", { server: serv })
+            halloworld() {
+                this.ctx.response.data("Hallo World");
+                this.ctx.response.send();
+            }
+        }
+        
+
+        const routemap = <RouteMap>(<any>serv)._routemap;
+        assert.ok(
+            true
+            && routemap.routes["ha"]
+            && routemap.routes["ha"].routes["lo"]
+            && routemap.routes["ha"].routes["lo"].endpoints.get(HttpVerb.GET)
+            , "Route not found"
+        );
+
+        const endp = routemap.routes["ha"].routes["lo"].endpoints.get(HttpVerb.GET)
+        assert.ok(
+            true
+            && endp instanceof WebMethodEndpoint
+            && (<WebMethodEndpoint<any>>endp).method === "halloworld"
+            && (<WebMethodEndpoint<any>>endp).script === WebSvc.prototype.constructor
+            , "Invalid endpoint"
+        );
+
+    });
+
 });

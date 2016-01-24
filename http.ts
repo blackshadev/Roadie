@@ -1,14 +1,15 @@
 ﻿import { IncomingMessage, ServerResponse, Server as HttpServer, createServer as createHttpServer, STATUS_CODES } from "http"
 import { Server as HttpsServer, createServer as createHttpsServer } from "https"
 import { BufferReader } from "./BufferReader";
-import { IDictionary } from "./collections";
+import { IDictionary, constructorOf } from "./collections";
 import { errno, IError } from "./errno";
 import { RouteMap, IRoutingResult } from "./routemap";
-import { WebFunction, Endpoint } from "./endpoints";
+import { WebFunction, Endpoint, WebServiceClass, WebMethodEndpoint } from "./endpoints";
+import { WebService } from "./webservice";
 import { parse as urlParse } from "url";
 
 
-type TInputRoutes = IRoutes | string;
+type TInputRoutes = { [route: string]: string | WebFunction  }
 
 export enum HttpVerb {
     "GET" = 0,
@@ -240,7 +241,29 @@ export interface IRoutes {
     [route: string]: WebFunction | string;
 }
 
+type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<Function>) => void;
+
+export interface IWebMethodParams {
+    data?: {};
+    server?: RoadieServer;
+}
+
+export function WebMethod(route: string, oPar?: IWebMethodParams): WebMethodDecorator {
+    oPar = oPar || {};
+    oPar.server = oPar.server || RoadieServer.Default;
+
+    return function (target: any, method: string, descr: TypedPropertyDescriptor<Function>) {
+        if (typeof (descr.value) !== "function")
+            throw new Error(`Given WebMethod ${method} is not a function`);
+
+        const endpoint = new WebMethodEndpoint(target.constructor, method, oPar.data);
+        oPar.server.addRoute(route, endpoint);
+    };
+}
+
 export class RoadieServer {
+    static Default: RoadieServer;
+
     protected _port: number = 80;
     get port(): number { return this._port; };
 
@@ -299,15 +322,15 @@ export class RoadieServer {
         return this._routemap.getRoute(url, verb);
     }
 
-    addRoute(route: string, endpoint: WebFunction | string, data?: any) {
+    addRoute(route: string, endpoint: WebFunction | string | Endpoint<any,any>, data?: any) {
+        const endp = endpoint instanceof Endpoint ?
+            <Endpoint<any, any>>endpoint :
+            Endpoint.Create(<WebFunction | string>endpoint, data);
 
-        //if (typeof (endpoint) === "string")
-        //    endpoint = this.webserviceDir + "/" + endpoint;
-
-        this._routemap.addRoute(route, Endpoint.Create(endpoint, data));
+        this._routemap.addRoute(route, endp);
     }
     
-    addRoutes(routes: TInputRoutes | TInputRoutes[]): void {
+    addRoutes(routes: any): void {
         if (routes instanceof Array) {
             for (var i = 0; i < routes.length; i++)
                 this.addRoutes(routes[i]);

@@ -32,13 +32,27 @@ export abstract class Endpoint<T, K> {
     
 }
 
+export class WebMethodEndpoint<K> extends Endpoint<WebServiceClass, K> {
+    method: string;
+
+    constructor(cls: WebServiceClass, method: string, data?: K) {
+        super(cls, data);
+        this.method = method;
+    }
+
+    execute(ctx: HttpContext): void {
+        let svc = new this.script(ctx, this.method);
+        if (svc.isReady) svc[this.method]();
+    }
+}
+
 export class ScriptEndpoint<K> extends Endpoint<string, K> {
     fileName: string;
     method: string;
 
     protected _class: WebServiceClass;
     protected _server: RoadieServer;
-    constructor(script: string, data: K) {
+    constructor(script: string, data?: K) {
         let parts = script.split(":");
         this.fileName = parts[0];
         this.method = parts[1];
