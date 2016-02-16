@@ -228,7 +228,7 @@ module.exports = (function($o) {
                                 A wildcard starts always with a * and the rest
                                 of the string is a specific match.
                             */
-                            ns.penalty += ns.uri.length - (e.name.length - 1)
+                            ns.penalty += (ns.uri ? ns.uri.length : 0) - (e.name.length - 1)
                             
                             
                             
