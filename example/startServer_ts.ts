@@ -2,6 +2,13 @@
 import j = require("../");
 import fs = require("fs");
 
+// used to include these files in the build
+let _a = require("./routing.json");
+require("./webservices/static.js");
+require("./webservices/test.js");
+require("./webservices/ws");
+
+
 // Accepts file names  with routes and json object with routes.
 // All routes are prefixed the HTTP verb (defaults to all).
 // The route itsef can contain a wildcard (*) and parameters ({paramName})

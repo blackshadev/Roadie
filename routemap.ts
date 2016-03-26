@@ -14,7 +14,7 @@ export enum RouteType {
     wildcard
 }
 
-interface Routes {
+export interface Routes {
     [name: string]: Route
 }
 
@@ -23,7 +23,7 @@ function escapeRegex(str) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
 
-interface IRouteMap {
+export interface IRouteMap {
     routes: Routes;
     addEndpoint(verbs: HttpVerb[], fname:any, data:any);
 }

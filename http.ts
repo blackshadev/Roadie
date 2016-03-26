@@ -30,7 +30,7 @@ export function parseHttpVerb(verb: string) {
 }
 
 
-class HttpRequest {
+export class HttpRequest {
     get url(): string { return this._req.url; };
     get method(): string { return this._req.method; }
     get parameters(): IDictionary<string> { return this._parameters; };
@@ -80,7 +80,7 @@ class HttpRequest {
     parameter(paramName: string): string { return this._parameters[paramName]; }
 }
 
-class HttpResponse {
+export class HttpResponse {
 
     protected resp: ServerResponse;
     protected statusCode: number = 200;
@@ -226,8 +226,8 @@ export class HttpContext {
     cwd(): string { return this._server.cwd; }
 }
 
-type ErrorHandle = (err: HttpError, ctx: HttpContext) => void;
-interface IRoadieServerParameters {
+export type ErrorHandle = (err: HttpError, ctx: HttpContext) => void;
+export interface IRoadieServerParameters {
     port?: number;
     host?: string
     root?: string;
@@ -241,7 +241,7 @@ export interface IRoutes {
     [route: string]: WebFunction | string;
 }
 
-type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<Function>) => void;
+export type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<Function>) => void;
 
 export interface IWebMethodParams {
     data?: {};
@@ -285,7 +285,7 @@ export class RoadieServer {
     constructor(oPar: IRoadieServerParameters) {
         this._port = oPar.port || this._port;
         this._host = oPar.host || this._host;
-        this.webserviceDir = oPar.webserviceDir || this.webserviceDir;
+        this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
         this._routemap = new RouteMap();
 

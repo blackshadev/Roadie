@@ -96,6 +96,5 @@ export class RouteSearch extends GreedySearch<RoutingState> {
 
         return states;
 
-        return [];
     }
 }

@@ -1,7 +1,7 @@
 ﻿import { Readable } from 'stream'
 import { EventEmitter } from "events"
 
-enum ReaderState {
+export enum ReaderState {
     none,
     reading,
     done

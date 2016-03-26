@@ -54,10 +54,12 @@ export class ScriptEndpoint<K> extends Endpoint<string, K> {
     protected _server: RoadieServer;
     constructor(script: string, data?: K) {
         let parts = script.split(":");
-        this.fileName = parts[0];
-        this.method = parts[1];
+        
         
         super(script, data);
+        
+        this.fileName = parts[0];
+        this.method = parts[1];
     }
 
     execute(ctx: HttpContext): void {
