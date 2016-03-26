@@ -117,3 +117,43 @@ Percentage of the requests served within a certain time (ms)
   99%      2
  100%      9 (longest request)
 ```
+
+
+## WebMethod, no concurrency
+```
+Server Software:
+Server Hostname:        localhost
+Server Port:            8080
+
+Document Path:          /query
+Document Length:        6 bytes
+
+Concurrency Level:      5
+Time taken for tests:   1.851 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      1000000 bytes
+HTML transferred:       60000 bytes
+Requests per second:    5401.89 [#/sec] (mean)
+Time per request:       0.926 [ms] (mean)
+Time per request:       0.185 [ms] (mean, across all concurrent requests)
+Transfer rate:          527.53 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.2      0       1
+Processing:     0    1   0.5      1       6
+Waiting:        0    1   0.5      1       6
+Total:          0    1   0.5      1       6
+
+Percentage of the requests served within a certain time (ms)
+  50%      1
+  66%      1
+  75%      1
+  80%      1
+  90%      1
+  95%      1
+  98%      2
+  99%      3
+ 100%      6 (longest request)
+```

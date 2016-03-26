@@ -11,10 +11,9 @@ import fs = require("fs");
 var routes = [
     "routing.json",
     {
-        "[GET,POST]/statics/*": "static.js",
         "[GET]/query/": function (ctx) {
             // echo the parameters in the search query of the URL
-            ctx.response.data(ctx.request.queryParams);
+            ctx.response.data("static");
             ctx.response.send();
         }
     }
@@ -36,8 +35,10 @@ var server = new j.Server({ port: 8080, webserviceDir: "webservices/", root: __d
 
 j.setDefaultServer(server);    
 server.addRoutes(routes[0]);
+server.addRoutes(routes[1]); 
 require('./webservices/ws.js');
 
 
-console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html")
+console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html");
+console.log = function() { }; // mute for benchmark
 server.start();
