@@ -1,9 +1,6 @@
 "use strict";
 var j = require("../");
-var _a = require("./routing.json");
-require("./webservices/static.js");
-require("./webservices/test.js");
-require("./webservices/ws");
+
 var routes = [
     "routing.json",
     {
@@ -19,5 +16,6 @@ j.setDefaultServer(server);
 server.addRoutes(routes[0]);
 require('./webservices/ws.js');
 console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html");
+console.log = function(){}; // mute output for benchmarking
 server.start();
 //# sourceMappingURL=startServer_ts.js.map

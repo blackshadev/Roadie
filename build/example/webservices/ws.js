@@ -25,4 +25,3 @@ var WS = (function (_super) {
     ], WS.prototype, "halloWorld", null);
     return WS;
 }(_1.WebService));
-//# sourceMappingURL=ws.js.map
