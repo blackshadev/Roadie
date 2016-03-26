@@ -16,9 +16,6 @@
 # sftp configuration file
 sftp-config.json
 
-### TypeScript
-*.js
-*.js.map
 
 ### Node ###
 # Logs
