@@ -328,7 +328,7 @@ export class RoadieServer {
      * @param isAbsolute whenever or not the given filename is an absolute path or a relative file name
      */
     include(svcFile: string, isAbsolute?: boolean) {
-        require(!isAbsolute ? (this._rootDir + "/" + this.webserviceDir + "/" + svcFile + ".js") : svcFile );
+        require(!isAbsolute ? (this.webserviceDir + "/" + svcFile + ".js") : svcFile );
     }
 
     addRoute(route: string, endpoint: WebFunction | string | Endpoint<any,any>, data?: any) {
