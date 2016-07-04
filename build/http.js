@@ -287,6 +287,9 @@ var RoadieServer = (function () {
         url = url_1.parse(url).pathname;
         return this._routemap.getRoute(url, verb);
     };
+    RoadieServer.prototype.include = function (svcFile, isAbsolute) {
+        require(!isAbsolute ? (this._rootDir + "/" + this.webserviceDir + "/" + svcFile + ".js") : svcFile);
+    };
     RoadieServer.prototype.addRoute = function (route, endpoint, data) {
         var endp = endpoint instanceof endpoints_1.Endpoint ?
             endpoint :

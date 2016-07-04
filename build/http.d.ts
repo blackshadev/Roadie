@@ -122,6 +122,7 @@ export declare class RoadieServer {
     onError: ErrorHandle;
     start(): void;
     getRoute(url: string, verb: HttpVerb): IRoutingResult;
+    include(svcFile: string, isAbsolute?: boolean): void;
     addRoute(route: string, endpoint: WebFunction | string | Endpoint<any, any>, data?: any): void;
     addRoutes(routes: any): void;
 }
