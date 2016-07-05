@@ -67,6 +67,11 @@ var HttpRequest = (function () {
         configurable: true
     });
     ;
+    Object.defineProperty(HttpRequest.prototype, "request", {
+        get: function () { return this._req; },
+        enumerable: true,
+        configurable: true
+    });
     HttpRequest.prototype.parseUrl = function () {
         var oPar = url_1.parse(this._req.url, true);
         this._queryString = oPar.search;
@@ -87,10 +92,15 @@ var HttpResponse = (function () {
         this.eos = false;
         this._encoding = "utf8";
         this._ctx = ctx;
-        this.resp = resp;
+        this._resp = resp;
         this.headers = {};
         this._startTime = Date.now();
     }
+    Object.defineProperty(HttpResponse.prototype, "response", {
+        get: function () { return this._resp; },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(HttpResponse.prototype, "ctx", {
         get: function () { return this._ctx; },
         enumerable: true,
@@ -130,8 +140,8 @@ var HttpResponse = (function () {
         var len = typeof (this._data) === "string" ? Buffer.byteLength(this._data, this._encoding) : this._data.length;
         this.headers["Content-Length"] = len + "";
         this.headers["Date"] = new Date().toUTCString();
-        this.resp.writeHead(this.statusCode, this.headers);
-        this.resp.end(this._data);
+        this._resp.writeHead(this.statusCode, this.headers);
+        this._resp.end(this._data);
         this.eos = true;
         var t = Date.now() - this._startTime;
         console.log("server", " send: " + typeof (this._data) +

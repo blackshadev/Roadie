@@ -25,6 +25,7 @@ export declare class HttpRequest {
     uri: string;
     queryParams: IDictionary<string>;
     protected _parameters: IDictionary<string>;
+    request: IncomingMessage;
     protected _req: IncomingMessage;
     protected _reader: BufferReader;
     protected _ctx: HttpContext;
@@ -39,7 +40,8 @@ export declare class HttpRequest {
     parameter(paramName: string): string;
 }
 export declare class HttpResponse {
-    protected resp: ServerResponse;
+    response: ServerResponse;
+    protected _resp: ServerResponse;
     protected statusCode: number;
     protected headers: {
         [name: string]: string;

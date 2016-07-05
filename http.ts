@@ -42,6 +42,7 @@ export class HttpRequest {
 
 
     protected _parameters: IDictionary<string>;
+    get request(): IncomingMessage { return this._req; }
     protected _req: IncomingMessage;
     protected _reader: BufferReader;
     protected _ctx: HttpContext;
@@ -82,7 +83,8 @@ export class HttpRequest {
 
 export class HttpResponse {
 
-    protected resp: ServerResponse;
+    get response(): ServerResponse { return this._resp; }
+    protected _resp: ServerResponse;
     protected statusCode: number = 200;
     protected headers: { [name: string]: string };
 
@@ -96,7 +98,7 @@ export class HttpResponse {
 
     constructor(ctx: HttpContext, resp: ServerResponse) {
         this._ctx = ctx;
-        this.resp = resp;
+        this._resp = resp;
         this.headers = {};
         this._startTime = Date.now();
     }
@@ -136,8 +138,8 @@ export class HttpResponse {
         this.headers["Content-Length"] = len + "";
         this.headers["Date"] = new Date().toUTCString();
 
-        this.resp.writeHead(this.statusCode, this.headers);
-        this.resp.end(this._data);
+        this._resp.writeHead(this.statusCode, this.headers);
+        this._resp.end(this._data);
         this.eos = true;
         
         var t = Date.now() - this._startTime;
