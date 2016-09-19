@@ -43,7 +43,7 @@ module.exports = (function() {
 			fn.$inherited = this.prototype.superClass;
 		};
 
-		GLOBAL._super = function (classDef) {
+		global._super = function (classDef) {
 			return Object.getPrototypeOf(classDef.prototype);
 		};
 

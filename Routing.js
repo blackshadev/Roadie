@@ -102,7 +102,7 @@ module.exports = (function($o) {
         }
 
         // split the url up into parts
-        url = url.toLowerCase();
+        //url = url.toLowerCase();
         if(url[0] === '/') url = url.slice(1);
         if(url[url.length - 1] === '/') url = url.slice(0, -1);
 
