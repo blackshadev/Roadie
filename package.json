@@ -2,7 +2,7 @@
   "name": "roadie",
   "author": "Vincent Hagen <vinnie_hagen@hotmail.com>",
   "description": "The nodeJs way of deploying webservices",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "main": "index.js",
   "scripts": {
     "start": "cd ./build/example && node startServer_ts.js",
