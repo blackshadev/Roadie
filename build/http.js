@@ -118,28 +118,28 @@ class HttpResponse {
 exports.HttpResponse = HttpResponse;
 class HttpError {
     constructor(err, errtxt, extra) {
-        this.code = 500;
-        if (err instanceof HttpError) {
-            this.code = err.code;
-            this.text = err.text;
+        this.statuscode = 500;
+        if (err.statuscode !== undefined) {
+            this.statuscode = err.statuscode;
+            this.text = err.text || err.message;
             this.extra = err.extra;
         }
         else if (err instanceof Error) {
             let errDescr = HttpError.translateErrNo(err.errno);
-            this.code = errDescr && errDescr.http ? errDescr.http : 500;
+            this.statuscode = errDescr && errDescr.http ? errDescr.http : 500;
             this.text = errDescr ? errDescr.description : err.name;
             this.extra = err.toString();
         }
         else if (typeof (err) === "number") {
-            this.code = err;
-            this.text = errtxt ? errtxt : HttpError.httpStatusText(this.code);
+            this.statuscode = err;
+            this.text = errtxt ? errtxt : HttpError.httpStatusText(this.statuscode);
             if (extra)
                 this.extra = extra;
         }
     }
     send(ctx) {
-        ctx.response.status(this.code);
-        ctx.response.data("<h1>" + this.code + " " + this.text + "</h1>");
+        ctx.response.status(this.statuscode);
+        ctx.response.data("<h1>" + this.statuscode + " " + this.text + "</h1>");
         if (this.extra)
             ctx.response.append(this.extra);
         ctx.response.send();

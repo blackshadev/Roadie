@@ -14,6 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 const _1 = require("../../");
+const http_1 = require("../../http");
 class WS extends _1.WebService {
     halloWorld() {
         this.ctx.response.data("HalloWorld");
@@ -32,7 +33,7 @@ class WS extends _1.WebService {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
-                    reject(new Error("Backstab"));
+                    reject(new http_1.HttpError(400, "Backstab", "I Lied!"));
                 }, 500);
             });
         });

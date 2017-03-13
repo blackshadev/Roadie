@@ -19,17 +19,14 @@ class WebService {
     ;
     _execute_(method) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("[webservice.ts:21]", method);
             try {
                 let d = yield this[method]();
-                console.log("[webservice.ts:24]", d);
                 if (d !== undefined) {
                     this.ctx.response.data(d);
                     this.ctx.response.send();
                 }
             }
             catch (e) {
-                console.log("[webservice.ts:30] Err", e);
                 this.ctx.error(e);
             }
         });

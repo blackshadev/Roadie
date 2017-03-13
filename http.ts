@@ -153,7 +153,7 @@ export class HttpResponse {
 export interface IHttpError {
     extra?: string;
     text?: string;
-    code: number;
+    statuscode: number;
 }
 export class HttpError implements IHttpError {
 
@@ -162,28 +162,28 @@ export class HttpError implements IHttpError {
     text: string;
 
     // HTTP statuscode
-    code: number = 500;
+    statuscode: number = 500;
 
-    constructor(err: IHttpError | Error | number, errtxt?: string, extra?: string) {
-        if (err instanceof HttpError) {
-            this.code = err.code;
-            this.text = err.text;
+    constructor(err: IHttpError | Error | number | any, errtxt?: string, extra?: string) {
+        if (err.statuscode !== undefined) {
+            this.statuscode = err.statuscode;
+            this.text = err.text || err.message;
             this.extra = err.extra;
         } else if (err instanceof Error) {
             let errDescr: IError = HttpError.translateErrNo((<NodeJS.ErrnoException>err).errno);
-            this.code = errDescr && errDescr.http ? errDescr.http : 500;
+            this.statuscode = errDescr && errDescr.http ? errDescr.http : 500;
             this.text = errDescr ? errDescr.description : err.name;
             this.extra = err.toString();
         } else if (typeof (err) === "number") {
-            this.code = <number>err;
-            this.text = errtxt ? errtxt : HttpError.httpStatusText(this.code);
+            this.statuscode = <number>err;
+            this.text = errtxt ? errtxt : HttpError.httpStatusText(this.statuscode);
             if (extra) this.extra = extra;
         }
     }
 
     send(ctx: HttpContext) {
-        ctx.response.status(this.code);
-        ctx.response.data("<h1>" + this.code + " " + this.text + "</h1>");
+        ctx.response.status(this.statuscode);
+        ctx.response.data("<h1>" + this.statuscode + " " + this.text + "</h1>");
         if (this.extra) ctx.response.append(this.extra);
         ctx.response.send();
     }

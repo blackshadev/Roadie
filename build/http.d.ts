@@ -64,13 +64,13 @@ export declare class HttpResponse {
 export interface IHttpError {
     extra?: string;
     text?: string;
-    code: number;
+    statuscode: number;
 }
 export declare class HttpError implements IHttpError {
     extra: string;
     text: string;
-    code: number;
-    constructor(err: IHttpError | Error | number, errtxt?: string, extra?: string);
+    statuscode: number;
+    constructor(err: IHttpError | Error | number | any, errtxt?: string, extra?: string);
     send(ctx: HttpContext): void;
     static translateErrNo(no: number): IError;
     static httpStatusText(no: string | number): string;

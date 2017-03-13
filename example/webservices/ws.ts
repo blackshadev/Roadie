@@ -1,4 +1,5 @@
 ﻿import { WebMethod, WebService } from "../../";
+import { HttpError } from "../../http";
 
 class WS extends WebService {
 
@@ -24,7 +25,13 @@ class WS extends WebService {
         return new Promise<string>(
             (resolve, reject) => {
                 setTimeout(() => {
-                    reject(new Error("Backstab"));
+                    reject(
+                        new HttpError(
+                            400,
+                            "Backstab",
+                            "I Lied!"
+                        )
+                    );
                 }, 500);
             }
         );
