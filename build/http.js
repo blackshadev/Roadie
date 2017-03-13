@@ -193,7 +193,7 @@ class RoadieServer {
         this._port = 80;
         this._rootDir = process.cwd();
         this._webserviceDir = "webservices";
-        this._port = oPar.port !== undefined ? oPar.port : this._tlsOptions !== undefined ? 443 : 80;
+        this._port = oPar.port !== undefined ? oPar.port : oPar.tlsOptions !== undefined ? 443 : 80;
         this._host = oPar.host || this._host;
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
