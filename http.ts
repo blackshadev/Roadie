@@ -285,7 +285,7 @@ export class RoadieServer {
     protected _routemap: RouteMap;
 
     constructor(oPar: IRoadieServerParameters) {
-        this._port = oPar.port || this._port;
+        this._port = oPar.port !== undefined ? oPar.port : this._tlsOptions !== undefined ? 443 : 80;
         this._host = oPar.host || this._host;
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
@@ -333,7 +333,7 @@ export class RoadieServer {
         require(!isAbsolute ? (this.webserviceDir + "/" + svcFile + ".js") : svcFile );
     }
 
-    addRoute(route: string, endpoint: WebFunction | string | Endpoint<any,any>, data?: any) {
+    addRoute(route: string, endpoint: WebServiceClass | WebFunction | string | Endpoint<any,any>, data?: any) {
         const endp = endpoint instanceof Endpoint ?
             <Endpoint<any, any>>endpoint :
             Endpoint.Create(<WebFunction | string>endpoint, data);
