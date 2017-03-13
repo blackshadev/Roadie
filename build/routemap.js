@@ -1,48 +1,43 @@
 "use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var endpoints_1 = require('./endpoints');
-var route_search_1 = require("./route_search");
-var http_1 = require("./http");
+const endpoints_1 = require("./endpoints");
+const route_search_1 = require("./route_search");
+const http_1 = require("./http");
+var RouteType;
 (function (RouteType) {
     RouteType[RouteType["unknown"] = 0] = "unknown";
     RouteType[RouteType["static"] = 1] = "static";
     RouteType[RouteType["parameter"] = 2] = "parameter";
     RouteType[RouteType["wildcard"] = 3] = "wildcard";
-})(exports.RouteType || (exports.RouteType = {}));
-var RouteType = exports.RouteType;
+})(RouteType = exports.RouteType || (exports.RouteType = {}));
 function escapeRegex(str) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
-var Route = (function () {
-    function Route(name) {
+class Route {
+    constructor(name) {
         this.type = RouteType.unknown;
         this.name = name;
         this.routes = {};
         this.endpoints = new endpoints_1.Endpoints();
     }
-    Route.prototype.addEndpoint = function (verbs, endpoint) {
-        for (var i = 0; i < verbs.length; i++)
+    addEndpoint(verbs, endpoint) {
+        for (let i = 0; i < verbs.length; i++)
             this.endpoints.set(verbs[i], endpoint);
-    };
-    Route.Create = function (urlPart) {
-        var m = ParameterRoute.ParameterRegExp.exec(urlPart);
+    }
+    static Create(urlPart) {
+        let m = ParameterRoute.ParameterRegExp.exec(urlPart);
         if (m)
             return new ParameterRoute(m[1]);
         if (urlPart.indexOf("*") > -1)
             return new WildcardRoute(urlPart);
         return new StaticRoute(urlPart);
-    };
-    Route.splitURL = function (url) {
+    }
+    static splitURL(url) {
         var idx = url.indexOf(']');
-        var verbs;
+        let verbs;
         if (idx > -1) {
-            var arr = url.slice(1, idx).toUpperCase().split(",");
-            verbs = arr.map(function (el) {
-                var v = http_1.HttpVerb[el];
+            const arr = url.slice(1, idx).toUpperCase().split(",");
+            verbs = arr.map((el) => {
+                let v = http_1.HttpVerb[el];
                 if (typeof (v) !== typeof (http_1.HttpVerb.GET))
                     throw new Error("No such verb as `" + el + "`");
                 return v;
@@ -57,95 +52,82 @@ var Route = (function () {
         if (url[url.length - 1] === '/')
             url = url.slice(0, -1);
         return [verbs, url.split('/')];
-    };
-    Route.allVerbs = (function () {
-        var arr = [];
-        for (var k in http_1.HttpVerb) {
-            if (typeof (http_1.HttpVerb.GET) !== typeof (http_1.HttpVerb[k]))
-                continue;
-            arr.push(http_1.HttpVerb[k]);
-        }
-        return arr;
-    })();
-    return Route;
-}());
-exports.Route = Route;
-var RootRoute = (function (_super) {
-    __extends(RootRoute, _super);
-    function RootRoute() {
-        _super.call(this, "");
     }
-    RootRoute.prototype.match = function (urlPart, rest) { return false; };
-    return RootRoute;
-}(Route));
-var StaticRoute = (function (_super) {
-    __extends(StaticRoute, _super);
-    function StaticRoute() {
-        _super.apply(this, arguments);
+}
+Route.allVerbs = (() => {
+    let arr = [];
+    for (var k in http_1.HttpVerb) {
+        if (typeof (http_1.HttpVerb.GET) !== typeof (http_1.HttpVerb[k]))
+            continue;
+        arr.push(http_1.HttpVerb[k]);
+    }
+    return arr;
+})();
+exports.Route = Route;
+class RootRoute extends Route {
+    constructor() {
+        super("");
+    }
+    match(urlPart, rest) { return false; }
+}
+class StaticRoute extends Route {
+    constructor() {
+        super(...arguments);
         this.type = RouteType.static;
     }
-    StaticRoute.prototype.match = function (urlPart, restUrl) {
+    match(urlPart, restUrl) {
         return this.name === urlPart;
-    };
-    return StaticRoute;
-}(Route));
+    }
+}
 exports.StaticRoute = StaticRoute;
-var ParameterRoute = (function (_super) {
-    __extends(ParameterRoute, _super);
-    function ParameterRoute() {
-        _super.apply(this, arguments);
+class ParameterRoute extends Route {
+    constructor() {
+        super(...arguments);
         this.type = RouteType.parameter;
     }
-    ParameterRoute.prototype.match = function (urlPart, restUrl) { return true; };
-    ParameterRoute.ParameterRegExp = /\{(\w+)\}/i;
-    return ParameterRoute;
-}(Route));
+    match(urlPart, restUrl) { return true; }
+}
+ParameterRoute.ParameterRegExp = /\{(\w+)\}/i;
 exports.ParameterRoute = ParameterRoute;
-var WildcardRoute = (function (_super) {
-    __extends(WildcardRoute, _super);
-    function WildcardRoute(name) {
-        _super.call(this, name);
+class WildcardRoute extends Route {
+    constructor(name) {
+        super(name);
         this.type = RouteType.wildcard;
         this.regex = new RegExp("^" + escapeRegex(this.name).replace("\\*", ".*") + "$", 'i');
     }
-    WildcardRoute.prototype.match = function (urlPart, restUrl) { return this.regex.test(restUrl); };
-    return WildcardRoute;
-}(Route));
+    match(urlPart, restUrl) { return this.regex.test(restUrl); }
+}
 exports.WildcardRoute = WildcardRoute;
-var RouteMap = (function () {
-    function RouteMap() {
+class RouteMap {
+    get routes() {
+        return this.root.routes;
+    }
+    constructor() {
         this.root = new RootRoute();
     }
-    Object.defineProperty(RouteMap.prototype, "routes", {
-        get: function () {
-            return this.root.routes;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    RouteMap.prototype.addRoute = function (url, endpoint) {
-        var tmp = Route.splitURL(url);
-        var verbs = tmp[0];
-        var urlParts = tmp[1];
-        var r = this.root;
-        for (var i = 0; i < urlParts.length; i++) {
-            var urlPart = urlParts[i];
+    addRoute(url, endpoint) {
+        const tmp = Route.splitURL(url);
+        const verbs = tmp[0];
+        const urlParts = tmp[1];
+        let r = this.root;
+        for (let i = 0; i < urlParts.length; i++) {
+            let urlPart = urlParts[i];
             if (!r.routes[urlPart]) {
                 r.routes[urlPart] = Route.Create(urlPart);
             }
             r = r.routes[urlPart];
         }
         r.addEndpoint(verbs, endpoint);
-    };
-    RouteMap.prototype.searchRoute = function (verb, url) {
-        var urlParts = Route.splitURL(url)[1];
-        var s = new route_search_1.RouteSearch(this, urlParts, verb);
-        var r = s.first();
+    }
+    searchRoute(verb, url) {
+        let urlParts = Route.splitURL(url)[1];
+        let s = new route_search_1.RouteSearch(this, urlParts, verb);
+        let r = s.first();
         return r;
-    };
-    RouteMap.prototype.getRoute = function (url, verb) {
-        var s = this.searchRoute(verb, url);
-        var end;
+    }
+    getRoute(url, verb) {
+        let s = this.searchRoute(verb, url);
+        let end;
         if (s)
             end = s.data.endpoints.get(verb);
         if (!end)
@@ -156,8 +138,7 @@ var RouteMap = (function () {
             resource: end,
             uri: s.uri
         };
-    };
-    return RouteMap;
-}());
+    }
+}
 exports.RouteMap = RouteMap;
 //# sourceMappingURL=routemap.js.map

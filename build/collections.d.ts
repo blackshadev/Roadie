@@ -3,8 +3,8 @@ export interface IValueOf {
 }
 export declare class SortedArray<T extends IValueOf> {
     protected _items: T[];
-    items: T[];
-    length: number;
+    readonly items: T[];
+    readonly length: number;
     constructor(items?: T[]);
     search(item: T): number;
     add(item: T): number;

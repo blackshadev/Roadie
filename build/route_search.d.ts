@@ -7,7 +7,7 @@ export declare class RoutingState extends State<string, Route> {
         [name: string]: any;
     };
     uri: string;
-    cost: number;
+    readonly cost: number;
     getPossibleRoutes(part: any, rest: any): Route[];
     clone(): RoutingState;
 }

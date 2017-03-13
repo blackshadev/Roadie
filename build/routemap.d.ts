@@ -53,7 +53,7 @@ export interface IRoutingResult {
 }
 export declare class RouteMap {
     root: Route;
-    routes: Routes;
+    readonly routes: Routes;
     constructor();
     addRoute(url: string, endpoint: Endpoint<any, any>): void;
     searchRoute(verb: HttpVerb, url: string): RoutingState;

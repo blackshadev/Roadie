@@ -4,7 +4,7 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { IError } from "./errno";
 import { RouteMap, IRoutingResult } from "./routemap";
-import { WebFunction, Endpoint } from "./endpoints";
+import { WebFunction, Endpoint, WebServiceClass } from "./endpoints";
 export declare enum HttpVerb {
     "GET" = 0,
     "POST" = 1,
@@ -18,14 +18,14 @@ export declare enum HttpVerb {
 }
 export declare function parseHttpVerb(verb: string): HttpVerb;
 export declare class HttpRequest {
-    url: string;
-    method: string;
-    parameters: IDictionary<string>;
-    ctx: HttpContext;
-    uri: string;
-    queryParams: IDictionary<string>;
+    readonly url: string;
+    readonly method: string;
+    readonly parameters: IDictionary<string>;
+    readonly ctx: HttpContext;
+    readonly uri: string;
+    readonly queryParams: IDictionary<string>;
     protected _parameters: IDictionary<string>;
-    request: IncomingMessage;
+    readonly request: IncomingMessage;
     protected _req: IncomingMessage;
     protected _reader: BufferReader;
     protected _ctx: HttpContext;
@@ -40,7 +40,7 @@ export declare class HttpRequest {
     parameter(paramName: string): string;
 }
 export declare class HttpResponse {
-    response: ServerResponse;
+    readonly response: ServerResponse;
     protected _resp: ServerResponse;
     protected statusCode: number;
     protected headers: {
@@ -51,7 +51,7 @@ export declare class HttpResponse {
     protected _data: Buffer | string;
     protected _startTime: number;
     protected _ctx: HttpContext;
-    ctx: HttpContext;
+    readonly ctx: HttpContext;
     constructor(ctx: HttpContext, resp: ServerResponse);
     status(code: number): void;
     contentType: string;
@@ -78,9 +78,9 @@ export declare class HttpContext {
     request: HttpRequest;
     response: HttpResponse;
     route: IRoutingResult;
-    url: string;
-    method: string;
-    server: RoadieServer;
+    readonly url: string;
+    readonly method: string;
+    readonly server: RoadieServer;
     protected _server: RoadieServer;
     constructor(serv: RoadieServer, route: IRoutingResult, req: IncomingMessage, resp: ServerResponse);
     execute(): void;
@@ -108,12 +108,12 @@ export declare function WebMethod(route: string, oPar?: IWebMethodParams): WebMe
 export declare class RoadieServer {
     static Default: RoadieServer;
     protected _port: number;
-    port: number;
+    readonly port: number;
     protected _host: string;
-    host: string;
-    cwd: string;
-    webserviceDir: string;
-    useHttps: boolean;
+    readonly host: string;
+    readonly cwd: string;
+    readonly webserviceDir: string;
+    readonly useHttps: boolean;
     protected _rootDir: string;
     protected _webserviceDir: string;
     protected _tlsOptions: {};
@@ -122,9 +122,10 @@ export declare class RoadieServer {
     constructor(oPar: IRoadieServerParameters);
     protected createServer(): HttpsServer | HttpServer;
     onError: ErrorHandle;
-    start(): void;
+    start(): Promise<void>;
+    stop(): Promise<void>;
     getRoute(url: string, verb: HttpVerb): IRoutingResult;
     include(svcFile: string, isAbsolute?: boolean): void;
-    addRoute(route: string, endpoint: WebFunction | string | Endpoint<any, any>, data?: any): void;
+    addRoute(route: string, endpoint: WebServiceClass | WebFunction | string | Endpoint<any, any>, data?: any): void;
     addRoutes(routes: any): void;
 }

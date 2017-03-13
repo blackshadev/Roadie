@@ -1,52 +1,46 @@
 "use strict";
-var collections_1 = require("./collections");
-var State = (function () {
-    function State(data) {
+const collections_1 = require("./collections");
+class State {
+    constructor(data) {
         this.data = data;
         this.path = [];
         this.left = [];
     }
-    Object.defineProperty(State.prototype, "cost", {
-        get: function () { return this.path.length; },
-        enumerable: true,
-        configurable: true
-    });
+    get cost() { return this.path.length; }
     ;
-    State.prototype.clone = function () {
-        var s = new State(this.data);
+    clone() {
+        let s = new State(this.data);
         s.path = this.path.slice(0);
         s.left = this.left.slice(0);
         return s;
-    };
-    State.prototype.valueOf = function () {
+    }
+    valueOf() {
         return this.cost;
-    };
-    return State;
-}());
+    }
+}
 exports.State = State;
-var GreedySearch = (function () {
-    function GreedySearch() {
+class GreedySearch {
+    constructor() {
         this.nodes = new collections_1.SortedArray();
     }
-    GreedySearch.prototype.reset = function () {
+    reset() {
         this.nodes.clear();
         this.nodes.addAll(this.initial());
-    };
-    GreedySearch.prototype.first = function () {
+    }
+    first() {
         this.reset();
         return this.next();
-    };
-    GreedySearch.prototype.next = function () {
+    }
+    next() {
         while (this.nodes.length > 0) {
-            var state = this.nodes.items.shift();
+            let state = this.nodes.items.shift();
             if (this.goal(state))
                 return state;
-            var arr = this.move(state);
+            let arr = this.move(state);
             this.nodes.addAll(arr);
         }
         return;
-    };
-    return GreedySearch;
-}());
+    }
+}
 exports.GreedySearch = GreedySearch;
 //# sourceMappingURL=searching.js.map

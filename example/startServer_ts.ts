@@ -19,26 +19,30 @@ var routes = [
     }
 ];
 
-// HTTP server
-var server = new j.Server({ port: 8080, webserviceDir: "webservices/", root: __dirname });
-// HTTPS server
-// var server = new j.Server({
-//         port: 8080, root: "./webservices/",
-//         useHttps: true,
-//         tlsOptions: {
-//             // For all options see http://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener
-//             key : fs.readFileSync("./ssl/server.key"),
-//             cert: fs.readFileSync("./ssl/server.crt")
-//         }
-//     });
-//var config = new j.ConfigServer(server, { port: 4242 });
+async function all() {
+    // HTTP server
+    var server = new j.Server({ port: 8080, webserviceDir: "webservices/", root: __dirname });
+    // HTTPS server
+    // var server = new j.Server({
+    //         port: 8080, root: "./webservices/",
+    //         useHttps: true,
+    //         tlsOptions: {
+    //             // For all options see http://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener
+    //             key : fs.readFileSync("./ssl/server.key"),
+    //             cert: fs.readFileSync("./ssl/server.crt")
+    //         }
+    //     });
+    //var config = new j.ConfigServer(server, { port: 4242 });
 
-j.setDefaultServer(server);    
-server.addRoutes(routes[0]);
-server.addRoutes(routes[1]); 
-require('./webservices/ws.js');
+    j.setDefaultServer(server);    
+    server.addRoutes(routes[0]);
+    server.addRoutes(routes[1]); 
+    require('./webservices/ws.js');
 
 
-console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html");
-console.log = function() { }; // mute for benchmark
-server.start();
+    await server.start();
+    console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html");
+}
+
+
+all();

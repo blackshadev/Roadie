@@ -314,9 +314,27 @@ export class RoadieServer {
     onError: ErrorHandle;
     
 
-    start(): void {
-        this._server.listen(this._port, this._host);
-        console.log("listening on port " + this._host + ":" + this._port);
+    async start(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this._server.listen(this._port, this._host, (err) => {
+                if(err) reject(err);
+                else resolve();
+            });
+        });
+    }
+
+    async stop(): Promise<void> {
+        return new Promise<void>(
+            (resolve, reject) => {
+                (<any>this._server).close(
+                    (err) => {
+                        if(err) reject(err);
+                        else resolve();
+                    }
+                );
+            }
+        );
+        
     }
 
     getRoute(url: string, verb: HttpVerb): IRoutingResult {

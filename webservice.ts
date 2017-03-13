@@ -24,13 +24,8 @@ export class WebService {
     }
 
     static extend(oPar: {}): constructorOf<WebService> {
-        let fn = function (ctx: HttpContext, method: string) {
-            WebService.prototype.constructor.call(this, ctx, method);
-        };
-        fn.prototype = Object.create(this.prototype);
-        for (let k in oPar)
-            fn.prototype[k] = oPar[k];
-
-        return <any>fn;
+        let cls = class extends WebService {}
+        Object.assign(cls.prototype, oPar);
+        return cls;
     }
 }

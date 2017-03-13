@@ -2,7 +2,7 @@ import { SortedArray, IValueOf } from "./collections";
 export declare class State<P, T> implements IValueOf {
     path: P[];
     left: P[];
-    cost: number;
+    readonly cost: number;
     data: T;
     constructor(data: T);
     clone(): State<P, T>;

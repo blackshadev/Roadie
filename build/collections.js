@@ -1,29 +1,21 @@
 "use strict";
-var SortedArray = (function () {
-    function SortedArray(items) {
+class SortedArray {
+    constructor(items) {
         if (items) {
-            items.sort(function (a, b) { return a.valueOf() - b.valueOf(); });
+            items.sort((a, b) => { return a.valueOf() - b.valueOf(); });
             this._items = items;
         }
         else
             this._items = [];
     }
-    Object.defineProperty(SortedArray.prototype, "items", {
-        get: function () { return this._items; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SortedArray.prototype, "length", {
-        get: function () { return this._items.length; },
-        enumerable: true,
-        configurable: true
-    });
-    SortedArray.prototype.search = function (item) {
-        var k = item.valueOf();
-        var val = item.valueOf();
-        var a = this._items;
-        var l = 0, h = a.length - 1;
-        var m, v;
+    get items() { return this._items; }
+    get length() { return this._items.length; }
+    search(item) {
+        const k = item.valueOf();
+        let val = item.valueOf();
+        let a = this._items;
+        let l = 0, h = a.length - 1;
+        let m, v;
         while (l <= h) {
             m = (l + h) >> 1;
             v = a[m].valueOf();
@@ -35,43 +27,41 @@ var SortedArray = (function () {
                 return m;
         }
         return l;
-    };
-    SortedArray.prototype.add = function (item) {
-        var idx = this.search(item);
+    }
+    add(item) {
+        let idx = this.search(item);
         this._items.splice(idx, 0, item);
         return idx;
-    };
-    SortedArray.prototype.addAll = function (items) {
-        for (var i = 0; i < items.length; i++)
+    }
+    addAll(items) {
+        for (let i = 0; i < items.length; i++)
             this.add(items[i]);
-    };
-    SortedArray.prototype.getItem = function (idx) {
+    }
+    getItem(idx) {
         return this._items[idx];
-    };
-    SortedArray.prototype.clear = function () {
+    }
+    clear() {
         this._items.length = 0;
-    };
-    return SortedArray;
-}());
+    }
+}
 exports.SortedArray = SortedArray;
-var Map = (function () {
-    function Map() {
+class Map {
+    constructor() {
         this.items = {};
     }
-    Map.prototype.key = function (key) { return key.toString(); };
-    Map.prototype.set = function (key, value) {
+    key(key) { return key.toString(); }
+    set(key, value) {
         this.items[this.key(key)] = value;
-    };
-    Map.prototype.get = function (key) {
+    }
+    get(key) {
         return this.items[this.key(key)];
-    };
-    return Map;
-}());
+    }
+}
 exports.Map = Map;
 exports.extend = Object.assign;
 if (!exports.extend) {
     exports.extend = function (target, source) {
-        for (var k in source) {
+        for (let k in source) {
             target[k] = source[k];
         }
         return target;
