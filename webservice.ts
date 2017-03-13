@@ -17,6 +17,20 @@ export class WebService {
         this.create(ctx, method);
     }
     
+    async _execute_(method: string) {
+        try {
+            let d = await this[method]();
+            if(d !== undefined) {
+                this.ctx.response.data(d);
+                this.ctx.response.send();
+            }
+        } catch(e) {
+            this.ctx.error(e);
+        }
+
+        
+    }
+
     // Use the create call for backwards compatibility
     create(ctx: HttpContext, method: string) {
         this.ctx = ctx;

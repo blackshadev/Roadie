@@ -25,7 +25,7 @@ class WebMethodEndpoint extends Endpoint {
     execute(ctx) {
         let svc = new this.script(ctx, this.method);
         if (svc.isReady)
-            svc[this.method]();
+            svc._execute_(this.method);
     }
 }
 exports.WebMethodEndpoint = WebMethodEndpoint;
@@ -41,7 +41,7 @@ class ScriptEndpoint extends Endpoint {
             this._class = require(ctx.server.webserviceDir + "/" + this.fileName);
         let svc = new this._class(ctx, this.method);
         if (svc.isReady)
-            svc[this.method]();
+            svc._execute_(this.method);
     }
 }
 exports.ScriptEndpoint = ScriptEndpoint;

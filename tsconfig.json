@@ -10,16 +10,10 @@
         "declaration": true,
         "pretty": true
     },
-    "files": [
-        "typings/node/node.d.ts",
-        "typings/mocha/mocha.d.ts",
-
-        "index.ts",
-        "example/startServer_ts.ts",
-        "example/webservices/ws.ts",
-
-        "test/collections.ts",
-        "test/Routing.ts",
-        "test/webservice.ts"
+    "include": [
+        "typings/**/*.ts",
+        "*.ts",
+        "example/**/*.ts",
+        "test/**/*.ts"
     ]
 }

@@ -42,7 +42,7 @@ export class WebMethodEndpoint<K> extends Endpoint<WebServiceClass, K> {
 
     execute(ctx: HttpContext): void {
         let svc = new this.script(ctx, this.method);
-        if (svc.isReady) svc[this.method]();
+        if (svc.isReady) svc._execute_(this.method);
     }
 }
 
@@ -67,7 +67,7 @@ export class ScriptEndpoint<K> extends Endpoint<string, K> {
             this._class = require(ctx.server.webserviceDir + "/" + this.fileName);
 
         let svc = new this._class(ctx, this.method);
-        if (svc.isReady) svc[this.method]();
+        if (svc.isReady) svc._execute_(this.method);
     }
 
 }
