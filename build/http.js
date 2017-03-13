@@ -103,7 +103,7 @@ class HttpResponse {
     }
     send() {
         if (this.eos)
-            return console.log("server", "Request already send");
+            return this._ctx.server.log("server", "Request already send");
         var len = typeof (this._data) === "string" ? Buffer.byteLength(this._data, this._encoding) : this._data.length;
         this.headers["Content-Length"] = len + "";
         this.headers["Date"] = new Date().toUTCString();
@@ -111,7 +111,7 @@ class HttpResponse {
         this._resp.end(this._data);
         this.eos = true;
         var t = Date.now() - this._startTime;
-        console.log("server", " send: " + typeof (this._data) +
+        this._ctx.server.log("server", " send: " + typeof (this._data) +
             " of length " + len + " bytes, took " + t + "ms");
     }
 }
@@ -197,7 +197,10 @@ class RoadieServer {
         this._host = oPar.host || this._host;
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
+        this._verbose = !!oPar.verbose;
         this._routemap = new routemap_1.RouteMap();
+        if (!this._verbose)
+            this.log = function () { };
         this._tlsOptions = oPar.tlsOptions;
         this._server = this.createServer();
     }
@@ -256,6 +259,9 @@ class RoadieServer {
             endpoint :
             endpoints_1.Endpoint.Create(endpoint, data);
         this._routemap.addRoute(route, endp);
+    }
+    log(...args) {
+        console.log.apply(console, args);
     }
     addRoutes(routes) {
         if (routes instanceof Array) {

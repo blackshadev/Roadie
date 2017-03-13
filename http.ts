@@ -7,6 +7,7 @@ import { RouteMap, IRoutingResult } from "./routemap";
 import { WebFunction, Endpoint, WebServiceClass, WebMethodEndpoint } from "./endpoints";
 import { WebService } from "./webservice";
 import { parse as urlParse } from "url";
+import { TlsOptions } from "tls";
 
 
 type TInputRoutes = { [route: string]: string | WebFunction  }
@@ -132,7 +133,7 @@ export class HttpResponse {
     }
 
     send(): void {
-        if (this.eos) return console.log("server", "Request already send");
+        if (this.eos) return this._ctx.server.log("server", "Request already send");
 
         var len = typeof (this._data) === "string" ? Buffer.byteLength(<string>this._data, this._encoding) : this._data.length;
         this.headers["Content-Length"] = len + "";
@@ -143,7 +144,7 @@ export class HttpResponse {
         this.eos = true;
         
         var t = Date.now() - this._startTime;
-        console.log("server", " send: " + typeof (this._data) +
+        this._ctx.server.log("server", " send: " + typeof (this._data) +
             " of length " + len + " bytes, took " + t + "ms");
     }
 
@@ -234,9 +235,10 @@ export interface IRoadieServerParameters {
     host?: string
     root?: string;
     webserviceDir?: string;
-    tlsOptions?: {}
+    tlsOptions?: TlsOptions;
     // User definable error handler
     onError?: (err: HttpError, ctx: HttpContext) => void
+    verbose?: boolean;
 }
 
 export interface IRoutes {
@@ -283,13 +285,17 @@ export class RoadieServer {
     protected _tlsOptions: {};
     protected _server: HttpsServer | HttpServer;
     protected _routemap: RouteMap;
+    protected _verbose: boolean;
 
     constructor(oPar: IRoadieServerParameters) {
         this._port = oPar.port !== undefined ? oPar.port : oPar.tlsOptions !== undefined ? 443 : 80;
         this._host = oPar.host || this._host;
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
+        this._verbose = !!oPar.verbose;
         this._routemap = new RouteMap();
+
+        if(!this._verbose) this.log = function() {};
 
         this._tlsOptions = oPar.tlsOptions;
 
@@ -357,6 +363,10 @@ export class RoadieServer {
             Endpoint.Create(<WebFunction | string>endpoint, data);
 
         this._routemap.addRoute(route, endp);
+    }
+
+    log(...args: string[]):void {
+        console.log.apply(console, args);
     }
     
     addRoutes(routes: any): void {

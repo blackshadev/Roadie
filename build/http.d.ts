@@ -5,6 +5,7 @@ import { IDictionary } from "./collections";
 import { IError } from "./errno";
 import { RouteMap, IRoutingResult } from "./routemap";
 import { WebFunction, Endpoint, WebServiceClass } from "./endpoints";
+import { TlsOptions } from "tls";
 export declare enum HttpVerb {
     "GET" = 0,
     "POST" = 1,
@@ -93,8 +94,9 @@ export interface IRoadieServerParameters {
     host?: string;
     root?: string;
     webserviceDir?: string;
-    tlsOptions?: {};
+    tlsOptions?: TlsOptions;
     onError?: (err: HttpError, ctx: HttpContext) => void;
+    verbose?: boolean;
 }
 export interface IRoutes {
     [route: string]: WebFunction | string;
@@ -119,6 +121,7 @@ export declare class RoadieServer {
     protected _tlsOptions: {};
     protected _server: HttpsServer | HttpServer;
     protected _routemap: RouteMap;
+    protected _verbose: boolean;
     constructor(oPar: IRoadieServerParameters);
     protected createServer(): HttpsServer | HttpServer;
     onError: ErrorHandle;
@@ -127,5 +130,6 @@ export declare class RoadieServer {
     getRoute(url: string, verb: HttpVerb): IRoutingResult;
     include(svcFile: string, isAbsolute?: boolean): void;
     addRoute(route: string, endpoint: WebServiceClass | WebFunction | string | Endpoint<any, any>, data?: any): void;
+    log(...args: string[]): void;
     addRoutes(routes: any): void;
 }

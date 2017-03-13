@@ -20,7 +20,7 @@ module.exports = (function() {
         },
         open: function() {
             var f = this.root + "/" + this.fname;
-            console.log("[Statics] opening " + f);
+            this.ctx.server.log("[Statics] opening " + f);
 
             fs.readFile(f, this.read.bind(this));
 
@@ -39,7 +39,7 @@ module.exports = (function() {
             this.ctx.response.send();
         },
         html: function() {
-            console.log("Html served");
+            this.ctx.server.log("Html served");
         }
     });
     StaticService.GuessMimeType = function(fname) {
