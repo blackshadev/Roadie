@@ -18,10 +18,11 @@ var routes = [
         }
     }
 ];
+let server: j.Server;
 
 async function all() {
     // HTTP server
-    var server = new j.Server({ port: 8080, webserviceDir: "webservices/", root: __dirname });
+    server = new j.Server({ port: 8080, webserviceDir: "webservices/", root: __dirname });
     // HTTPS server
     // var server = new j.Server({
     //         port: 8080, root: "./webservices/",
@@ -44,5 +45,15 @@ async function all() {
     console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html");
 }
 
+var first = true;
+process.on("SIGINT", async () => {
+    if(first) {
+        first = false;
+        console.log("Gracefully stopping, pres ctrl+c again to force stop");
+        await server.stop();
+    } else
+        process.exit();
+    
+})
 
 all();

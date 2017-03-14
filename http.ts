@@ -8,6 +8,7 @@ import { WebFunction, Endpoint, WebServiceClass, WebMethodEndpoint } from "./end
 import { WebService } from "./webservice";
 import { parse as urlParse } from "url";
 import { TlsOptions } from "tls";
+import { Socket } from "net";
 
 
 type TInputRoutes = { [route: string]: string | WebFunction  }
@@ -70,7 +71,6 @@ export class HttpRequest {
     }
 
 
-
     readBody(cb: (data: Buffer) => void): void {
         this._reader.read(cb);
     }
@@ -80,6 +80,7 @@ export class HttpRequest {
     queryParameter(paramName: string): string { return this._queryParameters[paramName]; } 
 
     parameter(paramName: string): string { return this._parameters[paramName]; }
+
 }
 
 export class HttpResponse {
@@ -141,6 +142,7 @@ export class HttpResponse {
 
         this._resp.writeHead(this.statusCode, this.headers);
         this._resp.end(this._data);
+        
         this.eos = true;
         
         var t = Date.now() - this._startTime;
@@ -227,6 +229,7 @@ export class HttpContext {
     }
 
     cwd(): string { return this._server.cwd; }
+
 }
 
 export type ErrorHandle = (err: HttpError, ctx: HttpContext) => void;
@@ -287,7 +290,11 @@ export class RoadieServer {
     protected _routemap: RouteMap;
     protected _verbose: boolean;
 
+    private _connections: { [remote_addr_port: string]: Socket };
+
     constructor(oPar: IRoadieServerParameters) {
+        this._connections = {};
+
         this._port = oPar.port !== undefined ? oPar.port : oPar.tlsOptions !== undefined ? 443 : 80;
         this._host = oPar.host || this._host;
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
@@ -301,6 +308,17 @@ export class RoadieServer {
 
         this._server = this.createServer();
     }
+
+    /**
+     * Tracks connections
+     * @source https://github.com/isaacs/server-destroy
+     * @param sock Socket to track
+     */
+    protected addConnection(sock: Socket) {
+        let key = sock.remoteAddress + ":" + sock.remotePort;
+        this._connections[key] = sock;
+        sock.on("close", () => delete this._connections[key]);
+    }
     
     protected createServer(): HttpsServer | HttpServer {
         const _h = (req: IncomingMessage, resp: ServerResponse) => {
@@ -311,10 +329,15 @@ export class RoadieServer {
             ctx.execute();
         };
         
+        let serv: HttpServer | HttpsServer;
         if (this.useHttps)
-            return createHttpsServer(this._tlsOptions, _h);
+            serv = createHttpsServer(this._tlsOptions, _h);
         else
-            return createHttpServer(_h)   
+            serv = createHttpServer(_h);
+        
+        serv.on("connection", (s) => this.addConnection(s));
+
+        return serv;
     }
     
     onError: ErrorHandle;
@@ -332,12 +355,17 @@ export class RoadieServer {
     async stop(): Promise<void> {
         return new Promise<void>(
             (resolve, reject) => {
+               
                 (<any>this._server).close(
                     (err) => {
                         if(err) reject(err);
                         else resolve();
                     }
                 );
+
+                for(let key in this._connections) {
+                    this._connections[key].destroy();
+                }
             }
         );
         

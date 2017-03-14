@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { IncomingMessage, ServerResponse, Server as HttpServer } from "http";
 import { Server as HttpsServer } from "https";
 import { BufferReader } from "./BufferReader";
@@ -6,6 +7,7 @@ import { IError } from "./errno";
 import { RouteMap, IRoutingResult } from "./routemap";
 import { WebFunction, Endpoint, WebServiceClass } from "./endpoints";
 import { TlsOptions } from "tls";
+import { Socket } from "net";
 export declare enum HttpVerb {
     "GET" = 0,
     "POST" = 1,
@@ -122,7 +124,9 @@ export declare class RoadieServer {
     protected _server: HttpsServer | HttpServer;
     protected _routemap: RouteMap;
     protected _verbose: boolean;
+    private _connections;
     constructor(oPar: IRoadieServerParameters);
+    protected addConnection(sock: Socket): void;
     protected createServer(): HttpsServer | HttpServer;
     onError: ErrorHandle;
     start(): Promise<void>;

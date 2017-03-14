@@ -193,6 +193,7 @@ class RoadieServer {
         this._port = 80;
         this._rootDir = process.cwd();
         this._webserviceDir = "webservices";
+        this._connections = {};
         this._port = oPar.port !== undefined ? oPar.port : oPar.tlsOptions !== undefined ? 443 : 80;
         this._host = oPar.host || this._host;
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
@@ -211,6 +212,11 @@ class RoadieServer {
     get cwd() { return this._rootDir; }
     get webserviceDir() { return this._rootDir + "/" + this._webserviceDir; }
     get useHttps() { return !!this._tlsOptions; }
+    addConnection(sock) {
+        let key = sock.remoteAddress + ":" + sock.remotePort;
+        this._connections[key] = sock;
+        sock.on("close", () => delete this._connections[key]);
+    }
     createServer() {
         const _h = (req, resp) => {
             let verb = parseHttpVerb(req.method);
@@ -218,10 +224,13 @@ class RoadieServer {
             let ctx = new HttpContext(this, route, req, resp);
             ctx.execute();
         };
+        let serv;
         if (this.useHttps)
-            return https_1.createServer(this._tlsOptions, _h);
+            serv = https_1.createServer(this._tlsOptions, _h);
         else
-            return http_1.createServer(_h);
+            serv = http_1.createServer(_h);
+        serv.on("connection", (s) => this.addConnection(s));
+        return serv;
     }
     start() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -244,6 +253,9 @@ class RoadieServer {
                     else
                         resolve();
                 });
+                for (let key in this._connections) {
+                    this._connections[key].destroy();
+                }
             });
         });
     }

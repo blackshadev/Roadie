@@ -17,9 +17,10 @@ var routes = [
         }
     }
 ];
+let server;
 function all() {
     return __awaiter(this, void 0, void 0, function* () {
-        var server = new j.Server({ port: 8080, webserviceDir: "webservices/", root: __dirname });
+        server = new j.Server({ port: 8080, webserviceDir: "webservices/", root: __dirname });
         j.setDefaultServer(server);
         server.addRoutes(routes[0]);
         server.addRoutes(routes[1]);
@@ -28,5 +29,15 @@ function all() {
         console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html");
     });
 }
+var first = true;
+process.on("SIGINT", () => __awaiter(this, void 0, void 0, function* () {
+    if (first) {
+        first = false;
+        console.log("Gracefully stopping, pres ctrl+c again to force stop");
+        yield server.stop();
+    }
+    else
+        process.exit();
+}));
 all();
 //# sourceMappingURL=startServer_ts.js.map

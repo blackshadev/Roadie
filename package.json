@@ -17,6 +17,7 @@
     "example": "example"
   },
   "dependencies": {
+    "@types/mocha": "^2.2.40",
     "raw-body": "^2.1.2",
     "sprintf": "^0.1.5"
   },

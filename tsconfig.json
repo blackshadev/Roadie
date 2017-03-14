@@ -11,9 +11,9 @@
         "pretty": true
     },
     "include": [
-        "typings/**/*.ts",
         "*.ts",
         "example/**/*.ts",
-        "test/**/*.ts"
+        "test/**/*.ts",
+        "@types/**/*.ts"
     ]
 }
