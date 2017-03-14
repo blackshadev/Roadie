@@ -81,6 +81,7 @@ export declare class HttpContext {
     request: HttpRequest;
     response: HttpResponse;
     route: IRoutingResult;
+    readonly userData: any;
     readonly url: string;
     readonly method: string;
     readonly server: RoadieServer;
@@ -99,6 +100,7 @@ export interface IRoadieServerParameters {
     tlsOptions?: TlsOptions;
     onError?: (err: HttpError, ctx: HttpContext) => void;
     verbose?: boolean;
+    userData?: any;
 }
 export interface IRoutes {
     [route: string]: WebFunction | string;
@@ -118,6 +120,8 @@ export declare class RoadieServer {
     readonly cwd: string;
     readonly webserviceDir: string;
     readonly useHttps: boolean;
+    readonly userData: any;
+    protected _userData: any;
     protected _rootDir: string;
     protected _webserviceDir: string;
     protected _tlsOptions: {};

@@ -152,6 +152,7 @@ class HttpError {
 }
 exports.HttpError = HttpError;
 class HttpContext {
+    get userData() { return this._server.userData; }
     get url() { return this.request.url; }
     get method() { return this.request.method; }
     get server() { return this._server; }
@@ -200,6 +201,7 @@ class RoadieServer {
         this._rootDir = oPar.root || this._rootDir;
         this._verbose = !!oPar.verbose;
         this._routemap = new routemap_1.RouteMap();
+        this._userData = oPar.userData;
         if (!this._verbose)
             this.log = function () { };
         this._tlsOptions = oPar.tlsOptions;
@@ -212,6 +214,7 @@ class RoadieServer {
     get cwd() { return this._rootDir; }
     get webserviceDir() { return this._rootDir + "/" + this._webserviceDir; }
     get useHttps() { return !!this._tlsOptions; }
+    get userData() { return this._userData; }
     addConnection(sock) {
         let key = sock.remoteAddress + ":" + sock.remotePort;
         this._connections[key] = sock;

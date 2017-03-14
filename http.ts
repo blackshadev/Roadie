@@ -202,6 +202,7 @@ export class HttpContext {
     response: HttpResponse;
     route: IRoutingResult;
 
+    get userData() { return this._server.userData; }
     get url(): string { return this.request.url; } 
     get method(): string { return this.request.method; }
     get server(): RoadieServer { return this._server; }
@@ -242,6 +243,7 @@ export interface IRoadieServerParameters {
     // User definable error handler
     onError?: (err: HttpError, ctx: HttpContext) => void
     verbose?: boolean;
+    userData?: any;
 }
 
 export interface IRoutes {
@@ -283,13 +285,16 @@ export class RoadieServer {
 
     get useHttps(): boolean { return !!this._tlsOptions; }
 
+    get userData() { return this._userData; }
+    protected _userData: any;
+
     protected _rootDir: string = process.cwd();
     protected _webserviceDir: string = "webservices";
     protected _tlsOptions: {};
     protected _server: HttpsServer | HttpServer;
     protected _routemap: RouteMap;
     protected _verbose: boolean;
-
+    
     private _connections: { [remote_addr_port: string]: Socket };
 
     constructor(oPar: IRoadieServerParameters) {
@@ -301,6 +306,7 @@ export class RoadieServer {
         this._rootDir = oPar.root || this._rootDir;
         this._verbose = !!oPar.verbose;
         this._routemap = new RouteMap();
+        this._userData = oPar.userData;
 
         if(!this._verbose) this.log = function() {};
 
@@ -342,7 +348,9 @@ export class RoadieServer {
     
     onError: ErrorHandle;
     
-
+    /** 
+     * Starts accepting external connection  
+     */
     async start(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this._server.listen(this._port, this._host, (err) => {
@@ -352,6 +360,9 @@ export class RoadieServer {
         });
     }
 
+    /**
+     * Stops the service and destroys all connections
+     */
     async stop(): Promise<void> {
         return new Promise<void>(
             (resolve, reject) => {
