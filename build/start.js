@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = require("./http");
 let s = new http_1.RoadieServer({});
 s.addRoute("[GET]/", function (ctx) {

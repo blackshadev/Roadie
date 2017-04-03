@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const collections_1 = require("../collections");
 describe("SortedArray", () => {

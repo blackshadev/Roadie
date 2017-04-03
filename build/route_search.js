@@ -1,7 +1,8 @@
 "use strict";
-const searching_1 = require("./searching");
-const routemap_1 = require("./routemap");
+Object.defineProperty(exports, "__esModule", { value: true });
 const collections_1 = require("./collections");
+const routemap_1 = require("./routemap");
+const searching_1 = require("./searching");
 class RoutingState extends searching_1.State {
     constructor() {
         super(...arguments);
@@ -13,8 +14,9 @@ class RoutingState extends searching_1.State {
     getPossibleRoutes(part, rest) {
         let arr = [];
         for (let k in this.data.routes) {
-            if (this.data.routes[k].match(part, rest))
+            if (this.data.routes[k].match(part, rest)) {
                 arr.push(this.data.routes[k]);
+            }
         }
         return arr;
     }
@@ -32,7 +34,7 @@ exports.RoutingState = RoutingState;
 class RouteSearch extends searching_1.GreedySearch {
     constructor(rm, urlParts, verb) {
         super();
-        this.RouteMap = rm;
+        this.routeMap = rm;
         this.urlParts = urlParts;
         this.verb = verb;
     }
@@ -40,18 +42,17 @@ class RouteSearch extends searching_1.GreedySearch {
         return s.left.length === 0 && (this.verb === undefined || !!s.data.endpoints.get(this.verb));
     }
     initial() {
-        let s = new RoutingState(this.RouteMap.root);
+        let s = new RoutingState(this.routeMap.root);
         s.left = this.urlParts;
         return [s];
     }
     move(s) {
-        var r = s.data;
-        var n = s.left.shift();
-        var rest = s.left.length ? n + "/" + s.left.join("/") : n;
-        var arr = s.getPossibleRoutes(n, rest);
-        var self = this;
-        var states = arr.map(function (e) {
-            var ns = s.clone();
+        let r = s.data;
+        let n = s.left.shift();
+        let rest = s.left.length ? n + "/" + s.left.join("/") : n;
+        let arr = s.getPossibleRoutes(n, rest);
+        let states = arr.map((e) => {
+            let ns = s.clone();
             ns.data = e;
             ns.path.push(e.name);
             switch (e.type) {
@@ -64,6 +65,7 @@ class RouteSearch extends searching_1.GreedySearch {
                     ns.penalty += ns.uri.length - (e.name.length - 1);
                     ns.left.length = 0;
                     break;
+                default: break;
             }
             return ns;
         });

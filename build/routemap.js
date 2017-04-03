@@ -1,7 +1,8 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const endpoints_1 = require("./endpoints");
-const route_search_1 = require("./route_search");
 const http_1 = require("./http");
+const route_search_1 = require("./route_search");
 var RouteType;
 (function (RouteType) {
     RouteType[RouteType["unknown"] = 0] = "unknown";
@@ -19,46 +20,54 @@ class Route {
         this.routes = {};
         this.endpoints = new endpoints_1.Endpoints();
     }
-    addEndpoint(verbs, endpoint) {
-        for (let i = 0; i < verbs.length; i++)
-            this.endpoints.set(verbs[i], endpoint);
-    }
     static Create(urlPart) {
-        let m = ParameterRoute.ParameterRegExp.exec(urlPart);
-        if (m)
+        let m = ParameterRoute.parameterRegExp.exec(urlPart);
+        if (m) {
             return new ParameterRoute(m[1]);
-        if (urlPart.indexOf("*") > -1)
+        }
+        if (urlPart.indexOf("*") > -1) {
             return new WildcardRoute(urlPart);
+        }
         return new StaticRoute(urlPart);
     }
     static splitURL(url) {
-        var idx = url.indexOf(']');
+        let idx = url.indexOf("]");
         let verbs;
         if (idx > -1) {
             const arr = url.slice(1, idx).toUpperCase().split(",");
             verbs = arr.map((el) => {
                 let v = http_1.HttpVerb[el];
-                if (typeof (v) !== typeof (http_1.HttpVerb.GET))
+                if (typeof (v) !== typeof (http_1.HttpVerb.GET)) {
                     throw new Error("No such verb as `" + el + "`");
+                }
                 return v;
             });
             url = url.slice(idx + 1);
         }
-        else
+        else {
             verbs = Route.allVerbs.slice(0);
+        }
         url = url.toLowerCase();
-        if (url[0] === '/')
+        if (url[0] === "/") {
             url = url.slice(1);
-        if (url[url.length - 1] === '/')
+        }
+        if (url[url.length - 1] === "/") {
             url = url.slice(0, -1);
-        return [verbs, url.split('/')];
+        }
+        return [verbs, url.split(/\/|\./g)];
+    }
+    addEndpoint(verbs, endpoint) {
+        for (let verb of verbs) {
+            this.endpoints.set(verb, endpoint);
+        }
     }
 }
 Route.allVerbs = (() => {
     let arr = [];
-    for (var k in http_1.HttpVerb) {
-        if (typeof (http_1.HttpVerb.GET) !== typeof (http_1.HttpVerb[k]))
+    for (let k in http_1.HttpVerb) {
+        if (typeof (http_1.HttpVerb.GET) !== typeof (http_1.HttpVerb[k])) {
             continue;
+        }
         arr.push(http_1.HttpVerb[k]);
     }
     return arr;
@@ -87,13 +96,13 @@ class ParameterRoute extends Route {
     }
     match(urlPart, restUrl) { return true; }
 }
-ParameterRoute.ParameterRegExp = /\{(\w+)\}/i;
+ParameterRoute.parameterRegExp = /\{(\w+)\}/i;
 exports.ParameterRoute = ParameterRoute;
 class WildcardRoute extends Route {
     constructor(name) {
         super(name);
         this.type = RouteType.wildcard;
-        this.regex = new RegExp("^" + escapeRegex(this.name).replace("\\*", ".*") + "$", 'i');
+        this.regex = new RegExp("^" + escapeRegex(this.name).replace("\\*", ".*") + "$", "i");
     }
     match(urlPart, restUrl) { return this.regex.test(restUrl); }
 }
@@ -110,8 +119,7 @@ class RouteMap {
         const verbs = tmp[0];
         const urlParts = tmp[1];
         let r = this.root;
-        for (let i = 0; i < urlParts.length; i++) {
-            let urlPart = urlParts[i];
+        for (let urlPart of urlParts) {
             if (!r.routes[urlPart]) {
                 r.routes[urlPart] = Route.Create(urlPart);
             }
@@ -128,15 +136,17 @@ class RouteMap {
     getRoute(url, verb) {
         let s = this.searchRoute(verb, url);
         let end;
-        if (s)
+        if (s) {
             end = s.data.endpoints.get(verb);
-        if (!end)
+        }
+        if (!end) {
             return { path: null, resource: null, uri: null, params: {} };
+        }
         return {
-            path: s.path,
             params: s.params,
+            path: s.path,
             resource: end,
-            uri: s.uri
+            uri: s.uri,
         };
     }
 }

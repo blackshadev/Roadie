@@ -1,38 +1,39 @@
 import { IDictionary } from "./collections";
-import { Endpoint, Endpoints } from './endpoints';
-import { RoutingState } from "./route_search";
+import { Endpoint, Endpoints } from "./endpoints";
 import { HttpVerb } from "./http";
+import { RoutingState } from "./route_search";
 export declare enum RouteType {
     unknown = 0,
     static = 1,
     parameter = 2,
     wildcard = 3,
 }
-export interface Routes {
+export interface IRoutes {
     [name: string]: Route;
 }
 export interface IRouteMap {
-    routes: Routes;
+    routes: IRoutes;
     addEndpoint(verbs: HttpVerb[], fname: any, data: any): any;
 }
 export declare abstract class Route implements IRouteMap {
     static allVerbs: HttpVerb[];
+    static Create(urlPart: string): Route;
+    static splitURL(url: string): [HttpVerb[], string[]];
+    private static urlRegexp;
     type: RouteType;
     name: string;
-    routes: Routes;
+    routes: IRoutes;
     endpoints: Endpoints;
     constructor(name: string);
     abstract match(urlPart: string, restUrl: string): boolean;
     addEndpoint(verbs: HttpVerb[], endpoint: Endpoint<any, any>): void;
-    static Create(urlPart: string): Route;
-    static splitURL(url: string): [HttpVerb[], string[]];
 }
 export declare class StaticRoute extends Route {
     type: RouteType;
     match(urlPart: string, restUrl: string): boolean;
 }
 export declare class ParameterRoute extends Route {
-    static ParameterRegExp: RegExp;
+    static parameterRegExp: RegExp;
     type: RouteType;
     match(urlPart: string, restUrl: string): boolean;
 }
@@ -53,7 +54,7 @@ export interface IRoutingResult {
 }
 export declare class RouteMap {
     root: Route;
-    readonly routes: Routes;
+    readonly routes: IRoutes;
     constructor();
     addRoute(url: string, endpoint: Endpoint<any, any>): void;
     searchRoute(verb: HttpVerb, url: string): RoutingState;

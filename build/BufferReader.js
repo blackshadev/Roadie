@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var ReaderState;
 (function (ReaderState) {
     ReaderState[ReaderState["none"] = 0] = "none";

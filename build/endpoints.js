@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const collections_1 = require("./collections");
 class Endpoints extends collections_1.Map {
 }

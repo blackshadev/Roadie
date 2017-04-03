@@ -1,6 +1,6 @@
-import { State, GreedySearch } from "./searching";
-import { Route, RouteMap } from "./routemap";
 import { HttpVerb } from "./http";
+import { Route, RouteMap } from "./routemap";
+import { GreedySearch, State } from "./searching";
 export declare class RoutingState extends State<string, Route> {
     penalty: number;
     params: {
@@ -12,7 +12,7 @@ export declare class RoutingState extends State<string, Route> {
     clone(): RoutingState;
 }
 export declare class RouteSearch extends GreedySearch<RoutingState> {
-    RouteMap: RouteMap;
+    routeMap: RouteMap;
     urlParts: string[];
     verb: HttpVerb;
     constructor(rm: RouteMap, urlParts: string[], verb: HttpVerb);

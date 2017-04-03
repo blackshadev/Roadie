@@ -1,13 +1,13 @@
 /// <reference types="node" />
-import { IncomingMessage, ServerResponse, Server as HttpServer } from "http";
+import { IncomingMessage, Server as HttpServer, ServerResponse } from "http";
 import { Server as HttpsServer } from "https";
+import { Socket } from "net";
+import { TlsOptions } from "tls";
 import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
+import { Endpoint, WebFunction, WebServiceClass } from "./endpoints";
 import { IError } from "./errno";
-import { RouteMap, IRoutingResult } from "./routemap";
-import { WebFunction, Endpoint, WebServiceClass } from "./endpoints";
-import { TlsOptions } from "tls";
-import { Socket } from "net";
+import { IRoutingResult, RouteMap } from "./routemap";
 export declare enum HttpVerb {
     "GET" = 0,
     "POST" = 1,
@@ -27,8 +27,8 @@ export declare class HttpRequest {
     readonly ctx: HttpContext;
     readonly uri: string;
     readonly queryParams: IDictionary<string>;
-    protected _parameters: IDictionary<string>;
     readonly request: IncomingMessage;
+    protected _parameters: IDictionary<string>;
     protected _req: IncomingMessage;
     protected _reader: BufferReader;
     protected _ctx: HttpContext;
@@ -36,28 +36,28 @@ export declare class HttpRequest {
     protected _queryString: string;
     protected _queryParameters: IDictionary<string>;
     constructor(ctx: HttpContext, route: IRoutingResult, req: IncomingMessage);
-    private parseUrl();
     readBody(cb: (data: Buffer) => void): void;
     header(headerName: string): string;
     queryParameter(paramName: string): string;
     parameter(paramName: string): string;
+    private parseUrl();
 }
 export declare class HttpResponse {
     readonly response: ServerResponse;
+    contentType: string;
     protected _resp: ServerResponse;
     protected statusCode: number;
     protected headers: {
         [name: string]: string;
     };
-    private eos;
     protected _encoding: string;
     protected _data: Buffer | string;
     protected _startTime: number;
     protected _ctx: HttpContext;
+    private eos;
     readonly ctx: HttpContext;
     constructor(ctx: HttpContext, resp: ServerResponse);
     status(code: number): void;
-    contentType: string;
     header(headerName: string, value: string): void;
     data(dat: Buffer | string | Object): void;
     append(dat: Buffer | string): void;
@@ -69,18 +69,18 @@ export interface IHttpError {
     statuscode: number;
 }
 export declare class HttpError implements IHttpError {
+    static translateErrNo(no: number): IError;
+    static httpStatusText(no: string | number): string;
     extra: string;
     text: string;
     statuscode: number;
     constructor(err: IHttpError | Error | number | any, errtxt?: string, extra?: string);
     send(ctx: HttpContext): void;
-    static translateErrNo(no: number): IError;
-    static httpStatusText(no: string | number): string;
 }
 export declare class HttpContext {
     request: HttpRequest;
     response: HttpResponse;
-    route: IRoutingResult;
+    readonly route: IRoutingResult;
     readonly userData: any;
     readonly url: string;
     readonly method: string;
@@ -100,6 +100,7 @@ export interface IRoadieServerParameters {
     tlsOptions?: TlsOptions;
     onError?: (err: HttpError, ctx: HttpContext) => void;
     verbose?: boolean;
+    includeHostname?: boolean;
     userData?: any;
 }
 export interface IRoutes {
@@ -112,15 +113,16 @@ export interface IWebMethodParams {
 }
 export declare function WebMethod(route: string, oPar?: IWebMethodParams): WebMethodDecorator;
 export declare class RoadieServer {
-    static Default: RoadieServer;
-    protected _port: number;
+    static default: RoadieServer;
     readonly port: number;
-    protected _host: string;
     readonly host: string;
     readonly cwd: string;
     readonly webserviceDir: string;
     readonly useHttps: boolean;
     readonly userData: any;
+    onError: ErrorHandle;
+    protected _port: number;
+    protected _host: string;
     protected _userData: any;
     protected _rootDir: string;
     protected _webserviceDir: string;
@@ -128,11 +130,10 @@ export declare class RoadieServer {
     protected _server: HttpsServer | HttpServer;
     protected _routemap: RouteMap;
     protected _verbose: boolean;
+    protected _includeHostname: boolean;
     private _connections;
     constructor(oPar: IRoadieServerParameters);
-    protected addConnection(sock: Socket): void;
-    protected createServer(): HttpsServer | HttpServer;
-    onError: ErrorHandle;
+    useRoutes(serv: RoadieServer): void;
     start(): Promise<void>;
     stop(): Promise<void>;
     getRoute(url: string, verb: HttpVerb): IRoutingResult;
@@ -140,4 +141,6 @@ export declare class RoadieServer {
     addRoute(route: string, endpoint: WebServiceClass | WebFunction | string | Endpoint<any, any>, data?: any): void;
     log(...args: string[]): void;
     addRoutes(routes: any): void;
+    protected addConnection(sock: Socket): void;
+    protected createServer(): HttpsServer | HttpServer;
 }

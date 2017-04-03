@@ -7,13 +7,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = require("http");
 const https_1 = require("https");
+const url_1 = require("url");
 const BufferReader_1 = require("./BufferReader");
+const endpoints_1 = require("./endpoints");
 const errno_1 = require("./errno");
 const routemap_1 = require("./routemap");
-const endpoints_1 = require("./endpoints");
-const url_1 = require("url");
 var HttpVerb;
 (function (HttpVerb) {
     HttpVerb[HttpVerb["GET"] = 0] = "GET";
@@ -28,8 +29,9 @@ var HttpVerb;
 })(HttpVerb = exports.HttpVerb || (exports.HttpVerb = {}));
 function parseHttpVerb(verb) {
     let v = HttpVerb[verb];
-    if (typeof (HttpVerb.GET) !== typeof (v))
+    if (typeof (HttpVerb.GET) !== typeof (v)) {
         throw new Error("Invalid HttpVerb");
+    }
     return v;
 }
 exports.parseHttpVerb = parseHttpVerb;
@@ -49,13 +51,8 @@ class HttpRequest {
         this._req = req;
         this._parameters = route.params;
         this._uri = route.uri;
-        this._reader = new BufferReader_1.BufferReader(parseInt(this.header("content-length")), req);
+        this._reader = new BufferReader_1.BufferReader(parseInt(this.header("content-length"), 10), req);
         this.parseUrl();
-    }
-    parseUrl() {
-        const oPar = url_1.parse(this._req.url, true);
-        this._queryString = oPar.search;
-        this._queryParameters = oPar.query;
     }
     readBody(cb) {
         this._reader.read(cb);
@@ -63,29 +60,34 @@ class HttpRequest {
     header(headerName) { return this._req.headers[headerName]; }
     queryParameter(paramName) { return this._queryParameters[paramName]; }
     parameter(paramName) { return this._parameters[paramName]; }
+    parseUrl() {
+        const oPar = url_1.parse(this._req.url, true);
+        this._queryString = oPar.search;
+        this._queryParameters = oPar.query;
+    }
 }
 exports.HttpRequest = HttpRequest;
 class HttpResponse {
     constructor(ctx, resp) {
         this.statusCode = 200;
-        this.eos = false;
         this._encoding = "utf8";
+        this.eos = false;
         this._ctx = ctx;
         this._resp = resp;
         this.headers = {};
         this._startTime = Date.now();
     }
     get response() { return this._resp; }
+    set contentType(val) { this.headers["Content-Type"] = val; }
     get ctx() { return this._ctx; }
     status(code) {
         this.statusCode = code;
     }
-    set contentType(val) { this.headers["Content-Type"] = val; }
     header(headerName, value) {
         this.headers[headerName] = value;
     }
     data(dat) {
-        var bin = dat instanceof Buffer;
+        let bin = dat instanceof Buffer;
         if (!bin && typeof (dat) === "object") {
             dat = JSON.stringify(dat);
             this.header("Content-Type", "application/json");
@@ -93,24 +95,30 @@ class HttpResponse {
         this._data = dat;
     }
     append(dat) {
-        var bin = dat instanceof Buffer;
-        if (!bin && typeof (dat) === "object")
+        let bin = dat instanceof Buffer;
+        if (!bin && typeof (dat) === "object") {
             dat = JSON.stringify(dat);
-        if (bin && this._data instanceof Buffer)
+        }
+        if (bin && this._data instanceof Buffer) {
             Buffer.concat([this._data, dat]);
-        else
+        }
+        else {
             this._data += dat.toString();
+        }
     }
     send() {
-        if (this.eos)
+        if (this.eos) {
             return this._ctx.server.log("server", "Request already send");
-        var len = typeof (this._data) === "string" ? Buffer.byteLength(this._data, this._encoding) : this._data.length;
+        }
+        let len = typeof (this._data) === "string" ?
+            Buffer.byteLength(this._data, this._encoding) :
+            this._data.length;
         this.headers["Content-Length"] = len + "";
-        this.headers["Date"] = new Date().toUTCString();
+        this.headers.Date = new Date().toUTCString();
         this._resp.writeHead(this.statusCode, this.headers);
         this._resp.end(this._data);
         this.eos = true;
-        var t = Date.now() - this._startTime;
+        let t = Date.now() - this._startTime;
         this._ctx.server.log("server", " send: " + typeof (this._data) +
             " of length " + len + " bytes, took " + t + "ms");
     }
@@ -133,21 +141,23 @@ class HttpError {
         else if (typeof (err) === "number") {
             this.statuscode = err;
             this.text = errtxt ? errtxt : HttpError.httpStatusText(this.statuscode);
-            if (extra)
+            if (extra) {
                 this.extra = extra;
+            }
         }
-    }
-    send(ctx) {
-        ctx.response.status(this.statuscode);
-        ctx.response.data("<h1>" + this.statuscode + " " + this.text + "</h1>");
-        if (this.extra)
-            ctx.response.append(this.extra);
-        ctx.response.send();
     }
     static translateErrNo(no) { return errno_1.errno[no]; }
     ;
     static httpStatusText(no) {
         return http_1.STATUS_CODES[no];
+    }
+    send(ctx) {
+        ctx.response.status(this.statuscode);
+        ctx.response.data("<h1>" + this.statuscode + " " + this.text + "</h1>");
+        if (this.extra) {
+            ctx.response.append(this.extra);
+        }
+        ctx.response.send();
     }
 }
 exports.HttpError = HttpError;
@@ -163,27 +173,32 @@ class HttpContext {
         this.response = new HttpResponse(this, resp);
     }
     execute() {
-        if (this.route.resource)
+        if (this.route.resource) {
             this.route.resource.execute(this);
-        else
+        }
+        else {
             this.error(404);
+        }
     }
     error(err, errtxt, extra) {
         let error = new HttpError(err, errtxt, extra);
-        if (this._server.onError)
+        if (this._server.onError) {
             this._server.onError(error, this);
-        else
+        }
+        else {
             error.send(this);
+        }
     }
     cwd() { return this._server.cwd; }
 }
 exports.HttpContext = HttpContext;
 function WebMethod(route, oPar) {
     oPar = oPar || {};
-    oPar.server = oPar.server || RoadieServer.Default;
+    oPar.server = oPar.server || RoadieServer.default;
     return function (target, method, descr) {
-        if (typeof (descr.value) !== "function")
+        if (typeof (descr.value) !== "function") {
             throw new Error(`Given WebMethod ${method} is not a function`);
+        }
         const endpoint = new endpoints_1.WebMethodEndpoint(target.constructor, method, oPar.data);
         oPar.server.addRoute(route, endpoint);
     };
@@ -202,8 +217,10 @@ class RoadieServer {
         this._verbose = !!oPar.verbose;
         this._routemap = new routemap_1.RouteMap();
         this._userData = oPar.userData;
-        if (!this._verbose)
-            this.log = function () { };
+        this._includeHostname = !!oPar.includeHostname;
+        if (!this._verbose) {
+            this.log = () => { };
+        }
         this._tlsOptions = oPar.tlsOptions;
         this._server = this.createServer();
     }
@@ -215,34 +232,19 @@ class RoadieServer {
     get webserviceDir() { return this._rootDir + "/" + this._webserviceDir; }
     get useHttps() { return !!this._tlsOptions; }
     get userData() { return this._userData; }
-    addConnection(sock) {
-        let key = sock.remoteAddress + ":" + sock.remotePort;
-        this._connections[key] = sock;
-        sock.on("close", () => delete this._connections[key]);
-    }
-    createServer() {
-        const _h = (req, resp) => {
-            let verb = parseHttpVerb(req.method);
-            let route = this.getRoute(req.url, verb);
-            let ctx = new HttpContext(this, route, req, resp);
-            ctx.execute();
-        };
-        let serv;
-        if (this.useHttps)
-            serv = https_1.createServer(this._tlsOptions, _h);
-        else
-            serv = http_1.createServer(_h);
-        serv.on("connection", (s) => this.addConnection(s));
-        return serv;
+    useRoutes(serv) {
+        this._routemap = serv._routemap;
     }
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
                 this._server.listen(this._port, this._host, (err) => {
-                    if (err)
+                    if (err) {
                         reject(err);
-                    else
+                    }
+                    else {
                         resolve();
+                    }
                 });
             });
         });
@@ -251,19 +253,29 @@ class RoadieServer {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
                 this._server.close((err) => {
-                    if (err)
+                    if (err) {
                         reject(err);
-                    else
+                    }
+                    else {
                         resolve();
+                    }
                 });
                 for (let key in this._connections) {
-                    this._connections[key].destroy();
+                    if (this._connections.hasOwnProperty(key)) {
+                        this._connections[key].destroy();
+                    }
                 }
             });
         });
     }
     getRoute(url, verb) {
-        url = url_1.parse(url).pathname;
+        let parsedUrl = url_1.parse(url);
+        if (this._includeHostname) {
+            url = parsedUrl.hostname + parsedUrl.pathname;
+        }
+        else {
+            url = parsedUrl.pathname;
+        }
         return this._routemap.getRoute(url, verb);
     }
     include(svcFile, isAbsolute) {
@@ -280,16 +292,45 @@ class RoadieServer {
     }
     addRoutes(routes) {
         if (routes instanceof Array) {
-            for (var i = 0; i < routes.length; i++)
-                this.addRoutes(routes[i]);
+            for (let route of routes) {
+                this.addRoutes(route);
+            }
             return;
         }
-        if (typeof (routes) === "string")
+        if (typeof (routes) === "string") {
             routes = require(`${this._rootDir}/${routes}`);
-        if (typeof (routes) !== "object")
+        }
+        if (typeof (routes) !== "object") {
             throw new Error("Invalid route argument given");
-        for (var k in routes)
-            this.addRoute(k, routes[k]);
+        }
+        for (let k in routes) {
+            if (routes.hasOwnProperty(k)) {
+                this.addRoute(k, routes[k]);
+            }
+        }
+    }
+    addConnection(sock) {
+        let key = sock.remoteAddress + ":" + sock.remotePort;
+        this._connections[key] = sock;
+        sock.on("close", () => delete this._connections[key]);
+    }
+    createServer() {
+        const _h = (req, resp) => {
+            const verb = parseHttpVerb(req.method);
+            const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+            const route = this.getRoute(url, verb);
+            const ctx = new HttpContext(this, route, req, resp);
+            ctx.execute();
+        };
+        let serv;
+        if (this.useHttps) {
+            serv = https_1.createServer(this._tlsOptions, _h);
+        }
+        else {
+            serv = http_1.createServer(_h);
+        }
+        serv.on("connection", (s) => this.addConnection(s));
+        return serv;
     }
 }
 exports.RoadieServer = RoadieServer;
