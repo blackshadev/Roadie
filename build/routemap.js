@@ -30,6 +30,16 @@ class Route {
         }
         return new StaticRoute(urlPart);
     }
+    static normalizeURL(url) {
+        url = url.replace(/[\/]+/g, "/").toLowerCase();
+        if (url[0] === "/") {
+            url = url.slice(1);
+        }
+        if (url[url.length - 1] === "/") {
+            url = url.slice(0, -1);
+        }
+        return url;
+    }
     static splitURL(url) {
         let idx = url.indexOf("]");
         let verbs;
@@ -47,13 +57,7 @@ class Route {
         else {
             verbs = Route.allVerbs.slice(0);
         }
-        url = url.toLowerCase();
-        if (url[0] === "/") {
-            url = url.slice(1);
-        }
-        if (url[url.length - 1] === "/") {
-            url = url.slice(0, -1);
-        }
+        url = Route.normalizeURL(url);
         return [verbs, url.split(/\/|\./g)];
     }
     addEndpoint(verbs, endpoint) {

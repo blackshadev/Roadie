@@ -54,6 +54,19 @@ export abstract class Route implements IRouteMap {
         return new StaticRoute(urlPart);
     }
 
+    public static normalizeURL(url: string): string {
+        url = url.replace(/[\/]+/g, "/").toLowerCase();
+
+        if (url[0] === "/") {
+            url = url.slice(1);
+        }
+        if (url[url.length - 1] === "/") {
+            url = url.slice(0, -1);
+        }
+
+        return url;
+    }
+
     public static splitURL(url: string): [HttpVerb[], string[]] {
         let idx = url.indexOf("]");
 
@@ -75,14 +88,7 @@ export abstract class Route implements IRouteMap {
         }
 
         // split the url up into parts
-        url = url.toLowerCase();
-        if (url[0] === "/") {
-            url = url.slice(1);
-        }
-        if (url[url.length - 1] === "/") {
-            url = url.slice(0, -1);
-        }
-
+        url = Route.normalizeURL(url);
         return [verbs, url.split(/\/|\./g)];
     }
     private static urlRegexp: RegExp;

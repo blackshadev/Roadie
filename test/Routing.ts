@@ -133,11 +133,18 @@ describe("Routing: ", () => {
         router.addRoute("[GET]{sub}.littledev.nl", Endpoint.Create("test.js"));
 
         let res = router.getRoute("tester.littledev.nl", HttpVerb.GET);
-        assert.ok(
-            res
-            && res.params.sub === "tester"
-            && res.resource.script === "test.js",
-        );
+        assert.ok(res, "Expected to find route");
+        assert.equal(res.params.sub, "tester", "Invalid parameter");
+        assert.equal(res.resource.script, "test.js", "Invalid bind resource");
+    });
+
+    it("URL normalization", () => {
+        router.addRoute("[GET]///test//test//////{aaa}////", Endpoint.Create("test.js"));
+
+        let res = router.getRoute("test/test/tester/", HttpVerb.GET);
+        assert.ok(res, "Expected to find route");
+        assert.equal(res.params.aaa, "tester", "Invalid parameter");
+        assert.equal(res.resource.script, "test.js", "Invalid bind resource");
     });
 
 });

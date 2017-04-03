@@ -18,6 +18,7 @@ export interface IRouteMap {
 export declare abstract class Route implements IRouteMap {
     static allVerbs: HttpVerb[];
     static Create(urlPart: string): Route;
+    static normalizeURL(url: string): string;
     static splitURL(url: string): [HttpVerb[], string[]];
     private static urlRegexp;
     type: RouteType;

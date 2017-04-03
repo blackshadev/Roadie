@@ -35,8 +35,9 @@ class GreedySearch {
     next() {
         while (this.nodes.length > 0) {
             let state = this.nodes.items.shift();
-            if (this.goal(state))
+            if (this.goal(state)) {
                 return state;
+            }
             let arr = this.move(state);
             this.nodes.addAll(arr);
         }
