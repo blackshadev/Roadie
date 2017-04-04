@@ -1,4 +1,4 @@
-﻿import { RoadieServer, WebMethod as decr } from "./http";
+﻿import { HttpVerb, RoadieServer, WebMethod as decr } from "./http";
 import { WebService as ws } from "./webservice";
 
 export {
