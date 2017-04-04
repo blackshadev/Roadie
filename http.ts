@@ -393,12 +393,6 @@ export class RoadieServer {
      * @param verb Verb used
      */
     public getRoute(url: string, verb: HttpVerb): IRoutingResult {
-        let parsedUrl: IURL = urlParse(url);
-        if (this._includeHostname) {
-            url = parsedUrl.hostname + parsedUrl.pathname;
-        } else {
-            url = parsedUrl.pathname;
-        }
         return this._routemap.getRoute(url, verb);
     }
 
