@@ -1,45 +1,44 @@
-﻿import { HttpContext } from "./http";
-import { constructorOf } from "./collections";
+﻿import { constructorOf } from "./collections";
+import { HttpContext } from "./http";
 
 
-function _super(o: any) { return o.prototype.__proto__; };
-(<any>global)._super = _super;
+function _super(o: any) { return o.prototype.__proto__; }
+(global as any)._super = _super;
 
 export class WebService {
+    public static extend(oPar: {}): constructorOf<WebService> {
+        const cls = class extends WebService {};
+        Object.assign(cls.prototype, oPar);
+        return cls;
+    }
+    public isReady: boolean = true;
     protected ctx: HttpContext;
     protected _method: string;
-    get method(): string { return this._method; };
+    get method(): string { return this._method; }
 
     // Set by the webservice constructor indicating the method can be called by roadie or not
-    isReady: boolean = true;
 
     constructor(ctx: HttpContext, method: string) {
         this.create(ctx, method);
     }
-    
-    async _execute_(method: string) {
+
+    public async _execute_(method: string) {
         try {
-            let d = await this[method]();
-            if(d !== undefined) {
+            const d = await this[method]();
+            if (d !== undefined) {
                 this.ctx.response.data(d);
                 this.ctx.response.send();
             }
-        } catch(e) {
+        } catch (e) {
             this.ctx.error(e);
         }
 
-        
     }
 
     // Use the create call for backwards compatibility
-    create(ctx: HttpContext, method: string) {
+    public create(ctx: HttpContext, method: string) {
         this.ctx = ctx;
         this._method = method;
     }
 
-    static extend(oPar: {}): constructorOf<WebService> {
-        let cls = class extends WebService {}
-        Object.assign(cls.prototype, oPar);
-        return cls;
-    }
 }

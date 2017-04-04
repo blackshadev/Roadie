@@ -5,7 +5,7 @@ import { Socket } from "net";
 import { TlsOptions } from "tls";
 import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
-import { Endpoint, WebFunction, WebServiceClass } from "./endpoints";
+import { Endpoint, IWebServiceClass, WebFunction } from "./endpoints";
 import { IError } from "./errno";
 import { IRoutingResult, RouteMap } from "./routemap";
 export declare enum HttpVerb {
@@ -138,7 +138,7 @@ export declare class RoadieServer {
     stop(): Promise<void>;
     getRoute(url: string, verb: HttpVerb): IRoutingResult;
     include(svcFile: string, isAbsolute?: boolean): void;
-    addRoute(route: string, endpoint: WebServiceClass | WebFunction | string | Endpoint<any, any>, data?: any): void;
+    addRoute(route: string, endpoint: IWebServiceClass | WebFunction | string | Endpoint<any, any>, data?: any): void;
     log(...args: string[]): void;
     addRoutes(routes: any): void;
     protected addConnection(sock: Socket): void;

@@ -9,11 +9,11 @@ import { TlsOptions } from "tls";
 import { parse as urlParse, Url as IURL } from "url";
 import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
-import { Endpoint, WebFunction, WebMethodEndpoint, WebServiceClass } from "./endpoints";
+import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
 import { errno, IError } from "./errno";
 import { IRoutingResult, RouteMap } from "./routemap";
 
-type TInputRoutes = { [route: string]: string | WebFunction  };
+interface IInputRoutes { [route: string]: string | WebFunction  };
 
 export enum HttpVerb {
     "GET" = 0,
@@ -413,7 +413,7 @@ export class RoadieServer {
      */
     public addRoute(
         route: string,
-        endpoint: WebServiceClass | WebFunction | string | Endpoint<any, any>,
+        endpoint: IWebServiceClass | WebFunction | string | Endpoint<any, any>,
         data?: any,
     ): void {
         const endp = endpoint instanceof Endpoint ?

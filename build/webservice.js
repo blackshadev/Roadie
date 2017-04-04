@@ -9,19 +9,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 function _super(o) { return o.prototype.__proto__; }
-;
 global._super = _super;
 class WebService {
     constructor(ctx, method) {
         this.isReady = true;
         this.create(ctx, method);
     }
+    static extend(oPar) {
+        const cls = class extends WebService {
+        };
+        Object.assign(cls.prototype, oPar);
+        return cls;
+    }
     get method() { return this._method; }
-    ;
     _execute_(method) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                let d = yield this[method]();
+                const d = yield this[method]();
                 if (d !== undefined) {
                     this.ctx.response.data(d);
                     this.ctx.response.send();
@@ -35,12 +39,6 @@ class WebService {
     create(ctx, method) {
         this.ctx = ctx;
         this._method = method;
-    }
-    static extend(oPar) {
-        let cls = class extends WebService {
-        };
-        Object.assign(cls.prototype, oPar);
-        return cls;
     }
 }
 exports.WebService = WebService;
