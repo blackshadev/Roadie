@@ -269,13 +269,6 @@ class RoadieServer {
         });
     }
     getRoute(url, verb) {
-        let parsedUrl = url_1.parse(url);
-        if (this._includeHostname) {
-            url = parsedUrl.hostname + parsedUrl.pathname;
-        }
-        else {
-            url = parsedUrl.pathname;
-        }
         return this._routemap.getRoute(url, verb);
     }
     include(svcFile, isAbsolute) {
