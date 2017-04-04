@@ -24,6 +24,7 @@ export declare class HttpRequest {
     readonly url: string;
     readonly method: string;
     readonly parameters: IDictionary<string>;
+    readonly headers: IDictionary<string>;
     readonly ctx: HttpContext;
     readonly uri: string;
     readonly queryParams: IDictionary<string>;

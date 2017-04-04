@@ -38,14 +38,12 @@ function parseHttpVerb(verb) {
 exports.parseHttpVerb = parseHttpVerb;
 class HttpRequest {
     get url() { return this._req.url; }
-    ;
     get method() { return this._req.method; }
     get parameters() { return this._parameters; }
-    ;
+    get headers() { return this._req.headers; }
     get ctx() { return this._ctx; }
     get uri() { return this._uri; }
     get queryParams() { return this._queryParameters; }
-    ;
     get request() { return this._req; }
     constructor(ctx, route, req) {
         this._ctx = ctx;

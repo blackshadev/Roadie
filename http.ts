@@ -36,12 +36,13 @@ export function parseHttpVerb(verb: string): HttpVerb {
 }
 
 export class HttpRequest {
-    get url(): string { return this._req.url; };
+    get url(): string { return this._req.url; }
     get method(): string { return this._req.method; }
-    get parameters(): IDictionary<string> { return this._parameters; };
+    get parameters(): IDictionary<string> { return this._parameters; }
+    get headers(): IDictionary<string> { return this._req.headers; }
     get ctx(): HttpContext { return this._ctx; }
     get uri(): string { return this._uri; }
-    get queryParams(): IDictionary<string> { return this._queryParameters; };
+    get queryParams(): IDictionary<string> { return this._queryParameters; }
     get request(): IncomingMessage { return this._req; }
 
     protected _parameters: IDictionary<string>;
