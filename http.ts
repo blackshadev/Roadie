@@ -12,6 +12,7 @@ import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
 import { errno, IError } from "./errno";
 import { IRoutingResult, RouteMap } from "./routemap";
+import { Writable, Readable } from "stream";
 
 interface IInputRoutes { [route: string]: string | WebFunction  };
 

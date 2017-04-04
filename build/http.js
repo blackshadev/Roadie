@@ -59,6 +59,9 @@ class HttpRequest {
     header(headerName) { return this._req.headers[headerName]; }
     queryParameter(paramName) { return this._queryParameters[paramName]; }
     parameter(paramName) { return this._parameters[paramName]; }
+    pipe(strm) {
+        this._req.pipe(strm);
+    }
     parseUrl() {
         const oPar = url_1.parse(this._req.url, true);
         this._queryString = oPar.search;
