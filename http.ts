@@ -466,7 +466,8 @@ export class RoadieServer {
     protected createServer(): HttpsServer | HttpServer {
         const _h = (req: IncomingMessage, resp: ServerResponse) => {
             const verb = parseHttpVerb(req.method);
-            const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+            const path = urlParse(req.url).pathname;
+            const url = this._includeHostname ? (req.headers.host + path) : path;
             const route = this.getRoute(url, verb);
 
             const ctx = new HttpContext(this, route, req, resp);
