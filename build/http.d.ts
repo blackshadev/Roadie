@@ -8,7 +8,6 @@ import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction } from "./endpoints";
 import { IError } from "./errno";
 import { IRoutingResult, RouteMap } from "./routemap";
-import { Writable } from "stream";
 export declare enum HttpVerb {
     "GET" = 0,
     "POST" = 1,
@@ -42,7 +41,6 @@ export declare class HttpRequest {
     header(headerName: string): string;
     queryParameter(paramName: string): string;
     parameter(paramName: string): string;
-    pipe(strm: Writable): void;
     private parseUrl();
 }
 export declare class HttpResponse {

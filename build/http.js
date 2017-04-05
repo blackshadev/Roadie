@@ -59,9 +59,6 @@ class HttpRequest {
     header(headerName) { return this._req.headers[headerName]; }
     queryParameter(paramName) { return this._queryParameters[paramName]; }
     parameter(paramName) { return this._parameters[paramName]; }
-    pipe(strm) {
-        this._req.pipe(strm);
-    }
     parseUrl() {
         const oPar = url_1.parse(this._req.url, true);
         this._queryString = oPar.search;
@@ -312,7 +309,8 @@ class RoadieServer {
     createServer() {
         const _h = (req, resp) => {
             const verb = parseHttpVerb(req.method);
-            const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+            const path = url_1.parse(req.url).pathname;
+            const url = this._includeHostname ? (req.headers.host + path) : path;
             const route = this.getRoute(url, verb);
             const ctx = new HttpContext(this, route, req, resp);
             ctx.execute();
