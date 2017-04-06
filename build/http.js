@@ -67,7 +67,7 @@ class HttpRequest {
 exports.HttpRequest = HttpRequest;
 class HttpResponse {
     constructor(ctx, resp) {
-        this.statusCode = 200;
+        this._statusCode = 200;
         this._encoding = "utf8";
         this.eos = false;
         this._ctx = ctx;
@@ -77,9 +77,13 @@ class HttpResponse {
     }
     get response() { return this._resp; }
     set contentType(val) { this.headers["Content-Type"] = val; }
+    get statusCode() { return this._statusCode; }
+    get length() {
+        return typeof (this._data) === "string" ? Buffer.byteLength(this._data) : this._data.length;
+    }
     get ctx() { return this._ctx; }
     status(code) {
-        this.statusCode = code;
+        this._statusCode = code;
     }
     header(headerName, value) {
         this.headers[headerName] = value;
@@ -113,7 +117,7 @@ class HttpResponse {
             this._data.length;
         this.headers["Content-Length"] = len + "";
         this.headers.Date = new Date().toUTCString();
-        this._resp.writeHead(this.statusCode, this.headers);
+        this._resp.writeHead(this._statusCode, this.headers);
         this._resp.end(this._data);
         this.eos = true;
         const t = Date.now() - this._startTime;
@@ -307,7 +311,8 @@ class RoadieServer {
         const _h = (req, resp) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const verb = parseHttpVerb(req.method);
-                const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+                const path = url_1.parse(req.url).pathname;
+                const url = this._includeHostname ? (req.headers.host + path) : path;
                 const route = yield this.getRoute(url, verb);
                 const ctx = new HttpContext(this, route, req, resp);
                 yield ctx.execute();

@@ -8,9 +8,8 @@ class State {
         this.left = [];
     }
     get cost() { return this.path.length; }
-    ;
     clone() {
-        let s = new State(this.data);
+        const s = new State(this.data);
         s.path = this.path.slice(0);
         s.left = this.left.slice(0);
         return s;
@@ -34,11 +33,11 @@ class GreedySearch {
     }
     next() {
         while (this.nodes.length > 0) {
-            let state = this.nodes.items.shift();
+            const state = this.nodes.items.shift();
             if (this.goal(state)) {
                 return state;
             }
-            let arr = this.move(state);
+            const arr = this.move(state);
             this.nodes.addAll(arr);
         }
         return;

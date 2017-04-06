@@ -86,9 +86,13 @@ export class HttpRequest {
 export class HttpResponse {
     get response(): ServerResponse { return this._resp; }
     set contentType(val: string) { this.headers["Content-Type"] = val; }
+    get statusCode(): number { return this._statusCode; }
+    get length(): number {
+        return typeof(this._data) === "string" ? Buffer.byteLength(this._data) : this._data.length;
+    }
 
     protected _resp: ServerResponse;
-    protected statusCode: number = 200;
+    protected _statusCode: number = 200;
     protected headers: { [name: string]: string };
 
     protected _encoding: string = "utf8";
@@ -107,7 +111,7 @@ export class HttpResponse {
     }
 
     public status(code: number): void {
-        this.statusCode = code;
+        this._statusCode = code;
     }
 
     public header(headerName: string, value: string): void {
@@ -148,7 +152,7 @@ export class HttpResponse {
         this.headers["Content-Length"] = len + "";
         this.headers.Date = new Date().toUTCString();
 
-        this._resp.writeHead(this.statusCode, this.headers);
+        this._resp.writeHead(this._statusCode, this.headers);
         this._resp.end(this._data);
 
         this.eos = true;
@@ -457,10 +461,12 @@ export class RoadieServer {
     }
 
     protected createServer(): HttpsServer | HttpServer {
+
         const _h = async (req: IncomingMessage, resp: ServerResponse) => {
             try {
                 const verb = parseHttpVerb(req.method);
-                const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+                const path = urlParse(req.url).pathname;
+                const url = this._includeHostname ? (req.headers.host + path) : path;
                 const route = await this.getRoute(url, verb);
 
                 const ctx = new HttpContext(this, route, req, resp);
@@ -470,6 +476,7 @@ export class RoadieServer {
                 resp.setHeader("Content-Type", "text/html");
                 resp.end(`<h1> Unkown server error occurred </h1><pre>${e.toString()}</pre>`);
             }
+
         };
 
         let serv: HttpServer | HttpsServer;

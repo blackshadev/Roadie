@@ -46,8 +46,10 @@ export declare class HttpRequest {
 export declare class HttpResponse {
     readonly response: ServerResponse;
     contentType: string;
+    readonly statusCode: number;
+    readonly length: number;
     protected _resp: ServerResponse;
-    protected statusCode: number;
+    protected _statusCode: number;
     protected headers: {
         [name: string]: string;
     };

@@ -4,7 +4,7 @@ import { Route, RouteType, StaticRouter } from "./routemap";
 import { GreedySearch, State } from "./searching";
 
 export interface IRoutingState {
-    public getPossibleRoutes(part, rest): Route[] {
+    getPossibleRoutes(part, rest): Route[];
 }
 
 export class RoutingState extends State<string, Route> {

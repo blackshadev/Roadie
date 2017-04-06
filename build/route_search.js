@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const collections_1 = require("./collections");
 const routemap_1 = require("./routemap");
 const searching_1 = require("./searching");
+{
+}
 class RoutingState extends searching_1.State {
     constructor() {
         super(...arguments);
@@ -12,8 +14,8 @@ class RoutingState extends searching_1.State {
     }
     get cost() { return this.path.length + this.penalty; }
     getPossibleRoutes(part, rest) {
-        let arr = [];
-        for (let k in this.data.routes) {
+        const arr = [];
+        for (const k in this.data.routes) {
             if (this.data.routes[k].match(part, rest)) {
                 arr.push(this.data.routes[k]);
             }
@@ -21,7 +23,7 @@ class RoutingState extends searching_1.State {
         return arr;
     }
     clone() {
-        let s = new RoutingState(this.data);
+        const s = new RoutingState(this.data);
         s.left = this.left.slice(0);
         s.path = this.path.slice(0);
         s.penalty = this.penalty;
@@ -42,17 +44,17 @@ class RouteSearch extends searching_1.GreedySearch {
         return s.left.length === 0 && (this.verb === undefined || !!s.data.endpoints.get(this.verb));
     }
     initial() {
-        let s = new RoutingState(this.routeMap.root);
+        const s = new RoutingState(this.routeMap.root);
         s.left = this.urlParts;
         return [s];
     }
     move(s) {
-        let r = s.data;
-        let n = s.left.shift();
-        let rest = s.left.length ? n + "/" + s.left.join("/") : n;
-        let arr = s.getPossibleRoutes(n, rest);
-        let states = arr.map((e) => {
-            let ns = s.clone();
+        const r = s.data;
+        const n = s.left.shift();
+        const rest = s.left.length ? n + "/" + s.left.join("/") : n;
+        const arr = s.getPossibleRoutes(n, rest);
+        const states = arr.map((e) => {
+            const ns = s.clone();
             ns.data = e;
             ns.path.push(e.name);
             switch (e.type) {

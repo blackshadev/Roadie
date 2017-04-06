@@ -1,6 +1,9 @@
 import { HttpVerb } from "./http";
 import { Route, StaticRouter } from "./routemap";
 import { GreedySearch, State } from "./searching";
+export interface IRoutingState {
+    getPossibleRoutes(part: any, rest: any): Route[];
+}
 export declare class RoutingState extends State<string, Route> {
     penalty: number;
     params: {
