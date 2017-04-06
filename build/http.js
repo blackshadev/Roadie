@@ -15,6 +15,7 @@ const BufferReader_1 = require("./BufferReader");
 const endpoints_1 = require("./endpoints");
 const errno_1 = require("./errno");
 const routemap_1 = require("./routemap");
+;
 var HttpVerb;
 (function (HttpVerb) {
     HttpVerb[HttpVerb["GET"] = 0] = "GET";
@@ -37,14 +38,12 @@ function parseHttpVerb(verb) {
 exports.parseHttpVerb = parseHttpVerb;
 class HttpRequest {
     get url() { return this._req.url; }
-    ;
     get method() { return this._req.method; }
     get parameters() { return this._parameters; }
-    ;
+    get headers() { return this._req.headers; }
     get ctx() { return this._ctx; }
     get uri() { return this._uri; }
     get queryParams() { return this._queryParameters; }
-    ;
     get request() { return this._req; }
     constructor(ctx, route, req) {
         this._ctx = ctx;
@@ -314,7 +313,8 @@ class RoadieServer {
     createServer() {
         const _h = (req, resp) => {
             const verb = parseHttpVerb(req.method);
-            const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+            const path = url_1.parse(req.url).pathname;
+            const url = this._includeHostname ? (req.headers.host + path) : path;
             const route = this.getRoute(url, verb);
             const ctx = new HttpContext(this, route, req, resp);
             ctx.execute();

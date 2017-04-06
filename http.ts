@@ -9,11 +9,12 @@ import { TlsOptions } from "tls";
 import { parse as urlParse, Url as IURL } from "url";
 import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
-import { Endpoint, WebFunction, WebMethodEndpoint, WebServiceClass } from "./endpoints";
+import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
 import { errno, IError } from "./errno";
 import { IRoutingResult, RouteMap } from "./routemap";
+import { Writable, Readable } from "stream";
 
-type TInputRoutes = { [route: string]: string | WebFunction  };
+interface IInputRoutes { [route: string]: string | WebFunction  };
 
 export enum HttpVerb {
     "GET" = 0,
@@ -36,12 +37,13 @@ export function parseHttpVerb(verb: string): HttpVerb {
 }
 
 export class HttpRequest {
-    get url(): string { return this._req.url; };
+    get url(): string { return this._req.url; }
     get method(): string { return this._req.method; }
-    get parameters(): IDictionary<string> { return this._parameters; };
+    get parameters(): IDictionary<string> { return this._parameters; }
+    get headers(): IDictionary<string> { return this._req.headers; }
     get ctx(): HttpContext { return this._ctx; }
     get uri(): string { return this._uri; }
-    get queryParams(): IDictionary<string> { return this._queryParameters; };
+    get queryParams(): IDictionary<string> { return this._queryParameters; }
     get request(): IncomingMessage { return this._req; }
 
     protected _parameters: IDictionary<string>;
@@ -417,7 +419,7 @@ export class RoadieServer {
      */
     public addRoute(
         route: string,
-        endpoint: WebServiceClass | WebFunction | string | Endpoint<any, any>,
+        endpoint: IWebServiceClass | WebFunction | string | Endpoint<any, any>,
         data?: any,
     ): void {
         const endp = endpoint instanceof Endpoint ?
@@ -468,7 +470,8 @@ export class RoadieServer {
     protected createServer(): HttpsServer | HttpServer {
         const _h = (req: IncomingMessage, resp: ServerResponse) => {
             const verb = parseHttpVerb(req.method);
-            const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+            const path = urlParse(req.url).pathname;
+            const url = this._includeHostname ? (req.headers.host + path) : path;
             const route = this.getRoute(url, verb);
 
             const ctx = new HttpContext(this, route, req, resp);

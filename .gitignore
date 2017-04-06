@@ -15,7 +15,7 @@
 
 # sftp configuration file
 sftp-config.json
-
+.tscache/
 
 ### Node ###
 # Logs
