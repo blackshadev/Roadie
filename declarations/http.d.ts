@@ -7,7 +7,7 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction } from "./endpoints";
 import { IError } from "./errno";
-import { IRoutingResult, StaticRouter } from "./routemap";
+import { IRoutingResult, IRouter } from "./routemap";
 export declare enum HttpVerb {
     "GET" = 0,
     "POST" = 1,
@@ -103,6 +103,7 @@ export interface IRoadieServerParameters {
     verbose?: boolean;
     includeHostname?: boolean;
     userData?: any;
+    router?: IRouter;
 }
 export interface IRoutes {
     [route: string]: WebFunction | string;
@@ -122,6 +123,7 @@ export declare class RoadieServer {
     readonly useHttps: boolean;
     readonly userData: any;
     onError: ErrorHandle;
+    router: IRouter;
     protected _port: number;
     protected _host: string;
     protected _userData: any;
@@ -129,12 +131,10 @@ export declare class RoadieServer {
     protected _webserviceDir: string;
     protected _tlsOptions: {};
     protected _server: HttpsServer | HttpServer;
-    protected _routemap: StaticRouter;
     protected _verbose: boolean;
     protected _includeHostname: boolean;
     private _connections;
     constructor(oPar: IRoadieServerParameters);
-    useRoutes(serv: RoadieServer): void;
     start(): Promise<void>;
     stop(): Promise<void>;
     getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;

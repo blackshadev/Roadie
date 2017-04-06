@@ -214,7 +214,7 @@ class RoadieServer {
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
         this._verbose = !!oPar.verbose;
-        this._routemap = new routemap_1.StaticRouter();
+        this.router = oPar.router || new routemap_1.StaticRouter();
         this._userData = oPar.userData;
         this._includeHostname = !!oPar.includeHostname;
         if (!this._verbose) {
@@ -229,9 +229,6 @@ class RoadieServer {
     get webserviceDir() { return this._rootDir + "/" + this._webserviceDir; }
     get useHttps() { return !!this._tlsOptions; }
     get userData() { return this._userData; }
-    useRoutes(serv) {
-        this._routemap = serv._routemap;
-    }
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
@@ -267,7 +264,7 @@ class RoadieServer {
     }
     getRoute(url, verb) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this._routemap.getRoute(url, verb);
+            return this.router.getRoute(url, verb);
         });
     }
     include(svcFile, isAbsolute) {
@@ -277,7 +274,7 @@ class RoadieServer {
         const endp = endpoint instanceof endpoints_1.Endpoint ?
             endpoint :
             endpoints_1.Endpoint.Create(endpoint, data);
-        this._routemap.addRoute(route, endp);
+        this.router.addRoute(route, endp);
     }
     log(...args) {
         console.log.apply(console, args);

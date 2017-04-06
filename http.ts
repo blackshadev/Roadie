@@ -12,7 +12,7 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
 import { errno, IError } from "./errno";
-import { IRoutingResult, StaticRouter } from "./routemap";
+import { IRoutingResult, StaticRouter, IRouter } from "./routemap";
 
 interface IInputRoutes { [route: string]: string | WebFunction;  }
 
@@ -259,6 +259,7 @@ export interface IRoadieServerParameters {
     // includes hostname in routes
     includeHostname?: boolean;
     userData?: any;
+    router?: IRouter;
 }
 
 export interface IRoutes {
@@ -302,6 +303,7 @@ export class RoadieServer {
     get userData() { return this._userData; }
 
     public onError: ErrorHandle;
+    public router: IRouter;
 
     protected _port: number = 80;
     protected _host: string;
@@ -311,7 +313,6 @@ export class RoadieServer {
     protected _webserviceDir: string = "webservices";
     protected _tlsOptions: {};
     protected _server: HttpsServer | HttpServer;
-    protected _routemap: StaticRouter;
     protected _verbose: boolean;
     protected _includeHostname: boolean;
 
@@ -325,7 +326,7 @@ export class RoadieServer {
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
         this._verbose = !!oPar.verbose;
-        this._routemap = new StaticRouter();
+        this.router = oPar.router || new StaticRouter();
         this._userData = oPar.userData;
         this._includeHostname = !!oPar.includeHostname;
 
@@ -338,14 +339,6 @@ export class RoadieServer {
         this._server = this.createServer();
     }
 
-    /**
-     * Uses the routemap of the given server.
-     * @remark Adding routes to one of the servers will affect both servers. The routemap is shared.
-     * @param serv Server to share the routes with
-     */
-    public useRoutes(serv: RoadieServer): void {
-        this._routemap = serv._routemap;
-    }
 
     /**
      * Starts accepting external connection
@@ -395,7 +388,7 @@ export class RoadieServer {
      * @param verb Verb used
      */
     public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult> {
-        return this._routemap.getRoute(url, verb);
+        return this.router.getRoute(url, verb);
     }
 
     /**
@@ -422,7 +415,7 @@ export class RoadieServer {
             endpoint as Endpoint<any, any> :
             Endpoint.Create(endpoint as WebFunction | string, data);
 
-        this._routemap.addRoute(route, endp);
+        this.router.addRoute(route, endp);
     }
 
     public log(...args: string[]): void {

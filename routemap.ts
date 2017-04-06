@@ -181,7 +181,12 @@ export interface IRoutingResult {
     uri: string;
 }
 
-export abstract class Router {
+export interface IRouter {
+    addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void>;
+    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
+}
+
+export abstract class Router implements IRouter {
     public readonly root: Route;
 
     constructor() {
@@ -217,7 +222,7 @@ export class StaticRouter extends Router {
         return this.root.routes;
     }
 
-    public addRoute(url: string, endpoint: Endpoint<any, any>) {
+    public async addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void> {
         const tmp = Route.splitURL(url);
         const verbs = tmp[0];
         const urlParts = tmp[1];

@@ -1,7 +1,7 @@
 ﻿import { IValueOf, SortedArray} from "./collections";
 
 export class State<P, T> implements IValueOf {
-    get cost(): number { return this.path.length; };
+    get cost(): number { return this.path.length; }
 
     // Path of states to this state
     public path: P[];
@@ -16,7 +16,7 @@ export class State<P, T> implements IValueOf {
     }
 
     public clone(): State<P, T> {
-        let s = new State<P, T>(this.data);
+        const s = new State<P, T>(this.data);
         s.path = this.path.slice(0);
         s.left = this.left.slice(0);
 
@@ -48,14 +48,14 @@ export abstract class GreedySearch<S extends State<any, any>> {
     public next(): S {
 
         while (this.nodes.length > 0) {
-            let state = this.nodes.items.shift();
+            const state = this.nodes.items.shift();
 
             // Is goal state?
             if (this.goal(state)) {
                 return state;
             }
 
-            let arr = this.move(state);
+            const arr = this.move(state);
 
             // Add the new states to our possible moves
             this.nodes.addAll(arr);

@@ -61,7 +61,7 @@ describe("server", () => {
         __decorate([
             http_1.WebMethod("[GET]/ha/lo", { server: serv })
         ], WebSvc.prototype, "halloworld", null);
-        const routemap = serv._routemap;
+        const routemap = serv.router;
         assert.ok(true
             && routemap.routes.ha
             && routemap.routes.ha.routes.lo

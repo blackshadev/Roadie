@@ -53,7 +53,11 @@ export interface IRoutingResult {
     resource: Endpoint<any, any>;
     uri: string;
 }
-export declare abstract class Router {
+export interface IRouter {
+    addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void>;
+    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
+}
+export declare abstract class Router implements IRouter {
     readonly root: Route;
     constructor();
     abstract addRoute(url: string, endpoint: Endpoint<any, any>): any;
@@ -62,6 +66,6 @@ export declare abstract class Router {
 }
 export declare class StaticRouter extends Router {
     readonly routes: IRoutes;
-    addRoute(url: string, endpoint: Endpoint<any, any>): void;
+    addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void>;
     searchRoute(verb: HttpVerb, url: string): Promise<RoutingState>;
 }

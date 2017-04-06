@@ -72,7 +72,7 @@ describe("server", () => {
             }
         }
 
-        const routemap =  (serv as any)._routemap as StaticRouter;
+        const routemap = serv.router as StaticRouter;
         assert.ok(
             true
             && routemap.routes.ha

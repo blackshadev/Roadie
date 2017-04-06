@@ -148,17 +148,19 @@ class StaticRouter extends Router {
         return this.root.routes;
     }
     addRoute(url, endpoint) {
-        const tmp = Route.splitURL(url);
-        const verbs = tmp[0];
-        const urlParts = tmp[1];
-        let r = this.root;
-        for (const urlPart of urlParts) {
-            if (!r.routes[urlPart]) {
-                r.routes[urlPart] = Route.Create(urlPart);
+        return __awaiter(this, void 0, void 0, function* () {
+            const tmp = Route.splitURL(url);
+            const verbs = tmp[0];
+            const urlParts = tmp[1];
+            let r = this.root;
+            for (const urlPart of urlParts) {
+                if (!r.routes[urlPart]) {
+                    r.routes[urlPart] = Route.Create(urlPart);
+                }
+                r = r.routes[urlPart];
             }
-            r = r.routes[urlPart];
-        }
-        r.addEndpoint(verbs, endpoint);
+            r.addEndpoint(verbs, endpoint);
+        });
     }
     searchRoute(verb, url) {
         return __awaiter(this, void 0, void 0, function* () {

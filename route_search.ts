@@ -1,7 +1,11 @@
 ﻿import { extend } from "./collections";
 import { HttpVerb } from "./http";
-import { Route, StaticRouter, RouteType } from "./routemap";
+import { Route, RouteType, StaticRouter } from "./routemap";
 import { GreedySearch, State } from "./searching";
+
+export interface IRoutingState {
+    public getPossibleRoutes(part, rest): Route[] {
+}
 
 export class RoutingState extends State<string, Route> {
     public penalty: number = 0;
@@ -16,8 +20,8 @@ export class RoutingState extends State<string, Route> {
 
     // Get Possible routes to take from this state
     public getPossibleRoutes(part, rest): Route[] {
-        let arr: Route[] = [];
-        for (let k in this.data.routes) {
+        const arr: Route[] = [];
+        for (const k in this.data.routes) {
             if (this.data.routes[k].match(part, rest)) {
                 arr.push(this.data.routes[k]);
             }
@@ -27,7 +31,7 @@ export class RoutingState extends State<string, Route> {
     }
 
     public clone(): RoutingState {
-        let s = new RoutingState(this.data);
+        const s = new RoutingState(this.data);
         s.left = this.left.slice(0);
         s.path = this.path.slice(0);
         s.penalty = this.penalty;
@@ -55,7 +59,7 @@ export class RouteSearch extends GreedySearch<RoutingState> {
     }
 
     public initial(): RoutingState[] {
-        let s = new RoutingState(this.routeMap.root);
+        const s = new RoutingState(this.routeMap.root);
         s.left = this.urlParts;
 
         return [s];
@@ -63,15 +67,15 @@ export class RouteSearch extends GreedySearch<RoutingState> {
 
     public move(s: RoutingState): RoutingState[] {
 
-        let r = s.data;
-        let n = s.left.shift();
-        let rest = s.left.length ? n + "/" + s.left.join("/") : n;
+        const r = s.data;
+        const n = s.left.shift();
+        const rest = s.left.length ? n + "/" + s.left.join("/") : n;
 
-        let arr = s.getPossibleRoutes(n, rest);
+        const arr = s.getPossibleRoutes(n, rest);
 
-        let states = arr.map((e) => {
+        const states = arr.map((e) => {
             // s = state, ns= newstate
-            let ns = s.clone();
+            const ns = s.clone();
             ns.data = e;
             ns.path.push(e.name);
 
