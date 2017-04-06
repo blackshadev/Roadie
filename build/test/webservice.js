@@ -7,9 +7,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
-const webservice_1 = require("../webservice");
-const http_1 = require("../http");
 const endpoints_1 = require("../endpoints");
+const http_1 = require("../http");
+const webservice_1 = require("../webservice");
 class NewWebservice extends webservice_1.WebService {
     constructor(ctx, method) {
         super(ctx, method);
@@ -24,23 +24,23 @@ class NewWebservice extends webservice_1.WebService {
 describe("Webservice", () => {
     it("extending old", () => {
         let constructed = false;
-        let svc = webservice_1.WebService.extend({
-            create: function (ctx, method) {
+        const svc = webservice_1.WebService.extend({
+            create(ctx, method) {
                 constructed = true;
                 _super(svc).create.call(this, ctx, method);
             },
-            test: function () {
+            test() {
                 this.ctx.response.data("Test Webservice");
                 this.ctx.response.send();
-            }
+            },
         });
-        let test = new svc({}, "testMethod");
+        const test = new svc({}, "testMethod");
         assert.ok(constructed, "Did not go through the create fn");
         assert.ok(test.test, "Doesn't have the newly added method");
         assert.ok(test._method === "testMethod", "method not set properly");
     });
     it("extending ts", () => {
-        let test = new NewWebservice({}, "test");
+        const test = new NewWebservice({}, "test");
         assert.ok(test.isReady === false, "isReady must be set to false by the new webservice");
         assert.ok(test.extraProp === true, "Newly added prop isn't set correctly");
         assert.ok(test.method === "test", "Method isn't set correctly");
@@ -63,10 +63,10 @@ describe("server", () => {
         ], WebSvc.prototype, "halloworld", null);
         const routemap = serv._routemap;
         assert.ok(true
-            && routemap.routes["ha"]
-            && routemap.routes["ha"].routes["lo"]
-            && routemap.routes["ha"].routes["lo"].endpoints.get(http_1.HttpVerb.GET), "Route not found");
-        const endp = routemap.routes["ha"].routes["lo"].endpoints.get(http_1.HttpVerb.GET);
+            && routemap.routes.ha
+            && routemap.routes.ha.routes.lo
+            && routemap.routes.ha.routes.lo.endpoints.get(http_1.HttpVerb.GET), "Route not found");
+        const endp = routemap.routes.ha.routes.lo.endpoints.get(http_1.HttpVerb.GET);
         assert.ok(true
             && endp instanceof endpoints_1.WebMethodEndpoint
             && endp.method === "halloworld"

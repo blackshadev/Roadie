@@ -28,8 +28,8 @@ export interface IRouteMap {
 export abstract class Route implements IRouteMap {
 
     public static allVerbs: HttpVerb[] = (() => {
-        let arr: HttpVerb[] = [];
-        for (let k in HttpVerb) {
+        const arr: HttpVerb[] = [];
+        for (const k in HttpVerb) {
             if (typeof (HttpVerb.GET) !== typeof (HttpVerb[k])) {
                 continue;
             }
@@ -44,7 +44,7 @@ export abstract class Route implements IRouteMap {
      * @param urlPart
      */
     public static Create(urlPart: string): Route {
-        let m = ParameterRoute.parameterRegExp.exec(urlPart);
+        const m = ParameterRoute.parameterRegExp.exec(urlPart);
         if (m) {
             return new ParameterRoute(m[1]);
         }
@@ -68,7 +68,7 @@ export abstract class Route implements IRouteMap {
     }
 
     public static splitURL(url: string): [HttpVerb[], string[]] {
-        let idx = url.indexOf("]");
+        const idx = url.indexOf("]");
 
         // Retrieve the verbs out of the url, if none default to all verbs
         let verbs: HttpVerb[];
@@ -76,7 +76,7 @@ export abstract class Route implements IRouteMap {
         if (idx > -1) {
             const arr: string[] = url.slice(1, idx).toUpperCase().split(",");
             verbs = arr.map((el) => {
-                let v = <HttpVerb> <any> HttpVerb[el];
+                const v = HttpVerb[el] as HttpVerb as any;
                 if (typeof (v) !== typeof (HttpVerb.GET)) {
                     throw new Error("No such verb as `" + el + "`");
                 }
@@ -92,7 +92,6 @@ export abstract class Route implements IRouteMap {
         return [verbs, url.split(/\/|\./g)];
     }
     private static urlRegexp: RegExp;
-
 
     public type: RouteType = RouteType.unknown;
     public name: string;
@@ -117,7 +116,7 @@ export abstract class Route implements IRouteMap {
     public abstract match(urlPart: string, restUrl: string): boolean;
 
     public addEndpoint(verbs: HttpVerb[], endpoint: Endpoint<any, any>) {
-        for (let verb of verbs) {
+        for (const verb of verbs) {
             this.endpoints.set(verb, endpoint);
         }
     }
@@ -182,42 +181,18 @@ export interface IRoutingResult {
     uri: string;
 }
 
-export class RouteMap {
-    public root: Route;
-    get routes(): IRoutes {
-        return this.root.routes;
-    }
+export abstract class Router {
+    public readonly root: Route;
 
     constructor() {
         this.root = new RootRoute();
     }
 
-    public addRoute(url: string, endpoint: Endpoint<any, any>) {
-        const tmp = Route.splitURL(url);
-        const verbs = tmp[0];
-        const urlParts = tmp[1];
+    public abstract async addRoute(url: string, endpoint: Endpoint<any, any>);
+    public abstract async searchRoute(verb: HttpVerb, url: string): Promise<RoutingState>;
 
-        let r: Route = this.root;
-        for (let urlPart of urlParts) {
-            if (!r.routes[urlPart]) {
-                r.routes[urlPart] = Route.Create(urlPart);
-            }
-            r = r.routes[urlPart];
-        }
-
-        r.addEndpoint(verbs, endpoint);
-    }
-
-    public searchRoute(verb: HttpVerb, url: string): RoutingState {
-        let urlParts = Route.splitURL(url)[1];
-        let s = new RouteSearch(this, urlParts, verb);
-        let r = s.first();
-
-        return r;
-    }
-
-    public getRoute(url: string, verb: HttpVerb): IRoutingResult  {
-        let s = this.searchRoute(verb, url);
+    public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>  {
+        const s = await this.searchRoute(verb, url);
         let end: Endpoint<any, any>;
 
         if (s) {
@@ -234,6 +209,36 @@ export class RouteMap {
             uri: s.uri,
         };
 
+    }
+}
+
+export class StaticRouter extends Router {
+    get routes(): IRoutes {
+        return this.root.routes;
+    }
+
+    public addRoute(url: string, endpoint: Endpoint<any, any>) {
+        const tmp = Route.splitURL(url);
+        const verbs = tmp[0];
+        const urlParts = tmp[1];
+
+        let r: Route = this.root;
+        for (const urlPart of urlParts) {
+            if (!r.routes[urlPart]) {
+                r.routes[urlPart] = Route.Create(urlPart);
+            }
+            r = r.routes[urlPart];
+        }
+
+        r.addEndpoint(verbs, endpoint);
+    }
+
+    public async searchRoute(verb: HttpVerb, url: string): Promise<RoutingState> {
+        const urlParts = Route.splitURL(url)[1];
+        const s = new RouteSearch(this, urlParts, verb);
+        const r = s.first();
+
+        return r;
     }
 
 }

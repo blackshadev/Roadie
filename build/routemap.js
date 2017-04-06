@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const endpoints_1 = require("./endpoints");
 const http_1 = require("./http");
@@ -21,7 +29,7 @@ class Route {
         this.endpoints = new endpoints_1.Endpoints();
     }
     static Create(urlPart) {
-        let m = ParameterRoute.parameterRegExp.exec(urlPart);
+        const m = ParameterRoute.parameterRegExp.exec(urlPart);
         if (m) {
             return new ParameterRoute(m[1]);
         }
@@ -41,12 +49,12 @@ class Route {
         return url;
     }
     static splitURL(url) {
-        let idx = url.indexOf("]");
+        const idx = url.indexOf("]");
         let verbs;
         if (idx > -1) {
             const arr = url.slice(1, idx).toUpperCase().split(",");
             verbs = arr.map((el) => {
-                let v = http_1.HttpVerb[el];
+                const v = http_1.HttpVerb[el];
                 if (typeof (v) !== typeof (http_1.HttpVerb.GET)) {
                     throw new Error("No such verb as `" + el + "`");
                 }
@@ -61,14 +69,14 @@ class Route {
         return [verbs, url.split(/\/|\./g)];
     }
     addEndpoint(verbs, endpoint) {
-        for (let verb of verbs) {
+        for (const verb of verbs) {
             this.endpoints.set(verb, endpoint);
         }
     }
 }
 Route.allVerbs = (() => {
-    let arr = [];
-    for (let k in http_1.HttpVerb) {
+    const arr = [];
+    for (const k in http_1.HttpVerb) {
         if (typeof (http_1.HttpVerb.GET) !== typeof (http_1.HttpVerb[k])) {
             continue;
         }
@@ -111,19 +119,40 @@ class WildcardRoute extends Route {
     match(urlPart, restUrl) { return this.regex.test(restUrl); }
 }
 exports.WildcardRoute = WildcardRoute;
-class RouteMap {
-    get routes() {
-        return this.root.routes;
-    }
+class Router {
     constructor() {
         this.root = new RootRoute();
+    }
+    getRoute(url, verb) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const s = yield this.searchRoute(verb, url);
+            let end;
+            if (s) {
+                end = s.data.endpoints.get(verb);
+            }
+            if (!end) {
+                return { path: null, resource: null, uri: null, params: {} };
+            }
+            return {
+                params: s.params,
+                path: s.path,
+                resource: end,
+                uri: s.uri,
+            };
+        });
+    }
+}
+exports.Router = Router;
+class StaticRouter extends Router {
+    get routes() {
+        return this.root.routes;
     }
     addRoute(url, endpoint) {
         const tmp = Route.splitURL(url);
         const verbs = tmp[0];
         const urlParts = tmp[1];
         let r = this.root;
-        for (let urlPart of urlParts) {
+        for (const urlPart of urlParts) {
             if (!r.routes[urlPart]) {
                 r.routes[urlPart] = Route.Create(urlPart);
             }
@@ -132,27 +161,13 @@ class RouteMap {
         r.addEndpoint(verbs, endpoint);
     }
     searchRoute(verb, url) {
-        let urlParts = Route.splitURL(url)[1];
-        let s = new route_search_1.RouteSearch(this, urlParts, verb);
-        let r = s.first();
-        return r;
-    }
-    getRoute(url, verb) {
-        let s = this.searchRoute(verb, url);
-        let end;
-        if (s) {
-            end = s.data.endpoints.get(verb);
-        }
-        if (!end) {
-            return { path: null, resource: null, uri: null, params: {} };
-        }
-        return {
-            params: s.params,
-            path: s.path,
-            resource: end,
-            uri: s.uri,
-        };
+        return __awaiter(this, void 0, void 0, function* () {
+            const urlParts = Route.splitURL(url)[1];
+            const s = new route_search_1.RouteSearch(this, urlParts, verb);
+            const r = s.first();
+            return r;
+        });
     }
 }
-exports.RouteMap = RouteMap;
+exports.StaticRouter = StaticRouter;
 //# sourceMappingURL=routemap.js.map

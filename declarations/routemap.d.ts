@@ -53,11 +53,15 @@ export interface IRoutingResult {
     resource: Endpoint<any, any>;
     uri: string;
 }
-export declare class RouteMap {
-    root: Route;
-    readonly routes: IRoutes;
+export declare abstract class Router {
+    readonly root: Route;
     constructor();
+    abstract addRoute(url: string, endpoint: Endpoint<any, any>): any;
+    abstract searchRoute(verb: HttpVerb, url: string): Promise<RoutingState>;
+    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
+}
+export declare class StaticRouter extends Router {
+    readonly routes: IRoutes;
     addRoute(url: string, endpoint: Endpoint<any, any>): void;
-    searchRoute(verb: HttpVerb, url: string): RoutingState;
-    getRoute(url: string, verb: HttpVerb): IRoutingResult;
+    searchRoute(verb: HttpVerb, url: string): Promise<RoutingState>;
 }

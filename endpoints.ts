@@ -3,7 +3,8 @@
 import { constructorOf, Map } from "./collections";
 import { WebService } from "./webservice";
 
-export type WebFunction = ((ctx: HttpContext, userData?: any) => void);
+export type WebFunction = (ctx: HttpContext, userData?: any) => void;
+
 export interface IWebServiceClass {
     new (ctx: HttpContext, method: string): WebService;
 }
@@ -27,7 +28,7 @@ export abstract class Endpoint<T, K> {
         this.data = data;
     }
 
-    public abstract execute(ctx: HttpContext): void;
+    public abstract execute(ctx: HttpContext): Promise<void>;
 
 }
 
@@ -39,10 +40,10 @@ export class WebMethodEndpoint<K> extends Endpoint<IWebServiceClass, K> {
         this.method = method;
     }
 
-    public execute(ctx: HttpContext): void {
+    public async execute(ctx: HttpContext): Promise<void> {
         const svc = new this.script(ctx, this.method);
         if (svc.isReady) {
-            svc._execute_(this.method);
+            return svc._execute_(this.method);
         }
     }
 }
@@ -62,19 +63,21 @@ export class ScriptEndpoint<K> extends Endpoint<string, K> {
         this.method = parts[1];
     }
 
-    public execute(ctx: HttpContext): void {
+    public async execute(ctx: HttpContext): Promise<void> {
         if (!this._class) {
             this._class = require(ctx.server.webserviceDir + "/" + this.fileName);
         }
 
         const svc = new this._class(ctx, this.method);
         if (svc.isReady) {
-            svc._execute_(this.method);
+            return svc._execute_(this.method);
         }
     }
 
 }
 
 export class FunctionEndpoint<K> extends Endpoint<WebFunction, K> {
-    public execute(ctx: HttpContext): void { this.script(ctx, this.data); }
+    public async execute(ctx: HttpContext): Promise<void> {
+        return this.script(ctx, this.data);
+    }
 }

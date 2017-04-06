@@ -7,8 +7,7 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction } from "./endpoints";
 import { IError } from "./errno";
-import { IRoutingResult, RouteMap } from "./routemap";
-import { Writable } from "stream";
+import { IRoutingResult, StaticRouter } from "./routemap";
 export declare enum HttpVerb {
     "GET" = 0,
     "POST" = 1,
@@ -42,7 +41,6 @@ export declare class HttpRequest {
     header(headerName: string): string;
     queryParameter(paramName: string): string;
     parameter(paramName: string): string;
-    pipe(strm: Writable): void;
     private parseUrl();
 }
 export declare class HttpResponse {
@@ -90,7 +88,7 @@ export declare class HttpContext {
     readonly server: RoadieServer;
     protected _server: RoadieServer;
     constructor(serv: RoadieServer, route: IRoutingResult, req: IncomingMessage, resp: ServerResponse);
-    execute(): void;
+    execute(): Promise<void>;
     error(err: IHttpError | Error | number, errtxt?: string, extra?: string): void;
     cwd(): string;
 }
@@ -109,7 +107,7 @@ export interface IRoadieServerParameters {
 export interface IRoutes {
     [route: string]: WebFunction | string;
 }
-export declare type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<Function>) => void;
+export declare type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<() => void>) => void;
 export interface IWebMethodParams {
     data?: {};
     server?: RoadieServer;
@@ -131,7 +129,7 @@ export declare class RoadieServer {
     protected _webserviceDir: string;
     protected _tlsOptions: {};
     protected _server: HttpsServer | HttpServer;
-    protected _routemap: RouteMap;
+    protected _routemap: StaticRouter;
     protected _verbose: boolean;
     protected _includeHostname: boolean;
     private _connections;
@@ -139,7 +137,7 @@ export declare class RoadieServer {
     useRoutes(serv: RoadieServer): void;
     start(): Promise<void>;
     stop(): Promise<void>;
-    getRoute(url: string, verb: HttpVerb): IRoutingResult;
+    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
     include(svcFile: string, isAbsolute?: boolean): void;
     addRoute(route: string, endpoint: IWebServiceClass | WebFunction | string | Endpoint<any, any>, data?: any): void;
     log(...args: string[]): void;

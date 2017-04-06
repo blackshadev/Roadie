@@ -5,16 +5,16 @@
 } from "http";
 import { createServer as createHttpsServer, Server as HttpsServer } from "https";
 import { Socket } from "net";
+import { Readable, Writable } from "stream";
 import { TlsOptions } from "tls";
 import { parse as urlParse, Url as IURL } from "url";
 import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
 import { errno, IError } from "./errno";
-import { IRoutingResult, RouteMap } from "./routemap";
-import { Writable, Readable } from "stream";
+import { IRoutingResult, StaticRouter } from "./routemap";
 
-interface IInputRoutes { [route: string]: string | WebFunction  };
+interface IInputRoutes { [route: string]: string | WebFunction;  }
 
 export enum HttpVerb {
     "GET" = 0,
@@ -29,7 +29,7 @@ export enum HttpVerb {
 }
 
 export function parseHttpVerb(verb: string): HttpVerb {
-    let v: HttpVerb = HttpVerb[verb];
+    const v: HttpVerb = HttpVerb[verb];
     if (typeof (HttpVerb.GET) !== typeof (v)) {
         throw new Error("Invalid HttpVerb");
     }
@@ -115,23 +115,23 @@ export class HttpResponse {
     }
 
     public data(dat: Buffer|string|Object): void {
-        let bin: boolean = dat instanceof Buffer;
+        const bin: boolean = dat instanceof Buffer;
         if (!bin && typeof (dat) === "object") {
             dat = JSON.stringify(dat);
             this.header("Content-Type", "application/json");
         }
 
-        this._data = <Buffer|string> dat;
+        this._data = dat as Buffer|string;
     }
 
     public append(dat: Buffer | string): void {
-        let bin: boolean = dat instanceof Buffer;
+        const bin: boolean = dat instanceof Buffer;
         if (!bin && typeof (dat) === "object") {
             dat = JSON.stringify(dat);
         }
 
         if (bin && this._data instanceof Buffer) {
-            Buffer.concat([<Buffer> this._data, <Buffer> dat]);
+            Buffer.concat([this._data as Buffer, dat as Buffer]);
         } else {
             this._data += dat.toString();
         }
@@ -142,8 +142,8 @@ export class HttpResponse {
             return this._ctx.server.log("server", "Request already send");
         }
 
-        let len: number = typeof (this._data) === "string" ?
-            Buffer.byteLength(<string> this._data, this._encoding) :
+        const len: number = typeof (this._data) === "string" ?
+            Buffer.byteLength(this._data as string, this._encoding) :
             this._data.length;
         this.headers["Content-Length"] = len + "";
         this.headers.Date = new Date().toUTCString();
@@ -153,7 +153,7 @@ export class HttpResponse {
 
         this.eos = true;
 
-        let t: number = Date.now() - this._startTime;
+        const t: number = Date.now() - this._startTime;
         this._ctx.server.log("server", " send: " + typeof (this._data) +
             " of length " + len + " bytes, took " + t + "ms");
     }
@@ -166,7 +166,7 @@ export interface IHttpError {
     statuscode: number;
 }
 export class HttpError implements IHttpError {
-    public static translateErrNo(no: number): IError { return errno[no]; };
+    public static translateErrNo(no: number): IError { return errno[no]; }
     public static httpStatusText(no: string|number): string {
         return STATUS_CODES[no];
     }
@@ -182,12 +182,12 @@ export class HttpError implements IHttpError {
             this.text = err.text || err.message;
             this.extra = err.extra;
         } else if (err instanceof Error) {
-            let errDescr: IError = HttpError.translateErrNo((<NodeJS.ErrnoException> err).errno);
+            const errDescr: IError = HttpError.translateErrNo((err as NodeJS.ErrnoException).errno);
             this.statuscode = errDescr && errDescr.http ? errDescr.http : 500;
             this.text = errDescr ? errDescr.description : err.name;
             this.extra = err.toString();
         } else if (typeof (err) === "number") {
-            this.statuscode = <number> err;
+            this.statuscode = err as number;
             this.text = errtxt ? errtxt : HttpError.httpStatusText(this.statuscode);
             if (extra) {
                 this.extra = extra;
@@ -224,16 +224,16 @@ export class HttpContext {
         this.response = new HttpResponse(this, resp);
     }
 
-    public execute(): void {
+    public async execute(): Promise<void> {
         if (this.route.resource) {
-            this.route.resource.execute(this);
+            return this.route.resource.execute(this);
         } else {
             this.error(404);
         }
     }
 
     public error(err: IHttpError | Error | number, errtxt?: string, extra?: string): void {
-        let error = new HttpError(err, errtxt, extra);
+        const error = new HttpError(err, errtxt, extra);
 
         if (this._server.onError) {
             this._server.onError(error, this);
@@ -265,7 +265,7 @@ export interface IRoutes {
     [route: string]: WebFunction | string;
 }
 
-export type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<Function>) => void;
+export type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<() => void>) => void;
 
 export interface IWebMethodParams {
     data?: {};
@@ -276,7 +276,7 @@ export function WebMethod(route: string, oPar?: IWebMethodParams): WebMethodDeco
     oPar = oPar || {};
     oPar.server = oPar.server || RoadieServer.default;
 
-    return function (this: any, target: any, method: string, descr: TypedPropertyDescriptor<Function>) {
+    return function(this: any, target: any, method: string, descr: TypedPropertyDescriptor<() => void>) {
         if (typeof (descr.value) !== "function") {
             throw new Error(`Given WebMethod ${method} is not a function`);
         }
@@ -289,9 +289,9 @@ export function WebMethod(route: string, oPar?: IWebMethodParams): WebMethodDeco
 export class RoadieServer {
     public static default: RoadieServer;
 
-    get port(): number { return this._port; };
+    get port(): number { return this._port; }
 
-    get host(): string { return this._host; };
+    get host(): string { return this._host; }
 
     get cwd(): string { return this._rootDir; }
 
@@ -311,7 +311,7 @@ export class RoadieServer {
     protected _webserviceDir: string = "webservices";
     protected _tlsOptions: {};
     protected _server: HttpsServer | HttpServer;
-    protected _routemap: RouteMap;
+    protected _routemap: StaticRouter;
     protected _verbose: boolean;
     protected _includeHostname: boolean;
 
@@ -325,7 +325,7 @@ export class RoadieServer {
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
         this._verbose = !!oPar.verbose;
-        this._routemap = new RouteMap();
+        this._routemap = new StaticRouter();
         this._userData = oPar.userData;
         this._includeHostname = !!oPar.includeHostname;
 
@@ -369,7 +369,7 @@ export class RoadieServer {
         return new Promise<void>(
             (resolve, reject) => {
 
-                (<any> this._server).close(
+                (this._server as any).close(
                     (err) => {
                         if (err) {
                             reject(err);
@@ -379,7 +379,7 @@ export class RoadieServer {
                     },
                 );
 
-                for (let key in this._connections) {
+                for (const key in this._connections) {
                     if (this._connections.hasOwnProperty(key)) {
                         this._connections[key].destroy();
                     }
@@ -394,7 +394,7 @@ export class RoadieServer {
      * @param url URL to parse
      * @param verb Verb used
      */
-    public getRoute(url: string, verb: HttpVerb): IRoutingResult {
+    public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult> {
         return this._routemap.getRoute(url, verb);
     }
 
@@ -419,8 +419,8 @@ export class RoadieServer {
         data?: any,
     ): void {
         const endp = endpoint instanceof Endpoint ?
-            <Endpoint<any, any>> endpoint :
-            Endpoint.Create(<WebFunction | string> endpoint, data);
+            endpoint as Endpoint<any, any> :
+            Endpoint.Create(endpoint as WebFunction | string, data);
 
         this._routemap.addRoute(route, endp);
     }
@@ -431,7 +431,7 @@ export class RoadieServer {
 
     public addRoutes(routes: any): void {
         if (routes instanceof Array) {
-            for (let route of routes) {
+            for (const route of routes) {
                 this.addRoutes(route);
             }
             return;
@@ -445,9 +445,9 @@ export class RoadieServer {
             throw new Error("Invalid route argument given");
         }
 
-        for (let k in routes as IRoutes) {
+        for (const k in routes as IRoutes) {
             if (routes.hasOwnProperty(k)) {
-                this.addRoute(k, (<IRoutes> routes)[k]);
+                this.addRoute(k, (routes as IRoutes)[k]);
             }
         }
     }
@@ -458,19 +458,25 @@ export class RoadieServer {
      * @param sock Socket to track
      */
     protected addConnection(sock: Socket) {
-        let key = sock.remoteAddress + ":" + sock.remotePort;
+        const key = sock.remoteAddress + ":" + sock.remotePort;
         this._connections[key] = sock;
         sock.on("close", () => delete this._connections[key]);
     }
 
     protected createServer(): HttpsServer | HttpServer {
-        const _h = (req: IncomingMessage, resp: ServerResponse) => {
-            const verb = parseHttpVerb(req.method);
-            const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
-            const route = this.getRoute(url, verb);
+        const _h = async (req: IncomingMessage, resp: ServerResponse) => {
+            try {
+                const verb = parseHttpVerb(req.method);
+                const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+                const route = await this.getRoute(url, verb);
 
-            const ctx = new HttpContext(this, route, req, resp);
-            ctx.execute();
+                const ctx = new HttpContext(this, route, req, resp);
+                await ctx.execute();
+            } catch (e) {
+                resp.statusCode = 500;
+                resp.setHeader("Content-Type", "text/html");
+                resp.end(`<h1> Unkown server error occurred </h1><pre>${e.toString()}</pre>`);
+            }
         };
 
         let serv: HttpServer | HttpsServer;

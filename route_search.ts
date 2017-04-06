@@ -1,6 +1,6 @@
 ﻿import { extend } from "./collections";
 import { HttpVerb } from "./http";
-import { Route, RouteMap, RouteType } from "./routemap";
+import { Route, StaticRouter, RouteType } from "./routemap";
 import { GreedySearch, State } from "./searching";
 
 export class RoutingState extends State<string, Route> {
@@ -39,11 +39,11 @@ export class RoutingState extends State<string, Route> {
 }
 
 export class RouteSearch extends GreedySearch<RoutingState> {
-    public routeMap: RouteMap;
+    public routeMap: StaticRouter;
     public urlParts: string[];
     public verb: HttpVerb;
 
-    constructor(rm: RouteMap, urlParts: string[], verb: HttpVerb) {
+    constructor(rm: StaticRouter, urlParts: string[], verb: HttpVerb) {
         super();
         this.routeMap = rm;
         this.urlParts = urlParts;

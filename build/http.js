@@ -15,7 +15,6 @@ const BufferReader_1 = require("./BufferReader");
 const endpoints_1 = require("./endpoints");
 const errno_1 = require("./errno");
 const routemap_1 = require("./routemap");
-;
 var HttpVerb;
 (function (HttpVerb) {
     HttpVerb[HttpVerb["GET"] = 0] = "GET";
@@ -29,7 +28,7 @@ var HttpVerb;
     HttpVerb[HttpVerb["UPDATE"] = 8] = "UPDATE";
 })(HttpVerb = exports.HttpVerb || (exports.HttpVerb = {}));
 function parseHttpVerb(verb) {
-    let v = HttpVerb[verb];
+    const v = HttpVerb[verb];
     if (typeof (HttpVerb.GET) !== typeof (v)) {
         throw new Error("Invalid HttpVerb");
     }
@@ -59,9 +58,6 @@ class HttpRequest {
     header(headerName) { return this._req.headers[headerName]; }
     queryParameter(paramName) { return this._queryParameters[paramName]; }
     parameter(paramName) { return this._parameters[paramName]; }
-    pipe(strm) {
-        this._req.pipe(strm);
-    }
     parseUrl() {
         const oPar = url_1.parse(this._req.url, true);
         this._queryString = oPar.search;
@@ -89,7 +85,7 @@ class HttpResponse {
         this.headers[headerName] = value;
     }
     data(dat) {
-        let bin = dat instanceof Buffer;
+        const bin = dat instanceof Buffer;
         if (!bin && typeof (dat) === "object") {
             dat = JSON.stringify(dat);
             this.header("Content-Type", "application/json");
@@ -97,7 +93,7 @@ class HttpResponse {
         this._data = dat;
     }
     append(dat) {
-        let bin = dat instanceof Buffer;
+        const bin = dat instanceof Buffer;
         if (!bin && typeof (dat) === "object") {
             dat = JSON.stringify(dat);
         }
@@ -112,7 +108,7 @@ class HttpResponse {
         if (this.eos) {
             return this._ctx.server.log("server", "Request already send");
         }
-        let len = typeof (this._data) === "string" ?
+        const len = typeof (this._data) === "string" ?
             Buffer.byteLength(this._data, this._encoding) :
             this._data.length;
         this.headers["Content-Length"] = len + "";
@@ -120,7 +116,7 @@ class HttpResponse {
         this._resp.writeHead(this.statusCode, this.headers);
         this._resp.end(this._data);
         this.eos = true;
-        let t = Date.now() - this._startTime;
+        const t = Date.now() - this._startTime;
         this._ctx.server.log("server", " send: " + typeof (this._data) +
             " of length " + len + " bytes, took " + t + "ms");
     }
@@ -135,7 +131,7 @@ class HttpError {
             this.extra = err.extra;
         }
         else if (err instanceof Error) {
-            let errDescr = HttpError.translateErrNo(err.errno);
+            const errDescr = HttpError.translateErrNo(err.errno);
             this.statuscode = errDescr && errDescr.http ? errDescr.http : 500;
             this.text = errDescr ? errDescr.description : err.name;
             this.extra = err.toString();
@@ -149,7 +145,6 @@ class HttpError {
         }
     }
     static translateErrNo(no) { return errno_1.errno[no]; }
-    ;
     static httpStatusText(no) {
         return http_1.STATUS_CODES[no];
     }
@@ -175,15 +170,17 @@ class HttpContext {
         this.response = new HttpResponse(this, resp);
     }
     execute() {
-        if (this.route.resource) {
-            this.route.resource.execute(this);
-        }
-        else {
-            this.error(404);
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.route.resource) {
+                return this.route.resource.execute(this);
+            }
+            else {
+                this.error(404);
+            }
+        });
     }
     error(err, errtxt, extra) {
-        let error = new HttpError(err, errtxt, extra);
+        const error = new HttpError(err, errtxt, extra);
         if (this._server.onError) {
             this._server.onError(error, this);
         }
@@ -217,7 +214,7 @@ class RoadieServer {
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
         this._verbose = !!oPar.verbose;
-        this._routemap = new routemap_1.RouteMap();
+        this._routemap = new routemap_1.StaticRouter();
         this._userData = oPar.userData;
         this._includeHostname = !!oPar.includeHostname;
         if (!this._verbose) {
@@ -227,9 +224,7 @@ class RoadieServer {
         this._server = this.createServer();
     }
     get port() { return this._port; }
-    ;
     get host() { return this._host; }
-    ;
     get cwd() { return this._rootDir; }
     get webserviceDir() { return this._rootDir + "/" + this._webserviceDir; }
     get useHttps() { return !!this._tlsOptions; }
@@ -262,7 +257,7 @@ class RoadieServer {
                         resolve();
                     }
                 });
-                for (let key in this._connections) {
+                for (const key in this._connections) {
                     if (this._connections.hasOwnProperty(key)) {
                         this._connections[key].destroy();
                     }
@@ -271,7 +266,9 @@ class RoadieServer {
         });
     }
     getRoute(url, verb) {
-        return this._routemap.getRoute(url, verb);
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._routemap.getRoute(url, verb);
+        });
     }
     include(svcFile, isAbsolute) {
         require(!isAbsolute ? (this.webserviceDir + "/" + svcFile + ".js") : svcFile);
@@ -287,7 +284,7 @@ class RoadieServer {
     }
     addRoutes(routes) {
         if (routes instanceof Array) {
-            for (let route of routes) {
+            for (const route of routes) {
                 this.addRoutes(route);
             }
             return;
@@ -298,25 +295,32 @@ class RoadieServer {
         if (typeof (routes) !== "object") {
             throw new Error("Invalid route argument given");
         }
-        for (let k in routes) {
+        for (const k in routes) {
             if (routes.hasOwnProperty(k)) {
                 this.addRoute(k, routes[k]);
             }
         }
     }
     addConnection(sock) {
-        let key = sock.remoteAddress + ":" + sock.remotePort;
+        const key = sock.remoteAddress + ":" + sock.remotePort;
         this._connections[key] = sock;
         sock.on("close", () => delete this._connections[key]);
     }
     createServer() {
-        const _h = (req, resp) => {
-            const verb = parseHttpVerb(req.method);
-            const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
-            const route = this.getRoute(url, verb);
-            const ctx = new HttpContext(this, route, req, resp);
-            ctx.execute();
-        };
+        const _h = (req, resp) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const verb = parseHttpVerb(req.method);
+                const url = this._includeHostname ? (req.headers.host + req.url) : req.url;
+                const route = yield this.getRoute(url, verb);
+                const ctx = new HttpContext(this, route, req, resp);
+                yield ctx.execute();
+            }
+            catch (e) {
+                resp.statusCode = 500;
+                resp.setHeader("Content-Type", "text/html");
+                resp.end(`<h1> Unkown server error occurred </h1><pre>${e.toString()}</pre>`);
+            }
+        });
         let serv;
         if (this.useHttps) {
             serv = https_1.createServer(this._tlsOptions, _h);

@@ -1,20 +1,20 @@
 ﻿"use strict";
 import assert = require("assert");
 import { Endpoint } from "../endpoints";
-import { ParameterRoute, RouteMap, StaticRoute, WildcardRoute } from "../routemap";
+import { ParameterRoute, StaticRoute, StaticRouter, WildcardRoute } from "../routemap";
 
 import { HttpVerb } from "../http";
 
 describe("Routing: ", () => {
 
-    let router: RouteMap;
+    let router: StaticRouter;
 
     before(() => {
-        router = new RouteMap();
+        router = new StaticRouter();
     });
 
-    it("Adding route with parameter", () => {
-        router.addRoute("/test/{param}/", Endpoint.Create("param.js"));
+    it("Adding route with parameter", async () => {
+        await router.addRoute("/test/{param}/", Endpoint.Create("param.js"));
 
         assert.ok(
             router.routes.test instanceof StaticRoute
@@ -30,8 +30,8 @@ describe("Routing: ", () => {
             );
     });
 
-    it("Specifing verb", () => {
-        router.addRoute("[GET]/test/", Endpoint.Create("get.js"));
+    it("Specifing verb", async () => {
+        await router.addRoute("[GET]/test/", Endpoint.Create("get.js"));
 
         assert.ok(
             router.routes.test
@@ -40,10 +40,10 @@ describe("Routing: ", () => {
         );
     });
 
-    it("Searching route", () => {
-        router.addRoute("[POST]/url/{to}/search", Endpoint.Create("test.js"));
+    it("Searching route", async () => {
+        await router.addRoute("[POST]/url/{to}/search", Endpoint.Create("test.js"));
 
-        let res = router.getRoute("/url/2/search", HttpVerb.POST);
+        const res = await router.getRoute("/url/2/search", HttpVerb.POST);
         assert.ok(
             res
             && res.params.to === "2"
@@ -51,22 +51,23 @@ describe("Routing: ", () => {
         );
     });
 
-    it("Multiple verbs", () => {
-        router.addRoute("[POST,PUT,DELETE]/a/static/url", Endpoint.Create("poster.js"));
-        let res = router.getRoute("/a/static/url", HttpVerb.POST);
+    it("Multiple verbs", async () => {
+        await router.addRoute("[POST,PUT,DELETE]/a/static/url", Endpoint.Create("poster.js"));
+
+        let res = await router.getRoute("/a/static/url", HttpVerb.POST);
         assert.ok(
             res && res.resource.script === "poster.js",
             "Didn't match the correct route",
         );
 
-        res = router.getRoute("/a/static/url", HttpVerb.GET);
+        res = await router.getRoute("/a/static/url", HttpVerb.GET);
         assert.ok(!res.resource, "Matched a route while expecting it to not match");
     });
 
-    it("Searching wildcard route", () => {
-        router.addRoute("[GET]/url/to/search/*", Endpoint.Create("test.js"));
+    it("Searching wildcard route", async () => {
+        await router.addRoute("[GET]/url/to/search/*", Endpoint.Create("test.js"));
 
-        let res = router.getRoute("/url/to/search/for", HttpVerb.GET);
+        const res = await router.getRoute("/url/to/search/for", HttpVerb.GET);
 
         assert.ok(
             res
@@ -76,11 +77,11 @@ describe("Routing: ", () => {
         );
     });
 
-    it("Getting custom data", () => {
-        let custDat = { customProp: true, isTest: true };
-        router.addRoute("[GET]/my/custom/data", Endpoint.Create("test.js", custDat));
+    it("Getting custom data", async () => {
+        const custDat = { customProp: true, isTest: true };
+        await router.addRoute("[GET]/my/custom/data", Endpoint.Create("test.js", custDat));
 
-        let res = router.getRoute("/my/custom/data", HttpVerb.GET);
+        const res = await router.getRoute("/my/custom/data", HttpVerb.GET);
 
         assert.ok(
             res
@@ -90,11 +91,11 @@ describe("Routing: ", () => {
         );
     });
 
-    it("Setting function as script", () => {
-        let fn = (ctx) => {/*NOOP*/};
-        router.addRoute("[GET]/my/custom/function", Endpoint.Create(fn));
+    it("Setting function as script",  async () => {
+        const fn = (ctx) => {/*NOOP*/};
+        await router.addRoute("[GET]/my/custom/function", Endpoint.Create(fn));
 
-        let res = router.getRoute("/my/custom/function", HttpVerb.GET);
+        const res = await router.getRoute("/my/custom/function", HttpVerb.GET);
 
         assert.ok(
             res
@@ -103,45 +104,45 @@ describe("Routing: ", () => {
         );
     });
 
-    it("Search precidence", () => {
+    it("Search precidence", async () => {
         router.addRoute("[PUT]/some/{a}/{b}", Endpoint.Create("1"));
         router.addRoute("[PUT]/some/{a}/url", Endpoint.Create("2"));
         router.addRoute("[PUT]/some/custom/url", Endpoint.Create("3"));
 
-        let res = router.getRoute("/some/custom/url", HttpVerb.PUT);
+        let res = await router.getRoute("/some/custom/url", HttpVerb.PUT);
         assert.ok(res && res.resource.script === "3", "Static precidence failt");
 
-        res = router.getRoute("/some/B/url", HttpVerb.PUT);
+        res = await router.getRoute("/some/B/url", HttpVerb.PUT);
         assert.ok(res && res.resource.script === "2" && res.params.a === "b");
 
-        res = router.getRoute("/some/custom/A", HttpVerb.PUT);
+        res = await router.getRoute("/some/custom/A", HttpVerb.PUT);
         assert.ok(res && res.resource.script === "1" && res.params.a === "custom" && res.params.b === "a");
 
     });
 
-    it("With hostname", () => {
-        router.addRoute("[GET]github.com/blackshadev/Roadie/", Endpoint.Create("test.js"));
+    it("With hostname", async () => {
+        await router.addRoute("[GET]github.com/blackshadev/Roadie/", Endpoint.Create("test.js"));
 
-        let res = router.getRoute("github.com/blackshadev/Roadie/", HttpVerb.GET);
+        const res = await router.getRoute("github.com/blackshadev/Roadie/", HttpVerb.GET);
         assert.ok(
             res
             && res.resource.script === "test.js",
         );
     });
 
-    it("With Parameter subdomain", () => {
+    it("With Parameter subdomain", async () => {
         router.addRoute("[GET]{sub}.littledev.nl", Endpoint.Create("test.js"));
 
-        let res = router.getRoute("tester.littledev.nl", HttpVerb.GET);
+        const res = await router.getRoute("tester.littledev.nl", HttpVerb.GET);
         assert.ok(res, "Expected to find route");
         assert.equal(res.params.sub, "tester", "Invalid parameter");
         assert.equal(res.resource.script, "test.js", "Invalid bind resource");
     });
 
-    it("URL normalization", () => {
-        router.addRoute("[GET]///test//test//////{aaa}////", Endpoint.Create("test.js"));
+    it("URL normalization", async () => {
+        await router.addRoute("[GET]///test//test//////{aaa}////", Endpoint.Create("test.js"));
 
-        let res = router.getRoute("test/test/tester/", HttpVerb.GET);
+        const res = await router.getRoute("test/test/tester/", HttpVerb.GET);
         assert.ok(res, "Expected to find route");
         assert.equal(res.params.aaa, "tester", "Invalid parameter");
         assert.equal(res.resource.script, "test.js", "Invalid bind resource");
