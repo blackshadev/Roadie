@@ -12,7 +12,7 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
 import { errno, IError } from "./errno";
-import { IRoutingResult, StaticRouter, IRouter } from "./routemap";
+import { IRouter, IRoutingResult, StaticRouter } from "./routing/routemap";
 
 interface IInputRoutes { [route: string]: string | WebFunction;  }
 
@@ -342,7 +342,6 @@ export class RoadieServer {
 
         this._server = this.createServer();
     }
-
 
     /**
      * Starts accepting external connection

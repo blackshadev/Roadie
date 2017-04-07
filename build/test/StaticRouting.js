@@ -10,9 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const endpoints_1 = require("../endpoints");
-const routemap_1 = require("../routemap");
+const routemap_1 = require("../routing/routemap");
 const http_1 = require("../http");
-describe("Routing: ", () => {
+describe("Static routing: ", () => {
     let router;
     before(() => {
         router = new routemap_1.StaticRouter();
@@ -107,4 +107,4 @@ describe("Routing: ", () => {
         assert.equal(res.resource.script, "test.js", "Invalid bind resource");
     }));
 });
-//# sourceMappingURL=Routing.js.map
+//# sourceMappingURL=StaticRouting.js.map

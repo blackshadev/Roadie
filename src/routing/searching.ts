@@ -1,4 +1,4 @@
-﻿import { IValueOf, SortedArray} from "./collections";
+﻿import { IValueOf, SortedArray} from "../collections";
 
 export class State<P, T> implements IValueOf {
     get cost(): number { return this.path.length; }

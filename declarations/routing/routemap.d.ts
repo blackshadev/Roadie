@@ -1,6 +1,6 @@
-import { IDictionary } from "./collections";
-import { Endpoint, Endpoints } from "./endpoints";
-import { HttpVerb } from "./http";
+import { IDictionary } from "../collections";
+import { Endpoint, Endpoints } from "../endpoints";
+import { HttpVerb } from "../http";
 import { RoutingState } from "./route_search";
 export declare enum RouteType {
     unknown = 0,

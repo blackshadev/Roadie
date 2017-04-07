@@ -8,8 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const endpoints_1 = require("./endpoints");
-const http_1 = require("./http");
+const endpoints_1 = require("../endpoints");
+const http_1 = require("../http");
 const route_search_1 = require("./route_search");
 var RouteType;
 (function (RouteType) {
@@ -119,31 +119,10 @@ class WildcardRoute extends Route {
     match(urlPart, restUrl) { return this.regex.test(restUrl); }
 }
 exports.WildcardRoute = WildcardRoute;
-class Router {
+class StaticRouter {
     constructor() {
         this.root = new RootRoute();
     }
-    getRoute(url, verb) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const s = yield this.searchRoute(verb, url);
-            let end;
-            if (s) {
-                end = s.data.endpoints.get(verb);
-            }
-            if (!end) {
-                return { path: null, resource: null, uri: null, params: {} };
-            }
-            return {
-                params: s.params,
-                path: s.path,
-                resource: end,
-                uri: s.uri,
-            };
-        });
-    }
-}
-exports.Router = Router;
-class StaticRouter extends Router {
     get routes() {
         return this.root.routes;
     }
@@ -163,11 +142,27 @@ class StaticRouter extends Router {
         });
     }
     searchRoute(verb, url) {
+        const urlParts = Route.splitURL(url)[1];
+        const s = new route_search_1.RouteSearch(this, urlParts, verb);
+        const r = s.first();
+        return r;
+    }
+    getRoute(url, verb) {
         return __awaiter(this, void 0, void 0, function* () {
-            const urlParts = Route.splitURL(url)[1];
-            const s = new route_search_1.RouteSearch(this, urlParts, verb);
-            const r = s.first();
-            return r;
+            const s = this.searchRoute(verb, url);
+            let end;
+            if (s) {
+                end = s.data.endpoints.get(verb);
+            }
+            if (!end) {
+                return { path: null, resource: null, uri: null, params: {} };
+            }
+            return {
+                params: s.params,
+                path: s.path,
+                resource: end,
+                uri: s.uri,
+            };
         });
     }
 }

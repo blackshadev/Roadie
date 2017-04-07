@@ -1,10 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const collections_1 = require("./collections");
+const collections_1 = require("../collections");
 const routemap_1 = require("./routemap");
 const searching_1 = require("./searching");
-{
-}
 class RoutingState extends searching_1.State {
     constructor() {
         super(...arguments);

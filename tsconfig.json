@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"target": "ES2015",
+		"target": "es6",
         "module": "commonjs",
         "removeComments": true,
         "preserveConstEnums": true,
@@ -9,12 +9,11 @@
         "experimentalDecorators": true,
         "declaration": true,
         "pretty": true,
+        "rootDir": "./src/",
         "declarationDir": "./declarations/"
     },
     "include": [
-        "*.ts",
-        "example/**/*.ts",
-        "test/**/*.ts",
-        "@types/**/*.ts"
+        "src/**/*.ts",
+        "node_modules/@types/**/*.ts"
     ]
 }

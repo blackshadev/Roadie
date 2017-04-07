@@ -1,7 +1,7 @@
 ﻿"use strict";
-import { extend, IDictionary, Map } from "./collections";
-import { Endpoint, Endpoints, FunctionEndpoint, ScriptEndpoint, WebFunction } from "./endpoints";
-import { HttpVerb } from "./http";
+import { extend, IDictionary, Map } from "../collections";
+import { Endpoint, Endpoints, FunctionEndpoint, ScriptEndpoint, WebFunction } from "../endpoints";
+import { HttpVerb } from "../http";
 import { RouteSearch, RoutingState } from "./route_search";
 import { GreedySearch, State } from "./searching";
 
@@ -186,38 +186,13 @@ export interface IRouter {
     getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
 }
 
-export abstract class Router implements IRouter {
+export class StaticRouter implements IRouter {
     public readonly root: Route;
 
     constructor() {
         this.root = new RootRoute();
     }
 
-    public abstract async addRoute(url: string, endpoint: Endpoint<any, any>);
-    public abstract async searchRoute(verb: HttpVerb, url: string): Promise<RoutingState>;
-
-    public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>  {
-        const s = await this.searchRoute(verb, url);
-        let end: Endpoint<any, any>;
-
-        if (s) {
-            end = s.data.endpoints.get(verb);
-        }
-
-        if (!end) {
-            return { path: null, resource: null, uri: null, params: {} };
-        }
-        return {
-            params: s.params,
-            path: s.path,
-            resource: end,
-            uri: s.uri,
-        };
-
-    }
-}
-
-export class StaticRouter extends Router {
     get routes(): IRoutes {
         return this.root.routes;
     }
@@ -238,12 +213,32 @@ export class StaticRouter extends Router {
         r.addEndpoint(verbs, endpoint);
     }
 
-    public async searchRoute(verb: HttpVerb, url: string): Promise<RoutingState> {
+    public searchRoute(verb: HttpVerb, url: string): RoutingState {
         const urlParts = Route.splitURL(url)[1];
         const s = new RouteSearch(this, urlParts, verb);
         const r = s.first();
 
         return r;
+    }
+
+    public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>  {
+        const s = this.searchRoute(verb, url);
+        let end: Endpoint<any, any>;
+
+        if (s) {
+            end = s.data.endpoints.get(verb);
+        }
+
+        if (!end) {
+            return { path: null, resource: null, uri: null, params: {} };
+        }
+        return {
+            params: s.params,
+            path: s.path,
+            resource: end,
+            uri: s.uri,
+        };
+
     }
 
 }

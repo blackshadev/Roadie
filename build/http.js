@@ -14,7 +14,7 @@ const url_1 = require("url");
 const BufferReader_1 = require("./BufferReader");
 const endpoints_1 = require("./endpoints");
 const errno_1 = require("./errno");
-const routemap_1 = require("./routemap");
+const routemap_1 = require("./routing/routemap");
 var HttpVerb;
 (function (HttpVerb) {
     HttpVerb[HttpVerb["GET"] = 0] = "GET";

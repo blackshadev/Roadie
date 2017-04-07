@@ -7,7 +7,7 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction } from "./endpoints";
 import { IError } from "./errno";
-import { IRouter, IRoutingResult } from "./routing/routemap";
+import { IRoutingResult, IRouter } from "./routemap";
 export declare enum HttpVerb {
     "GET" = 0,
     "POST" = 1,

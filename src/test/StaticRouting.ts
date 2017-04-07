@@ -1,11 +1,11 @@
 ﻿"use strict";
 import assert = require("assert");
 import { Endpoint } from "../endpoints";
-import { ParameterRoute, StaticRoute, StaticRouter, WildcardRoute } from "../routemap";
+import { ParameterRoute, StaticRoute, StaticRouter, WildcardRoute } from "../routing/routemap";
 
 import { HttpVerb } from "../http";
 
-describe("Routing: ", () => {
+describe("Static routing: ", () => {
 
     let router: StaticRouter;
 
