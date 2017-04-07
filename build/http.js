@@ -14,7 +14,7 @@ const url_1 = require("url");
 const BufferReader_1 = require("./BufferReader");
 const endpoints_1 = require("./endpoints");
 const errno_1 = require("./errno");
-const routemap_1 = require("./routing/static/routemap");
+const index_1 = require("./index");
 var HttpVerb;
 (function (HttpVerb) {
     HttpVerb[HttpVerb["NONE"] = 0] = "NONE";
@@ -28,6 +28,16 @@ var HttpVerb;
     HttpVerb[HttpVerb["OPTIONS"] = 128] = "OPTIONS";
     HttpVerb[HttpVerb["UPDATE"] = 256] = "UPDATE";
 })(HttpVerb = exports.HttpVerb || (exports.HttpVerb = {}));
+exports.allVerbs = (() => {
+    const arr = [];
+    for (const k in HttpVerb) {
+        if (HttpVerb[k] !== HttpVerb.NONE && typeof (HttpVerb.GET) !== typeof (HttpVerb[k])) {
+            continue;
+        }
+        arr.push(HttpVerb[k]);
+    }
+    return arr;
+})();
 function parseHttpVerb(verb) {
     const v = HttpVerb[verb];
     if (typeof (HttpVerb.GET) !== typeof (v)) {
@@ -219,7 +229,7 @@ class RoadieServer {
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
         this._verbose = !!oPar.verbose;
-        this.router = oPar.router || new routemap_1.StaticRouter();
+        this.router = oPar.router || new index_1.StaticRouter();
         this._userData = oPar.userData;
         this._includeHostname = !!oPar.includeHostname;
         if (!this._verbose) {

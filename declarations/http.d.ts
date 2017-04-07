@@ -20,6 +20,7 @@ export declare enum HttpVerb {
     "OPTIONS" = 128,
     "UPDATE" = 256,
 }
+export declare const allVerbs: HttpVerb[];
 export declare function parseHttpVerb(verb: string): HttpVerb;
 export declare class HttpRequest {
     readonly url: string;

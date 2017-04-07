@@ -58,7 +58,7 @@ class Route {
             url = url.slice(idx + 1);
         }
         else {
-            verbs = Route.allVerbs.slice(0);
+            verbs = http_1.allVerbs.slice(0);
         }
         url = Route.normalizeURL(url);
         return [verbs, url.split(/\/|\./g)];
@@ -69,16 +69,6 @@ class Route {
         }
     }
 }
-Route.allVerbs = (() => {
-    const arr = [];
-    for (const k in http_1.HttpVerb) {
-        if (typeof (http_1.HttpVerb.GET) !== typeof (http_1.HttpVerb[k])) {
-            continue;
-        }
-        arr.push(http_1.HttpVerb[k]);
-    }
-    return arr;
-})();
 exports.Route = Route;
 class RootRoute extends Route {
     constructor() {

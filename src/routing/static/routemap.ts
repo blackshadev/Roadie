@@ -1,7 +1,7 @@
 ﻿"use strict";
 import { extend, IDictionary, Map } from "../../collections";
 import { Endpoint, Endpoints, FunctionEndpoint, ScriptEndpoint, WebFunction } from "../../endpoints";
-import { HttpVerb } from "../../http";
+import { HttpVerb, allVerbs } from "../../http";
 import { IRouter, IRoutingResult, RouteType } from "../router";
 import { GreedySearch, State } from "../searching";
 import { RouteSearch, StaticRoutingState } from "./route_search";
@@ -20,18 +20,6 @@ export interface IRouteMap {
 }
 
 export abstract class Route implements IRouteMap {
-
-    public static allVerbs: HttpVerb[] = (() => {
-        const arr: HttpVerb[] = [];
-        for (const k in HttpVerb) {
-            if (typeof (HttpVerb.GET) !== typeof (HttpVerb[k])) {
-                continue;
-            }
-            arr.push(HttpVerb[k] as any);
-        }
-
-        return arr;
-    })();
 
     /**
      * Constructs a Route from the given urlPart
@@ -78,7 +66,7 @@ export abstract class Route implements IRouteMap {
             });
             url = url.slice(idx + 1);
         } else {
-            verbs = Route.allVerbs.slice(0);
+            verbs = allVerbs.slice(0);
         }
 
         // split the url up into parts

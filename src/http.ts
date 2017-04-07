@@ -12,8 +12,9 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
 import { errno, IError } from "./errno";
+import { StaticRouter } from "./index";
 import { IRouter, IRoutingResult } from "./routing/router";
-import { StaticRouter } from "./routing/static/routemap";
+
 
 interface IInputRoutes { [route: string]: string | WebFunction;  }
 
@@ -29,6 +30,20 @@ export enum HttpVerb {
     "OPTIONS" = 1 << 7,
     "UPDATE" = 1 << 8,
 }
+
+export const allVerbs: HttpVerb[] = (() => {
+        const arr: HttpVerb[] = [];
+
+        for (const k in HttpVerb) {
+            if (HttpVerb[k] as any !== HttpVerb.NONE && typeof (HttpVerb.GET) !== typeof (HttpVerb[k])) {
+                continue;
+            }
+            arr.push(HttpVerb[k] as any);
+        }
+
+        return arr;
+    })();
+
 
 export function parseHttpVerb(verb: string): HttpVerb {
     const v: HttpVerb = HttpVerb[verb];

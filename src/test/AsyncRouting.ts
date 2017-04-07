@@ -24,7 +24,7 @@ describe("AsyncRouter", () => {
         },
     };
 
-    it.only("Combined", async () => {
+    it("Combined", async () => {
 
         let r = new AsyncRouter<{ [r: string]: any }>();
         r.getRoot = async () => {

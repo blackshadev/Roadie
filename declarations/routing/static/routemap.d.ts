@@ -11,7 +11,6 @@ export interface IRouteMap {
     addEndpoint(verbs: HttpVerb[], fname: any, data: any): any;
 }
 export declare abstract class Route implements IRouteMap {
-    static allVerbs: HttpVerb[];
     static Create(urlPart: string): Route;
     static normalizeURL(url: string): string;
     static splitURL(url: string): [HttpVerb[], string[]];

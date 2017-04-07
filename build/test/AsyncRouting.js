@@ -24,7 +24,7 @@ describe("AsyncRouter", () => {
             "{er}": 1,
         },
     };
-    it.only("Combined", () => __awaiter(this, void 0, void 0, function* () {
+    it("Combined", () => __awaiter(this, void 0, void 0, function* () {
         let r = new asyncRouter_1.AsyncRouter();
         r.getRoot = () => __awaiter(this, void 0, void 0, function* () {
             return new asyncRouter_1.AsyncRootNode({
