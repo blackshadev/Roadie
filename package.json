@@ -4,6 +4,7 @@
   "description": "The nodeJs way of deploying webservices",
   "version": "2.2.13",
   "main": "build/index.js",
+  "types": "declarations/index.d.ts",
   "scripts": {
     "start": "cd ./build/example && node startServer_ts.js",
     "test": "mocha ./build/test/*.js"

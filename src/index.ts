@@ -11,8 +11,10 @@ export {
     HttpVerb,
 } from "./http";
 export {
-     IRouter,
-     StaticRouter,
-} from "./routing/routemap";
+    StaticRouter,
+} from "./routing/static/routemap";
+export {
+    IRouter
+} from "./routing/router";
 
 export function setDefaultServer(serv: RoadieServer) { RoadieServer.default = serv; }

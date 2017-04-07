@@ -7,17 +7,18 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction } from "./endpoints";
 import { IError } from "./errno";
-import { IRouter, IRoutingResult } from "./routing/routemap";
+import { IRouter, IRoutingResult } from "./routing/router";
 export declare enum HttpVerb {
-    "GET" = 0,
-    "POST" = 1,
-    "PUT" = 2,
-    "DELETE" = 3,
-    "UPGRADE" = 4,
-    "TRACE" = 5,
-    "HEAD" = 6,
-    "OPTIONS" = 7,
-    "UPDATE" = 8,
+    "NONE" = 0,
+    "GET" = 1,
+    "POST" = 2,
+    "PUT" = 4,
+    "DELETE" = 8,
+    "UPGRADE" = 16,
+    "TRACE" = 32,
+    "HEAD" = 64,
+    "OPTIONS" = 128,
+    "UPDATE" = 256,
 }
 export declare function parseHttpVerb(verb: string): HttpVerb;
 export declare class HttpRequest {

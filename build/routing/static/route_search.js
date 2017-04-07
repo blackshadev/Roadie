@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const collections_1 = require("../collections");
-const router_1 = require("./router");
-const searching_1 = require("./searching");
+const router_1 = require("../router");
+const searching_1 = require("../searching");
 class RoutingState extends searching_1.State {
     constructor() {
         super(...arguments);
@@ -11,6 +10,18 @@ class RoutingState extends searching_1.State {
         this.uri = "";
     }
     get cost() { return this.path.length + this.penalty; }
+    clone() {
+        const s = new (Object.getPrototypeOf(this).constructor)(this.data);
+        s.left = this.left.slice(0);
+        s.path = this.path.slice(0);
+        s.penalty = this.penalty;
+        s.uri = this.uri;
+        s.params = Object.assign({}, this.params);
+        return s;
+    }
+}
+exports.RoutingState = RoutingState;
+class StaticRoutingState extends RoutingState {
     getPossibleRoutes(part, rest) {
         const arr = [];
         for (const k in this.data.routes) {
@@ -21,16 +32,10 @@ class RoutingState extends searching_1.State {
         return arr;
     }
     clone() {
-        const s = new RoutingState(this.data);
-        s.left = this.left.slice(0);
-        s.path = this.path.slice(0);
-        s.penalty = this.penalty;
-        s.uri = this.uri;
-        s.params = collections_1.extend({}, this.params);
-        return s;
+        return super.clone();
     }
 }
-exports.RoutingState = RoutingState;
+exports.StaticRoutingState = StaticRoutingState;
 class RouteSearch extends searching_1.GreedySearch {
     constructor(rm, urlParts, verb) {
         super();
@@ -42,7 +47,7 @@ class RouteSearch extends searching_1.GreedySearch {
         return s.left.length === 0 && (this.verb === undefined || !!s.data.endpoints.get(this.verb));
     }
     initial() {
-        const s = new RoutingState(this.routeMap.root);
+        const s = new StaticRoutingState(this.routeMap.root);
         s.left = this.urlParts;
         return [s];
     }

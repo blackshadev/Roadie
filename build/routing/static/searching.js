@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const collections_1 = require("../collections");
+const collections_1 = require("../../collections");
 class State {
     constructor(data) {
         this.data = data;
@@ -19,13 +19,10 @@ class State {
     }
 }
 exports.State = State;
-class Search {
+class GreedySearch {
     constructor() {
         this.nodes = new collections_1.SortedArray();
     }
-}
-exports.Search = Search;
-class GreedySearch extends Search {
     reset() {
         this.nodes.clear();
         this.nodes.addAll(this.initial());

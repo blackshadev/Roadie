@@ -12,20 +12,22 @@ import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
 import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
 import { errno, IError } from "./errno";
-import { IRouter, IRoutingResult, StaticRouter } from "./routing/routemap";
+import { IRouter, IRoutingResult } from "./routing/router";
+import { StaticRouter } from "./routing/static/routemap";
 
 interface IInputRoutes { [route: string]: string | WebFunction;  }
 
 export enum HttpVerb {
-    "GET" = 0,
-    "POST",
-    "PUT",
-    "DELETE",
-    "UPGRADE",
-    "TRACE",
-    "HEAD",
-    "OPTIONS",
-    "UPDATE",
+    "NONE" = 0,
+    "GET"  = 1 << 0,
+    "POST" = 1 << 1,
+    "PUT"  = 1 << 2,
+    "DELETE" = 1 << 3,
+    "UPGRADE" = 1 << 4,
+    "TRACE" = 1 << 5,
+    "HEAD" = 1 << 6,
+    "OPTIONS" = 1 << 7,
+    "UPDATE" = 1 << 8,
 }
 
 export function parseHttpVerb(verb: string): HttpVerb {

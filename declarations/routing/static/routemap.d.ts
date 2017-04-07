@@ -1,10 +1,11 @@
-import { Endpoint, Endpoints } from "../endpoints";
-import { HttpVerb } from "../http";
-import { RoutingState } from "./route_search";
-import { IRouter, IRoutingResult, RouteType } from "./router";
+import { Endpoint, Endpoints } from "../../endpoints";
+import { HttpVerb } from "../../http";
+import { IRouter, IRoutingResult, RouteType } from "../router";
+import { StaticRoutingState } from "./route_search";
 export interface IRoutes {
     [name: string]: Route;
 }
+export declare function escapeRegex(str: any): any;
 export interface IRouteMap {
     routes: IRoutes;
     addEndpoint(verbs: HttpVerb[], fname: any, data: any): any;
@@ -46,6 +47,6 @@ export declare class StaticRouter implements IRouter {
     constructor();
     readonly routes: IRoutes;
     addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void>;
-    searchRoute(verb: HttpVerb, url: string): RoutingState;
+    searchRoute(verb: HttpVerb, url: string): StaticRoutingState;
     getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
 }

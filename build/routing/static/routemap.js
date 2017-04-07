@@ -8,13 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const endpoints_1 = require("../endpoints");
-const http_1 = require("../http");
+const endpoints_1 = require("../../endpoints");
+const http_1 = require("../../http");
+const router_1 = require("../router");
 const route_search_1 = require("./route_search");
-const router_1 = require("./router");
 function escapeRegex(str) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
+exports.escapeRegex = escapeRegex;
 class Route {
     constructor(name) {
         this.type = router_1.RouteType.unknown;

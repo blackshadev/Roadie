@@ -1,13 +1,14 @@
-﻿import { extend } from "../collections";
-import { HttpVerb } from "../http";
-import { Route, RouteType, StaticRouter } from "./routemap";
-import { GreedySearch, State } from "./searching";
+﻿import { extend } from "../../collections";
+import { HttpVerb } from "../../http";
+import { RouteType } from "../router";
+import { GreedySearch, State } from "../searching";
+import { Route, StaticRouter } from "./routemap";
 
 export interface IRoutingState {
     getPossibleRoutes(part, rest): Route[];
 }
 
-export class RoutingState extends State<string, Route> {
+export class RoutingState<T> extends State<string, T> {
     public penalty: number = 0;
 
     // Collected parameters
@@ -17,6 +18,20 @@ export class RoutingState extends State<string, Route> {
     public uri: string = "";
 
     get cost(): number { return this.path.length + this.penalty; }
+
+    public clone(): this {
+        const s = new (Object.getPrototypeOf(this).constructor)(this.data);
+        s.left = this.left.slice(0);
+        s.path = this.path.slice(0);
+        s.penalty = this.penalty;
+        s.uri = this.uri;
+        s.params = Object.assign({}, this.params);
+
+        return s;
+    }
+}
+
+export class StaticRoutingState extends RoutingState<Route> {
 
     // Get Possible routes to take from this state
     public getPossibleRoutes(part, rest): Route[] {
@@ -30,19 +45,12 @@ export class RoutingState extends State<string, Route> {
         return arr;
     }
 
-    public clone(): RoutingState {
-        const s = new RoutingState(this.data);
-        s.left = this.left.slice(0);
-        s.path = this.path.slice(0);
-        s.penalty = this.penalty;
-        s.uri = this.uri;
-        s.params = extend({}, this.params);
-
-        return s;
+    public clone(): this {
+        return super.clone() as this;
     }
 }
 
-export class RouteSearch extends GreedySearch<RoutingState> {
+export class RouteSearch extends GreedySearch<StaticRoutingState> {
     public routeMap: StaticRouter;
     public urlParts: string[];
     public verb: HttpVerb;
@@ -54,18 +62,18 @@ export class RouteSearch extends GreedySearch<RoutingState> {
         this.verb = verb;
     }
 
-    public goal(s: RoutingState): boolean {
+    public goal(s: StaticRoutingState): boolean {
         return s.left.length === 0 && (this.verb === undefined || !!s.data.endpoints.get(this.verb));
     }
 
-    public initial(): RoutingState[] {
-        const s = new RoutingState(this.routeMap.root);
+    public initial(): StaticRoutingState[] {
+        const s = new StaticRoutingState(this.routeMap.root);
         s.left = this.urlParts;
 
         return [s];
     }
 
-    public move(s: RoutingState): RoutingState[] {
+    public move(s: StaticRoutingState): StaticRoutingState[] {
 
         const r = s.data;
         const n = s.left.shift();

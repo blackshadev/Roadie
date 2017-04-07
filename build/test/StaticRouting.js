@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const endpoints_1 = require("../endpoints");
-const routemap_1 = require("../routing/routemap");
+const routemap_1 = require("../routing/static/routemap");
 const http_1 = require("../http");
 describe("Static routing: ", () => {
     let router;

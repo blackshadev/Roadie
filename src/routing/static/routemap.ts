@@ -1,22 +1,16 @@
 ﻿"use strict";
-import { extend, IDictionary, Map } from "../collections";
-import { Endpoint, Endpoints, FunctionEndpoint, ScriptEndpoint, WebFunction } from "../endpoints";
-import { HttpVerb } from "../http";
-import { RouteSearch, RoutingState } from "./route_search";
-import { GreedySearch, State } from "./searching";
-
-export enum RouteType {
-    unknown,
-    static,
-    parameter,
-    wildcard,
-}
+import { extend, IDictionary, Map } from "../../collections";
+import { Endpoint, Endpoints, FunctionEndpoint, ScriptEndpoint, WebFunction } from "../../endpoints";
+import { HttpVerb } from "../../http";
+import { IRouter, IRoutingResult, RouteType } from "../router";
+import { GreedySearch, State } from "../searching";
+import { RouteSearch, StaticRoutingState } from "./route_search";
 
 export interface IRoutes {
     [name: string]: Route;
 }
 
-function escapeRegex(str) {
+export function escapeRegex(str) {
     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
 
@@ -174,18 +168,6 @@ export interface IUserRoutes {
     [route: string]: string;
 }
 
-export interface IRoutingResult {
-    path: string[];
-    params: IDictionary<string>;
-    resource: Endpoint<any, any>;
-    uri: string;
-}
-
-export interface IRouter {
-    addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void>;
-    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
-}
-
 export class StaticRouter implements IRouter {
     public readonly root: Route;
 
@@ -213,7 +195,7 @@ export class StaticRouter implements IRouter {
         r.addEndpoint(verbs, endpoint);
     }
 
-    public searchRoute(verb: HttpVerb, url: string): RoutingState {
+    public searchRoute(verb: HttpVerb, url: string): StaticRoutingState {
         const urlParts = Route.splitURL(url)[1];
         const s = new RouteSearch(this, urlParts, verb);
         const r = s.first();

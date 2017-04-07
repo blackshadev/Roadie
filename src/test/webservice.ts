@@ -2,7 +2,7 @@
 import { constructorOf } from "../collections";
 import { WebMethodEndpoint } from "../endpoints";
 import { HttpContext, HttpVerb, RoadieServer, WebMethod } from "../http";
-import { StaticRouter } from "../routing/routemap";
+import { StaticRouter } from "../routing/static/routemap";
 import { WebService } from "../webservice";
 
 class NewWebservice extends WebService {

@@ -28,24 +28,34 @@ export class State<P, T> implements IValueOf {
     }
 }
 
-export abstract class GreedySearch<S extends State<any, any>> {
-    public nodes: SortedArray<S>;
+export abstract class Search<S extends State<any, any>> {
+    public readonly nodes: SortedArray<S>;
 
     constructor() {
         this.nodes = new SortedArray<S>();
     }
+
+    public abstract reset(): void|Promise<void>;
+    public abstract first(): S|Promise<S|undefined>|undefined;
+    public abstract next(): S|Promise<S|undefined>|undefined;
+    protected abstract initial(): S[]|Promise<S[]>;
+    protected abstract move(state: S): S[]|Promise<S[]>;
+    protected abstract goal(state: S): boolean|Promise<boolean>;
+}
+
+export abstract class GreedySearch<S extends State<any, any>> extends Search<S> {
 
     public reset(): void {
         this.nodes.clear();
         this.nodes.addAll(this.initial());
     }
 
-    public first(): S {
+    public first(): S|undefined {
         this.reset();
         return this.next();
     }
 
-    public next(): S {
+    public next(): S|undefined {
 
         while (this.nodes.length > 0) {
             const state = this.nodes.items.shift();
@@ -69,16 +79,18 @@ export abstract class GreedySearch<S extends State<any, any>> {
      * Returns possible moves from given state
      * @param state State to inspect to move from
      */
-    protected abstract move(state): S[];
+    protected abstract move(state: S): S[];
 
     /**
      * Whenever a given state is a goal state
      * @param state State to inspect
      */
-    protected abstract goal(state): boolean;
+    protected abstract goal(state: S): boolean;
 
     /**
      * Return the initial states
      */
     protected abstract initial(): S[];
 }
+
+
