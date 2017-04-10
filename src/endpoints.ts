@@ -16,8 +16,8 @@ export abstract class Endpoint<T, K> {
         switch (typeof (script)) {
             case "function": return new FunctionEndpoint<T>(script as WebFunction, data);
             case "string": return new ScriptEndpoint<T>(script as string, data);
+            default: throw new Error("Unknown endpoint type");
         }
-        throw new Error("Unknown endpoint type");
     }
 
     public readonly script: T;

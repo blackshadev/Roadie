@@ -1,7 +1,7 @@
 import { HttpVerb } from "../../http";
 import { Search, State } from "../searching";
 import { RoutingState } from "../static/route_search";
-import { AsyncRouteNode } from "./asyncRouter";
+import { AsyncRouteNode } from "./asyncRouteNode";
 export declare abstract class AsyncSearch<S extends State<any, any>> extends Search<S> {
     reset(): Promise<void>;
     first(): Promise<S>;

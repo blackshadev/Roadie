@@ -3,88 +3,57 @@ import { Endpoint } from "../../endpoints";
 import { HttpVerb } from "../../http";
 import { IRouter, IRoutingResult, RouteType } from "../router";
 import { escapeRegex, Route } from "../static/routemap";
+import { AsyncRootNode, AsyncRouteNode } from "./asyncRouteNode";
 import { AsyncRouteSearch, AsyncRoutingState } from "./search";
 
-export interface IRoute<T> {
-    type: RouteType;
-    data: T;
-}
-
-export abstract class AsyncRouteNode<T> implements IRoute<T> {
-    /** Type of the route */
-    public readonly type: RouteType = RouteType.unknown;
-    /** User data bound to the route */
-    public readonly data: T;
-    /** Node is an endpoint */
-    public readonly leafs: HttpVerb;
-    /** Route name */
-    public readonly name: string;
-
-    constructor(oPar: { name?: string, data?: T, leafs?: HttpVerb } = {}) {
-        this.name = oPar.name || "";
-        this.data = oPar.data;
-        this.leafs = oPar.leafs || 0;
-    }
-
-    public abstract match(n: string, rest: string): boolean;
-}
-
-export class AsyncRootNode<T> extends AsyncRouteNode<T> {
-    public readonly type: RouteType = RouteType.root;
-
-    public match(n: string, rest: string): boolean {
-        return true;
-    }
-}
-
-export class AsyncParameterNode<T> extends AsyncRouteNode<T> {
-    public readonly type: RouteType = RouteType.parameter;
-
-    public match(n: string, rest: string): boolean {
-        return true;
-    }
-}
-
-export class AsyncWildcardNode<T> extends AsyncRouteNode<T> {
-    public readonly type: RouteType = RouteType.wildcard;
-    private readonly re: RegExp;
-    constructor(oPar) {
-        super(oPar);
-        this.re = new RegExp("^" + escapeRegex(this.name).replace("\\*", ".*") + "$", "i");
-    }
-
-    public match(n: string, rest: string): boolean {
-        return this.re.test(rest);
-    }
-}
-
-export class AsyncStaticNode<T> extends AsyncRouteNode<T> {
-    public readonly type: RouteType = RouteType.static;
-
-    public match(n: string, rest: string): boolean {
-        return this.name === n;
-    }
-}
-
+/**
+ * Async router, routes given route through an async search tree
+ * @remarks the following functions should be overridden:
+ *          getRoot, getRouteChildren, addRoute, getResource
+ */
 export class AsyncRouter<T> implements IRouter {
+
+    /**
+     * Retrieves the rootnode bound to a given hostname
+     * @param hostname Hostname to use and find the rootnode of
+     */
     public async getRoot(hostname: string): Promise<AsyncRouteNode<T>> {
         return new AsyncRootNode<T>();
     }
 
+    /**
+     * Retrieves the route's children
+     * @param n Node to retrieve the children of.
+     */
     public async getRouteChildren(
         n: AsyncRouteNode<T>,
     ): Promise<AsyncRouteNode<T>[]>  {
         throw new Error("Method not implemented.");
     }
 
+    /**
+     * Adds a route to the async router
+     * @param url URL to add
+     * @param endpoint Endpoint bound to it
+     */
     public async addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void> {
         throw new Error("Method not implemented.");
     }
 
-    public async getResource(d: T): Promise<Endpoint<any, any>> {
+    /**
+     * Gets an endpoint of the given Route Node
+     * @param node Route node to use.
+     * @param verb Verb of the endpoint to bind.
+     */
+    public async getResource(node: T, verb: HttpVerb): Promise<Endpoint<any, any>> {
         throw new Error("Method not implemented.");
     }
 
+    /**
+     * Retrieves the routing result of the given url and verb
+     * @param url URL to find the route of
+     * @param verb HTTP Verb to use
+     */
     public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult> {
         let parsedURL = parse(url);
         url = Route.normalizeURL(url);
@@ -102,9 +71,9 @@ export class AsyncRouter<T> implements IRouter {
             next: string,
             rest: string
         ): Promise<AsyncRouteNode<T>[]>  => {
-            let all = await this.getRouteChildren(from);
-
-            return all.filter((n) => n.match(next, rest));
+            const all = await this.getRouteChildren(from);
+            const filtered = all.filter((n) => n.match(next, rest));
+            return filtered;
         };
         let res = await search.first();
 
@@ -115,7 +84,7 @@ export class AsyncRouter<T> implements IRouter {
         return {
             params: res.params,
             path: res.path,
-            resource: await this.getResource(res.data.data),
+            resource: await this.getResource(res.data.data, verb),
             uri: res.uri,
         };
     }

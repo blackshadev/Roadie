@@ -12,6 +12,7 @@
             true,
             "array"
         ],
-        "no-bitwise": false
+        "no-bitwise": false,
+        "object-literal-sort-keys": false
     }
 }

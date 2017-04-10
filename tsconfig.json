@@ -10,7 +10,8 @@
         "declaration": true,
         "pretty": true,
         "rootDir": "./src/",
-        "declarationDir": "./declarations/"
+        "declarationDir": "./declarations/",
+        "alwaysStrict": true
     },
     "include": [
         "src/**/*.ts",

@@ -9,63 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const url_1 = require("url");
-const router_1 = require("../router");
 const routemap_1 = require("../static/routemap");
+const asyncRouteNode_1 = require("./asyncRouteNode");
 const search_1 = require("./search");
-class AsyncRouteNode {
-    constructor(oPar = {}) {
-        this.type = router_1.RouteType.unknown;
-        this.name = oPar.name || "";
-        this.data = oPar.data;
-        this.leafs = oPar.leafs || 0;
-    }
-}
-exports.AsyncRouteNode = AsyncRouteNode;
-class AsyncRootNode extends AsyncRouteNode {
-    constructor() {
-        super(...arguments);
-        this.type = router_1.RouteType.root;
-    }
-    match(n, rest) {
-        return true;
-    }
-}
-exports.AsyncRootNode = AsyncRootNode;
-class AsyncParameterNode extends AsyncRouteNode {
-    constructor() {
-        super(...arguments);
-        this.type = router_1.RouteType.parameter;
-    }
-    match(n, rest) {
-        return true;
-    }
-}
-exports.AsyncParameterNode = AsyncParameterNode;
-class AsyncWildcardNode extends AsyncRouteNode {
-    constructor(oPar) {
-        super(oPar);
-        this.type = router_1.RouteType.wildcard;
-        this.re = new RegExp("^" + routemap_1.escapeRegex(this.name).replace("\\*", ".*") + "$", "i");
-    }
-    match(n, rest) {
-        return this.re.test(rest);
-    }
-}
-exports.AsyncWildcardNode = AsyncWildcardNode;
-class AsyncStaticNode extends AsyncRouteNode {
-    constructor() {
-        super(...arguments);
-        this.type = router_1.RouteType.static;
-    }
-    match(n, rest) {
-        return this.name === n;
-    }
-}
-exports.AsyncStaticNode = AsyncStaticNode;
 class AsyncRouter {
     getRoot(hostname) {
         return __awaiter(this, void 0, void 0, function* () {
-            return new AsyncRootNode();
+            return new asyncRouteNode_1.AsyncRootNode();
         });
     }
     getRouteChildren(n) {
@@ -78,7 +28,7 @@ class AsyncRouter {
             throw new Error("Method not implemented.");
         });
     }
-    getResource(d) {
+    getResource(node, verb) {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error("Method not implemented.");
         });
@@ -96,8 +46,9 @@ class AsyncRouter {
                 return [node];
             });
             search.getPossibleRoutes = (from, next, rest) => __awaiter(this, void 0, void 0, function* () {
-                let all = yield this.getRouteChildren(from);
-                return all.filter((n) => n.match(next, rest));
+                const all = yield this.getRouteChildren(from);
+                const filtered = all.filter((n) => n.match(next, rest));
+                return filtered;
             });
             let res = yield search.first();
             if (!res) {
@@ -106,7 +57,7 @@ class AsyncRouter {
             return {
                 params: res.params,
                 path: res.path,
-                resource: yield this.getResource(res.data.data),
+                resource: yield this.getResource(res.data.data, verb),
                 uri: res.uri,
             };
         });

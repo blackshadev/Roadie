@@ -4,13 +4,13 @@ import { HttpError } from "../../http";
 class WS extends WebService {
 
     @WebMethod("[GET]/ha/lo")
-    halloWorld() {
+    public halloWorld() {
         this.ctx.response.data("HalloWorld");
         this.ctx.response.send();
     }
 
     @WebMethod("[GET]/i/promise")
-    async prom() : Promise<string> {
+    public async prom(): Promise<string> {
         return new Promise<string>(
             (resolve, reject) => {
                 setTimeout(() => {
@@ -21,7 +21,7 @@ class WS extends WebService {
     }
 
     @WebMethod("[GET]/i/promise/judas")
-    async judas() : Promise<string> {
+    public async judas() : Promise<string> {
         return new Promise<string>(
             (resolve, reject) => {
                 setTimeout(() => {
@@ -29,7 +29,7 @@ class WS extends WebService {
                         new HttpError(
                             400,
                             "Backstab",
-                            "I Lied!"
+                            "I Lied!",
                         )
                     );
                 }, 500);

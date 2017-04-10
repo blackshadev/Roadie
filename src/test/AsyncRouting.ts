@@ -4,11 +4,13 @@ import {
     AsyncParameterNode,
     AsyncRootNode,
     AsyncRouteNode,
-    AsyncRouter,
     AsyncStaticNode,
     AsyncWildcardNode,
+} from "../routing/async/asyncRouteNode";
+import {
+    AsyncRouter,
 } from "../routing/async/asyncRouter";
-import { IRoutingResult } from "../routing/router";
+import { IRoutingResult, RouteType } from "../routing/router";
 
 describe("AsyncRouter", () => {
     const routes = {
@@ -34,35 +36,32 @@ describe("AsyncRouter", () => {
         };
         r.getResource = async(d) => {
             return d;
-        }
+        };
 
         r.getRouteChildren = async (n: AsyncRouteNode<{ [r: string]: any }>) => {
             return Object.keys(n.data).map((k) => {
                 let val = n.data[k];
                 let leafs = typeof(val) === "number" ? HttpVerb.GET : 0;
                 let node: AsyncRouteNode<{ [r: string]: any }>;
+                let type: RouteType;
 
                 if (k.indexOf("*") > -1) {
-                    node = new AsyncWildcardNode<{ [r: string]: any }>({
-                        data: val,
-                        name: k,
-                        leafs,
-                    });
+                    type = RouteType.wildcard;
                 } else if (k[0] === "{") {
-                    node = new AsyncParameterNode<{ [r: string]: any }>({
-                        data: val,
-                        name: k.substr(1, k.length - 2),
-                        leafs,
-                    });
+                    type = RouteType.parameter;
+                    k = k.substr(1, k.length - 2);
                 } else {
-                    node = new AsyncStaticNode<{ [r: string]: any }>({
-                        data: val,
-                        name: k,
-                        leafs,
-                    });
+                    type = RouteType.static;
                 }
 
-                return node;
+                return AsyncRouteNode.Create<{ [r: string]: any }>(
+                    type,
+                    {
+                        data: val,
+                        name: k,
+                        leafs,
+                    },
+                );
             });
         };
 
@@ -77,6 +76,10 @@ describe("AsyncRouter", () => {
         res = await r.getRoute("/test/statics/index.html", HttpVerb.GET);
         assert.equal(res.resource, 12);
         assert.equal(res.uri, "index.html");
+
+        res = await r.getRoute("/test/statics/sub/dir/index.html", HttpVerb.GET);
+        assert.equal(res.resource, 12);
+        assert.equal(res.uri, "sub/dir/index.html");
 
         res = await r.getRoute("/55/", HttpVerb.GET);
         assert.equal(res.resource, 1);

@@ -10,7 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const http_1 = require("../http");
+const asyncRouteNode_1 = require("../routing/async/asyncRouteNode");
 const asyncRouter_1 = require("../routing/async/asyncRouter");
+const router_1 = require("../routing/router");
 describe("AsyncRouter", () => {
     const routes = {
         "/": {
@@ -27,7 +29,7 @@ describe("AsyncRouter", () => {
     it("Combined", () => __awaiter(this, void 0, void 0, function* () {
         let r = new asyncRouter_1.AsyncRouter();
         r.getRoot = () => __awaiter(this, void 0, void 0, function* () {
-            return new asyncRouter_1.AsyncRootNode({
+            return new asyncRouteNode_1.AsyncRootNode({
                 data: routes["/"],
             });
         });
@@ -39,28 +41,22 @@ describe("AsyncRouter", () => {
                 let val = n.data[k];
                 let leafs = typeof (val) === "number" ? http_1.HttpVerb.GET : 0;
                 let node;
+                let type;
                 if (k.indexOf("*") > -1) {
-                    node = new asyncRouter_1.AsyncWildcardNode({
-                        data: val,
-                        name: k,
-                        leafs,
-                    });
+                    type = router_1.RouteType.wildcard;
                 }
                 else if (k[0] === "{") {
-                    node = new asyncRouter_1.AsyncParameterNode({
-                        data: val,
-                        name: k.substr(1, k.length - 2),
-                        leafs,
-                    });
+                    type = router_1.RouteType.parameter;
+                    k = k.substr(1, k.length - 2);
                 }
                 else {
-                    node = new asyncRouter_1.AsyncStaticNode({
-                        data: val,
-                        name: k,
-                        leafs,
-                    });
+                    type = router_1.RouteType.static;
                 }
-                return node;
+                return asyncRouteNode_1.AsyncRouteNode.Create(type, {
+                    data: val,
+                    name: k,
+                    leafs,
+                });
             });
         });
         let res;
@@ -72,6 +68,9 @@ describe("AsyncRouter", () => {
         res = yield r.getRoute("/test/statics/index.html", http_1.HttpVerb.GET);
         assert.equal(res.resource, 12);
         assert.equal(res.uri, "index.html");
+        res = yield r.getRoute("/test/statics/sub/dir/index.html", http_1.HttpVerb.GET);
+        assert.equal(res.resource, 12);
+        assert.equal(res.uri, "sub/dir/index.html");
         res = yield r.getRoute("/55/", http_1.HttpVerb.GET);
         assert.equal(res.resource, 1);
         assert.equal(res.params.er, "55");

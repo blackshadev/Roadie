@@ -21,8 +21,8 @@ class Endpoint {
         switch (typeof (script)) {
             case "function": return new FunctionEndpoint(script, data);
             case "string": return new ScriptEndpoint(script, data);
+            default: throw new Error("Unknown endpoint type");
         }
-        throw new Error("Unknown endpoint type");
     }
 }
 exports.Endpoint = Endpoint;

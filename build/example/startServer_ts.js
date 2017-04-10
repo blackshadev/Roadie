@@ -9,14 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const j = require("../");
-var routes = [
+let routes = [
     "routing.json",
     {
-        "[GET]/query/": function (ctx) {
+        "[GET]/query/": (ctx) => {
             ctx.response.data("static");
             ctx.response.send();
-        }
-    }
+        },
+    },
 ];
 let server;
 function all() {
@@ -25,20 +25,21 @@ function all() {
         j.setDefaultServer(server);
         server.addRoutes(routes[0]);
         server.addRoutes(routes[1]);
-        require('./webservices/ws.js');
+        require("./webservices/ws.js");
         yield server.start();
         console.log("Go to http://localhost:8080/test/{anything}/ or http://localhost:8080/statics/test.html");
     });
 }
-var first = true;
+let first = true;
 process.on("SIGINT", () => __awaiter(this, void 0, void 0, function* () {
     if (first) {
         first = false;
         console.log("Gracefully stopping, pres ctrl+c again to force stop");
         yield server.stop();
     }
-    else
+    else {
         process.exit();
+    }
 }));
 all();
 //# sourceMappingURL=startServer_ts.js.map
