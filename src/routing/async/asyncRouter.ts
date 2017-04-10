@@ -54,14 +54,13 @@ export class AsyncRouter<T> implements IRouter {
      * @param url URL to find the route of
      * @param verb HTTP Verb to use
      */
-    public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult> {
-        let parsedURL = parse(url);
+    public async getRoute(url: string, verb: HttpVerb, hostname?: string): Promise<IRoutingResult> {
         url = Route.normalizeURL(url);
 
         let search = new AsyncRouteSearch<T>();
         search.verb = verb;
         search.initial = async () => {
-            const root = await this.getRoot(parsedURL.hostname);
+            const root = await this.getRoot(hostname);
             let node = new AsyncRoutingState<T>(root);
             node.left = url.length ? url.split("/") : [];
             return [node];

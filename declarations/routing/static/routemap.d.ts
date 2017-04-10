@@ -47,5 +47,5 @@ export declare class StaticRouter implements IRouter {
     readonly routes: IRoutes;
     addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void>;
     searchRoute(verb: HttpVerb, url: string): StaticRoutingState;
-    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
+    getRoute(url: string, verb: HttpVerb, hostname?: string): Promise<IRoutingResult>;
 }

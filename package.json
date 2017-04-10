@@ -2,7 +2,7 @@
   "name": "roadie",
   "author": "Vincent Hagen <vinnie_hagen@hotmail.com>",
   "description": "The nodeJs way of deploying webservices",
-  "version": "2.2.14",
+  "version": "2.2.15",
   "main": "build/index.js",
   "types": "declarations/index.d.ts",
   "scripts": {

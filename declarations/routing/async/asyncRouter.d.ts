@@ -7,5 +7,5 @@ export declare class AsyncRouter<T> implements IRouter {
     getRouteChildren(n: AsyncRouteNode<T>): Promise<AsyncRouteNode<T>[]>;
     addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void>;
     getResource(node: T, verb: HttpVerb): Promise<Endpoint<any, any>>;
-    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
+    getRoute(url: string, verb: HttpVerb, hostname?: string): Promise<IRoutingResult>;
 }

@@ -277,9 +277,9 @@ class RoadieServer {
             });
         });
     }
-    getRoute(url, verb) {
+    getRoute(url, verb, hostname) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.router.getRoute(url, verb);
+            return this.router.getRoute(url, verb, hostname);
         });
     }
     include(svcFile, isAbsolute) {
@@ -323,8 +323,7 @@ class RoadieServer {
             try {
                 const verb = parseHttpVerb(req.method);
                 const path = url_1.parse(req.url).pathname;
-                const url = this._includeHostname ? (req.headers.host + path) : path;
-                const route = yield this.getRoute(url, verb);
+                const route = yield this.getRoute(path, verb, this._includeHostname ? req.headers.host : undefined);
                 const ctx = new HttpContext(this, route, req, resp);
                 yield ctx.execute();
             }

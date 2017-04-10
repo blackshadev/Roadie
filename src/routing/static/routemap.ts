@@ -191,8 +191,8 @@ export class StaticRouter implements IRouter {
         return r;
     }
 
-    public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>  {
-        const s = this.searchRoute(verb, url);
+    public async getRoute(url: string, verb: HttpVerb, hostname?: string): Promise<IRoutingResult>  {
+        const s = this.searchRoute(verb, hostname !== undefined ? hostname + url : url);
         let end: Endpoint<any, any>;
 
         if (s) {

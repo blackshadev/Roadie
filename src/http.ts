@@ -287,7 +287,11 @@ export interface IRoutes {
     [route: string]: WebFunction | string;
 }
 
-export type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<() => void>) => void;
+export type WebMethodDecorator = (
+    target: any,
+    method: string,
+    descr: TypedPropertyDescriptor<(...args: any[]) => void|Promise<any>>,
+) => void;
 
 export interface IWebMethodParams {
     data?: {};
@@ -407,8 +411,8 @@ export class RoadieServer {
      * @param url URL to parse
      * @param verb Verb used
      */
-    public async getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult> {
-        return this.router.getRoute(url, verb);
+    public async getRoute(url: string, verb: HttpVerb, hostname?: string): Promise<IRoutingResult> {
+        return this.router.getRoute(url, verb, hostname);
     }
 
     /**
@@ -482,8 +486,7 @@ export class RoadieServer {
             try {
                 const verb = parseHttpVerb(req.method);
                 const path = urlParse(req.url).pathname;
-                const url = this._includeHostname ? (req.headers.host + path) : path;
-                const route = await this.getRoute(url, verb);
+                const route = await this.getRoute(path, verb, this._includeHostname ? req.headers.host : undefined);
 
                 const ctx = new HttpContext(this, route, req, resp);
                 await ctx.execute();

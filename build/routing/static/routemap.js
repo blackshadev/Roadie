@@ -132,9 +132,9 @@ class StaticRouter {
         const r = s.first();
         return r;
     }
-    getRoute(url, verb) {
+    getRoute(url, verb, hostname) {
         return __awaiter(this, void 0, void 0, function* () {
-            const s = this.searchRoute(verb, url);
+            const s = this.searchRoute(verb, hostname !== undefined ? hostname + url : url);
             let end;
             if (s) {
                 end = s.data.endpoints.get(verb);

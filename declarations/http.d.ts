@@ -112,7 +112,7 @@ export interface IRoadieServerParameters {
 export interface IRoutes {
     [route: string]: WebFunction | string;
 }
-export declare type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<() => void>) => void;
+export declare type WebMethodDecorator = (target: any, method: string, descr: TypedPropertyDescriptor<(...args: any[]) => void | Promise<any>>) => void;
 export interface IWebMethodParams {
     data?: {};
     server?: RoadieServer;
@@ -141,7 +141,7 @@ export declare class RoadieServer {
     constructor(oPar: IRoadieServerParameters);
     start(): Promise<void>;
     stop(): Promise<void>;
-    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
+    getRoute(url: string, verb: HttpVerb, hostname?: string): Promise<IRoutingResult>;
     include(svcFile: string, isAbsolute?: boolean): void;
     addRoute(route: string, endpoint: IWebServiceClass | WebFunction | string | Endpoint<any, any>, data?: any): void;
     log(...args: string[]): void;

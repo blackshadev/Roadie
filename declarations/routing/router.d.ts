@@ -16,5 +16,5 @@ export interface IRoutingResult {
 }
 export interface IRouter {
     addRoute(url: string, endpoint: Endpoint<any, any>): Promise<void>;
-    getRoute(url: string, verb: HttpVerb): Promise<IRoutingResult>;
+    getRoute(url: string, verb: HttpVerb, hostname?: string): Promise<IRoutingResult>;
 }
