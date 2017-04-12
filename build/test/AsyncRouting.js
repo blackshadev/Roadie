@@ -29,12 +29,12 @@ describe("AsyncRouter", () => {
     it("Combined", () => __awaiter(this, void 0, void 0, function* () {
         let r = new asyncRouter_1.AsyncRouter();
         r.getRoot = () => __awaiter(this, void 0, void 0, function* () {
-            return new asyncRouteNode_1.AsyncRootNode({
-                data: routes["/"],
-            });
+            return [new asyncRouteNode_1.AsyncRootNode({
+                    data: routes["/"],
+                })];
         });
         r.getResource = (d) => __awaiter(this, void 0, void 0, function* () {
-            return d;
+            return d.data;
         });
         r.getRouteChildren = (n) => __awaiter(this, void 0, void 0, function* () {
             return Object.keys(n.data).map((k) => {

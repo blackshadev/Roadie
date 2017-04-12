@@ -152,7 +152,7 @@ async function all() {
     router = new j.AsyncRouter<RouteNodeData>();
 
     // Retrieve the root
-    router.getRoot = () => getRouteNode(0);
+    router.getRoot = async () => [await getRouteNode(0)];
 
     // Retrieve children of given node
     router.getRouteChildren = async (n: j.AsyncRouteNode<RouteNodeData>) => {
@@ -164,8 +164,8 @@ async function all() {
     };
 
     // Retrieve resource bound to a given node
-    router.getResource = async (n: RouteNodeData, v: j.HttpVerb) => {
-        let d = n.endpoints[j.HttpVerb[v]];
+    router.getResource = async (n: j.AsyncRouteNode<RouteNodeData>, v: j.HttpVerb) => {
+        let d = n.data.endpoints[j.HttpVerb[v]];
         return j.Endpoint.Create(d);
     };
 

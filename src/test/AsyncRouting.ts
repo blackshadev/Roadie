@@ -30,12 +30,12 @@ describe("AsyncRouter", () => {
 
         let r = new AsyncRouter<{ [r: string]: any }>();
         r.getRoot = async () => {
-            return new AsyncRootNode({
+            return [new AsyncRootNode({
                 data: routes["/"],
-            });
+            })];
         };
         r.getResource = async(d) => {
-            return d;
+            return d.data;
         };
 
         r.getRouteChildren = async (n: AsyncRouteNode<{ [r: string]: any }>) => {

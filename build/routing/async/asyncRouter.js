@@ -12,9 +12,12 @@ const routemap_1 = require("../static/routemap");
 const asyncRouteNode_1 = require("./asyncRouteNode");
 const search_1 = require("./search");
 class AsyncRouter {
+    newState(node, path) {
+        return new search_1.AsyncRoutingState(node, path);
+    }
     getRoot(hostname) {
         return __awaiter(this, void 0, void 0, function* () {
-            return new asyncRouteNode_1.AsyncRootNode();
+            return [new asyncRouteNode_1.AsyncRootNode()];
         });
     }
     getRouteChildren(n) {
@@ -32,16 +35,29 @@ class AsyncRouter {
             throw new Error("Method not implemented.");
         });
     }
+    getRoutingResult(res, url, verb, hostname) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!res) {
+                return { path: null, resource: null, uri: null, params: {} };
+            }
+            return {
+                params: res.params,
+                path: res.path,
+                resource: yield this.getResource(res.data, verb),
+                uri: res.uri,
+            };
+        });
+    }
     getRoute(url, verb, hostname) {
         return __awaiter(this, void 0, void 0, function* () {
             url = routemap_1.Route.normalizeURL(url);
             let search = new search_1.AsyncRouteSearch();
             search.verb = verb;
             search.initial = () => __awaiter(this, void 0, void 0, function* () {
-                const root = yield this.getRoot(hostname);
-                let node = new search_1.AsyncRoutingState(root);
-                node.left = url.length ? url.split("/") : [];
-                return [node];
+                const roots = yield this.getRoot(hostname);
+                return roots.filter((n) => n.match(url, "")).map((root) => {
+                    return this.newState(root, url.length ? url.split("/") : []);
+                });
             });
             search.getPossibleRoutes = (from, next, rest) => __awaiter(this, void 0, void 0, function* () {
                 const all = yield this.getRouteChildren(from);
@@ -49,15 +65,7 @@ class AsyncRouter {
                 return filtered;
             });
             let res = yield search.first();
-            if (!res) {
-                return { path: null, resource: null, uri: null, params: {} };
-            }
-            return {
-                params: res.params,
-                path: res.path,
-                resource: yield this.getResource(res.data.data, verb),
-                uri: res.uri,
-            };
+            return this.getRoutingResult(res, url, verb, hostname);
         });
     }
 }

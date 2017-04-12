@@ -9,10 +9,10 @@ export class State<P, T> implements IValueOf {
     // user definable data, the clone function copies this by reference, watch out mutating it
     public data: T;
 
-    constructor(data: T) {
+    constructor(data: T, left: P[] = []) {
         this.data = data;
         this.path = [];
-        this.left = [];
+        this.left = left;
     }
 
     public clone(): State<P, T> {

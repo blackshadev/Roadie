@@ -4,7 +4,7 @@ export declare class State<P, T> implements IValueOf {
     path: P[];
     left: P[];
     data: T;
-    constructor(data: T);
+    constructor(data: T, left?: P[]);
     clone(): State<P, T>;
     valueOf(): number;
 }

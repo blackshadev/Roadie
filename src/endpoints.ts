@@ -1,6 +1,5 @@
-﻿import { HttpContext, HttpVerb, RoadieServer } from "./http";
-
-import { constructorOf, Map } from "./collections";
+﻿import { constructorOf, Map } from "./collections";
+import { HttpContext, HttpVerb, RoadieServer } from "./http";
 import { WebService } from "./webservice";
 
 export type WebFunction = (ctx: HttpContext, userData?: any) => void;

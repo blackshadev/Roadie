@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const collections_1 = require("../collections");
 class State {
-    constructor(data) {
+    constructor(data, left = []) {
         this.data = data;
         this.path = [];
-        this.left = [];
+        this.left = left;
     }
     get cost() { return this.path.length; }
     clone() {

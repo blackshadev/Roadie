@@ -132,7 +132,7 @@ function getRouteNode(id) {
 function all() {
     return __awaiter(this, void 0, void 0, function* () {
         router = new j.AsyncRouter();
-        router.getRoot = () => getRouteNode(0);
+        router.getRoot = () => __awaiter(this, void 0, void 0, function* () { return [yield getRouteNode(0)]; });
         router.getRouteChildren = (n) => __awaiter(this, void 0, void 0, function* () {
             let arr = [];
             for (let nodeId of routes[n.data.id].nodes) {
@@ -141,7 +141,7 @@ function all() {
             return arr;
         });
         router.getResource = (n, v) => __awaiter(this, void 0, void 0, function* () {
-            let d = n.endpoints[j.HttpVerb[v]];
+            let d = n.data.endpoints[j.HttpVerb[v]];
             return j.Endpoint.Create(d);
         });
         server = new j.Server({ port: 8080, webserviceDir: "webservices/", root: __dirname });

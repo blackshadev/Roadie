@@ -17,6 +17,7 @@ export {
 
 export {
     StaticRouter,
+    Route,
 } from "./routing/static/routemap";
 
 export {
@@ -25,7 +26,15 @@ export {
 
 export {
     AsyncRouteNode,
+    AsyncParameterNode,
+    AsyncRootNode,
+    AsyncStaticNode,
+    AsyncWildcardNode,
 } from "./routing/async/asyncRouteNode";
+
+export {
+    AsyncRoutingState
+} from "./routing/async/search";
 
 export {
     IRouter,
