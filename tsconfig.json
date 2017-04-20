@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-        "watch": true,
+        "watch": false,
 		"target": "es6",
         "module": "commonjs",
         "removeComments": true,

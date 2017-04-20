@@ -102,15 +102,18 @@ export class HttpRequest {
 
 export class HttpResponse {
     get response(): ServerResponse { return this._resp; }
-    set contentType(val: string) { this.headers["Content-Type"] = val; }
+    set contentType(val: string) { this._headers["Content-Type"] = val; }
     get statusCode(): number { return this._statusCode; }
     get length(): number {
         return typeof(this._data) === "string" ? Buffer.byteLength(this._data) : this._data.length;
     }
+    get headers(): { [name: string]: string } {
+        return Object.assign({}, this._headers);
+    }
 
     protected _resp: ServerResponse;
     protected _statusCode: number = 200;
-    protected headers: { [name: string]: string };
+    protected _headers: { [name: string]: string };
 
     protected _encoding: string = "utf8";
     protected _data: Buffer | string;
@@ -123,7 +126,7 @@ export class HttpResponse {
     constructor(ctx: HttpContext, resp: ServerResponse) {
         this._ctx = ctx;
         this._resp = resp;
-        this.headers = {};
+        this._headers = {};
         this._startTime = Date.now();
     }
 
@@ -132,7 +135,7 @@ export class HttpResponse {
     }
 
     public header(headerName: string, value: string): void {
-        this.headers[headerName] = value;
+        this._headers[headerName] = value;
     }
 
     public data(dat: Buffer|string|Object): void {
@@ -166,10 +169,10 @@ export class HttpResponse {
         const len: number = typeof (this._data) === "string" ?
             Buffer.byteLength(this._data as string, this._encoding) :
             this._data.length;
-        this.headers["Content-Length"] = len + "";
-        this.headers.Date = new Date().toUTCString();
+        this._headers["Content-Length"] = len + "";
+        this._headers.Date = new Date().toUTCString();
 
-        this._resp.writeHead(this._statusCode, this.headers);
+        this._resp.writeHead(this._statusCode, this._headers);
         this._resp.end(this._data);
 
         this.eos = true;
@@ -177,6 +180,10 @@ export class HttpResponse {
         const t: number = Date.now() - this._startTime;
         this._ctx.server.log("server", " send: " + typeof (this._data) +
             " of length " + len + " bytes, took " + t + "ms");
+    }
+
+    public getData(): string|Buffer {
+        return this._data;
     }
 
 }

@@ -45,4 +45,9 @@ export {
     Endpoint
 } from "./endpoints";
 
+export {
+    IMockContextParams,
+    createMockContext
+} from "./mock/http";
+
 export function setDefaultServer(serv: RoadieServer) { RoadieServer.default = serv; }

@@ -83,21 +83,24 @@ class HttpResponse {
         this.eos = false;
         this._ctx = ctx;
         this._resp = resp;
-        this.headers = {};
+        this._headers = {};
         this._startTime = Date.now();
     }
     get response() { return this._resp; }
-    set contentType(val) { this.headers["Content-Type"] = val; }
+    set contentType(val) { this._headers["Content-Type"] = val; }
     get statusCode() { return this._statusCode; }
     get length() {
         return typeof (this._data) === "string" ? Buffer.byteLength(this._data) : this._data.length;
+    }
+    get headers() {
+        return Object.assign({}, this._headers);
     }
     get ctx() { return this._ctx; }
     status(code) {
         this._statusCode = code;
     }
     header(headerName, value) {
-        this.headers[headerName] = value;
+        this._headers[headerName] = value;
     }
     data(dat) {
         const bin = dat instanceof Buffer;
@@ -126,14 +129,17 @@ class HttpResponse {
         const len = typeof (this._data) === "string" ?
             Buffer.byteLength(this._data, this._encoding) :
             this._data.length;
-        this.headers["Content-Length"] = len + "";
-        this.headers.Date = new Date().toUTCString();
-        this._resp.writeHead(this._statusCode, this.headers);
+        this._headers["Content-Length"] = len + "";
+        this._headers.Date = new Date().toUTCString();
+        this._resp.writeHead(this._statusCode, this._headers);
         this._resp.end(this._data);
         this.eos = true;
         const t = Date.now() - this._startTime;
         this._ctx.server.log("server", " send: " + typeof (this._data) +
             " of length " + len + " bytes, took " + t + "ms");
+    }
+    getData() {
+        return this._data;
     }
 }
 exports.HttpResponse = HttpResponse;

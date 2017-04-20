@@ -7,4 +7,5 @@ export { AsyncRouteNode, AsyncParameterNode, AsyncRootNode, AsyncStaticNode, Asy
 export { AsyncRoutingState } from "./routing/async/search";
 export { IRouter, RouteType } from "./routing/router";
 export { Endpoint } from "./endpoints";
+export { IMockContextParams, createMockContext } from "./mock/http";
 export declare function setDefaultServer(serv: RoadieServer): void;

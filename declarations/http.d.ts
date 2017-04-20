@@ -50,9 +50,12 @@ export declare class HttpResponse {
     contentType: string;
     readonly statusCode: number;
     readonly length: number;
+    readonly headers: {
+        [name: string]: string;
+    };
     protected _resp: ServerResponse;
     protected _statusCode: number;
-    protected headers: {
+    protected _headers: {
         [name: string]: string;
     };
     protected _encoding: string;
@@ -67,6 +70,7 @@ export declare class HttpResponse {
     data(dat: Buffer | string | Object): void;
     append(dat: Buffer | string): void;
     send(): void;
+    getData(): string | Buffer;
 }
 export interface IHttpError {
     extra?: string;
