@@ -25,6 +25,7 @@
   "dependencies": {
     "@types/mocha": "^2.2.40",
     "@types/node": "^7.0.12",
+    "node-mocks-http": "^1.6.1",
     "raw-body": "^2.1.2",
     "sprintf": "^0.1.5"
   },
