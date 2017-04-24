@@ -61,7 +61,7 @@ class Route {
             verbs = http_1.allVerbs.slice(0);
         }
         url = Route.normalizeURL(url);
-        return [verbs, url.split(/\/|\./g)];
+        return [verbs, url.split(/\//g)];
     }
     addEndpoint(verbs, endpoint) {
         for (const verb of verbs) {

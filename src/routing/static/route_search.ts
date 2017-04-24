@@ -94,7 +94,7 @@ export class RouteSearch extends GreedySearch<StaticRoutingState> {
                     break;
                 case RouteType.wildcard:
                     ns.uri = rest;
-                    ns.penalty += ns.uri.length - (e.name.length - 1);
+                    ns.penalty += ns.uri ? ns.uri.length - (e.name.length - 1) : 0;
                     ns.left.length = 0;
                     break;
                 default: break;

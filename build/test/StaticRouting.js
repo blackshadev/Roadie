@@ -92,13 +92,6 @@ describe("Static routing: ", () => {
         assert.ok(res
             && res.resource.script === "test.js");
     }));
-    it("With Parameter subdomain", () => __awaiter(this, void 0, void 0, function* () {
-        router.addRoute("[GET]{sub}.littledev.nl", endpoints_1.Endpoint.Create("test.js"));
-        const res = yield router.getRoute("tester.littledev.nl", http_1.HttpVerb.GET);
-        assert.ok(res, "Expected to find route");
-        assert.equal(res.params.sub, "tester", "Invalid parameter");
-        assert.equal(res.resource.script, "test.js", "Invalid bind resource");
-    }));
     it("URL normalization", () => __awaiter(this, void 0, void 0, function* () {
         yield router.addRoute("[GET]///test//test//////{aaa}////", endpoints_1.Endpoint.Create("test.js"));
         const res = yield router.getRoute("test/test/tester/", http_1.HttpVerb.GET);
