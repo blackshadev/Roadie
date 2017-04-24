@@ -1,9 +1,9 @@
+import { constructorOf } from "../../collections";
 import { HttpVerb } from "../../http";
 import { RouteType } from "../router";
 import { Search, State } from "../searching";
 import { RoutingState } from "../static/route_search";
 import { AsyncRouteNode } from "./asyncRouteNode";
-import { constructorOf } from "../../collections";
 
 /**
  * Asynchronous search

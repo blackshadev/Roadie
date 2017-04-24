@@ -71,7 +71,7 @@ export abstract class Route implements IRouteMap {
 
         // split the url up into parts
         url = Route.normalizeURL(url);
-        return [verbs, url.split(/\/|\./g)];
+        return [verbs, url.split(/\//g)];
     }
     private static urlRegexp: RegExp;
 
