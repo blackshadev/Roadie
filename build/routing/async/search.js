@@ -78,7 +78,7 @@ class AsyncRouteSearch extends AsyncSearch {
                 switch (e.type) {
                     case router_1.RouteType.parameter:
                         ns.penalty += 1;
-                        ns.params[e.name] = n;
+                        ns.params[e.name] = decodeURIComponent(n);
                         break;
                     case router_1.RouteType.wildcard:
                         ns.uri = rest;

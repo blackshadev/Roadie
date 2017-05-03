@@ -90,7 +90,7 @@ export class RouteSearch extends GreedySearch<StaticRoutingState> {
             switch (e.type) {
                 case RouteType.parameter:
                     ns.penalty += 1;
-                    ns.params[e.name] = n;
+                    ns.params[e.name] = decodeURIComponent(n);
                     break;
                 case RouteType.wildcard:
                     ns.uri = rest;
