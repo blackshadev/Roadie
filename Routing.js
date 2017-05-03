@@ -216,7 +216,7 @@ module.exports = (function($o) {
                         ns.params = $o.extend({}, s.params);
                         if (e.isParameter) {
                             ns.penalty += 1;
-                            ns.params[e.name.slice(1, e.name.length - 1)] = n;
+                            ns.params[e.name.slice(1, e.name.length - 1)] = decodeURIComponent(n);
                         }
                         
                         if (e.isWildcard) {
