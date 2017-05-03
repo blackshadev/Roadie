@@ -241,7 +241,6 @@ module.exports = (function() {
         resolveUrl: function() {
             var rm = this._server.routemap;
             var tmp = rm.getRoute(this.request.urlPath, this.method);
-
             if(!tmp) return false;
             
             this.request.parameters = tmp.params;

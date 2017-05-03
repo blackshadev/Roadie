@@ -49,7 +49,9 @@ module.exports = (function($o) {
 
             var m = parRe.exec(this.name);
 
-            if(m) this.parameter = m[1];
+            if (m) {
+                this.parameter = decodeURIComponent(m[1]);
+            }
 
             this.isParameter = !!this.parameter;
 
