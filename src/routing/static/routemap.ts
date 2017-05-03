@@ -1,7 +1,7 @@
 ﻿"use strict";
 import { extend, IDictionary, Map } from "../../collections";
 import { Endpoint, Endpoints, FunctionEndpoint, ScriptEndpoint, WebFunction } from "../../endpoints";
-import { HttpVerb, allVerbs } from "../../http";
+import { allVerbs, HttpVerb } from "../../http";
 import { IRouter, IRoutingResult, RouteType } from "../router";
 import { GreedySearch, State } from "../searching";
 import { RouteSearch, StaticRoutingState } from "./route_search";

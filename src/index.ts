@@ -18,6 +18,9 @@ export {
 export {
     StaticRouter,
     Route,
+    ParameterRoute,
+    StaticRoute,
+    WildcardRoute,
 } from "./routing/static/routemap";
 
 export {
