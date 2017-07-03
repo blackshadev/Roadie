@@ -34,15 +34,14 @@ describe("AsyncRouter", () => {
                 data: routes["/"],
             })];
         };
-        r.getResource = async(d) => {
-            return d.data;
+        r.getResource = async (d) => {
+            return d.data as any;
         };
 
         r.getRouteChildren = async (n: AsyncRouteNode<{ [r: string]: any }>) => {
             return Object.keys(n.data).map((k) => {
-                let val = n.data[k];
-                let leafs = typeof(val) === "number" ? HttpVerb.GET : 0;
-                let node: AsyncRouteNode<{ [r: string]: any }>;
+                const val = n.data[k];
+                const leafs = typeof(val) === "number" ? HttpVerb.GET : 0;
                 let type: RouteType;
 
                 if (k.indexOf("*") > -1) {

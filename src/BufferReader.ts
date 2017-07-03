@@ -1,22 +1,21 @@
-﻿import { Readable } from 'stream'
-import { EventEmitter } from "events"
+﻿import { EventEmitter } from "events";
+import { Readable } from "stream";
 
 export enum ReaderState {
     none,
     reading,
-    done
+    done,
 }
 
 export class BufferReader {
+    get buffer(): Buffer { return this._buffer; }
+    get length(): number { return this._buffer.length; }
+
+    public state: ReaderState = ReaderState.none;
     protected _stream: Readable;
 
     private _buffer: Buffer;
-    get buffer(): Buffer { return this._buffer; }
-    get length(): number { return this._buffer.length; }
-    
     private _iX: number = 0;
-
-    state: ReaderState = ReaderState.none;
 
     constructor(contentLength: number, strm: Readable) {
         contentLength = isNaN(contentLength) ? 0 : contentLength;
@@ -26,7 +25,7 @@ export class BufferReader {
 
     }
 
-    read(cb: (data: Buffer) => void): void {
+    public read(cb: (data: Buffer) => void): void {
 
         switch (this.state) {
             case ReaderState.none:
@@ -45,8 +44,6 @@ export class BufferReader {
                 break;
         }
 
-        
     }
-
 
 }

@@ -40,6 +40,11 @@ export declare class HttpRequest {
     protected _queryParameters: IDictionary<string>;
     constructor(ctx: HttpContext, route: IRoutingResult, req: IncomingMessage);
     readBody(cb: (data: Buffer) => void): void;
+    readBody(): Promise<Buffer>;
+    readString(encoding: string, cb: (err: Error, data: string) => void): void;
+    readString(encoding?: string): Promise<string>;
+    readJSON<T>(encoding: string, cb: (err: Error, data: T) => void): void;
+    readJSON<T>(encoding?: string): Promise<T>;
     header(headerName: string): string;
     queryParameter(paramName: string): string;
     parameter(paramName: string): string;
@@ -67,7 +72,7 @@ export declare class HttpResponse {
     constructor(ctx: HttpContext, resp: ServerResponse);
     status(code: number): void;
     header(headerName: string, value: string): void;
-    data(dat: Buffer | string | Object): void;
+    data(dat: Buffer | string | object): void;
     append(dat: Buffer | string): void;
     send(): void;
     getData(): string | Buffer;

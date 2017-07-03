@@ -1,5 +1,5 @@
 ﻿"use strict";
-import { extend, IDictionary, Map } from "../../collections";
+import { IDictionary, Map } from "../../collections";
 import { Endpoint, Endpoints, FunctionEndpoint, ScriptEndpoint, WebFunction } from "../../endpoints";
 import { allVerbs, HttpVerb } from "../../http";
 import { IRouter, IRoutingResult, RouteType } from "../router";

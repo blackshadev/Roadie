@@ -1,4 +1,4 @@
-﻿import { constructorOf } from "./collections";
+﻿import { IConstructorOf } from "./collections";
 import { HttpContext } from "./http";
 
 
@@ -6,7 +6,7 @@ function _super(o: any) { return o.prototype.__proto__; }
 (global as any)._super = _super;
 
 export class WebService {
-    public static extend(oPar: {}): constructorOf<WebService> {
+    public static extend(oPar: {}): IConstructorOf<WebService> {
         const cls = class extends WebService {};
         Object.assign(cls.prototype, oPar);
         return cls;

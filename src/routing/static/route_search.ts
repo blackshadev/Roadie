@@ -1,5 +1,4 @@
-﻿import { extend } from "../../collections";
-import { HttpVerb } from "../../http";
+﻿import { HttpVerb } from "../../http";
 import { RouteType } from "../router";
 import { GreedySearch, State } from "../searching";
 import { Route, StaticRouter } from "./routemap";

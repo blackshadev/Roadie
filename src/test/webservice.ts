@@ -1,5 +1,5 @@
 ﻿import assert = require("assert");
-import { constructorOf } from "../collections";
+import { IConstructorOf } from "../collections";
 import { WebMethodEndpoint } from "../endpoints";
 import { HttpContext, HttpVerb, RoadieServer, WebMethod } from "../http";
 import { StaticRouter } from "../routing/static/routemap";
@@ -20,7 +20,7 @@ class NewWebservice extends WebService {
     }
 }
 
-declare const _super: (o: constructorOf<WebService>) => WebService;
+declare const _super: (o: IConstructorOf<WebService>) => WebService;
 
 describe("Webservice", () => {
 

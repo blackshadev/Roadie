@@ -1,4 +1,4 @@
-import { constructorOf } from "../../collections";
+import { IConstructorOf } from "../../collections";
 import { HttpVerb } from "../../http";
 import { RouteType } from "../router";
 import { Search, State } from "../searching";
@@ -160,6 +160,5 @@ export class AsyncRouteSearch<T> extends AsyncSearch<AsyncRoutingState<T>> {
     public goal(state: AsyncRoutingState<T>): boolean {
         return state.left.length === 0 && (state.leafs & this.verb)  !== 0;
     }
-
 
 }

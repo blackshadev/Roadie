@@ -1,4 +1,4 @@
-﻿import { constructorOf, Map } from "./collections";
+﻿import { IConstructorOf, Map } from "./collections";
 import { HttpContext, HttpVerb, RoadieServer } from "./http";
 import { WebService } from "./webservice";
 

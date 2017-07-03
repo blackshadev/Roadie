@@ -36,8 +36,9 @@ function createMockContext(oPar) {
             body = Buffer.alloc(0);
             break;
     }
-    let ctx = new http_1.HttpContext(serv, route, request, resp);
-    ctx.request.readBody = (cb) => cb(body);
+    const ctx = new http_1.HttpContext(serv, route, request, resp);
+    const fn = (cb) => cb(body);
+    ctx.request.readBody = fn;
     return ctx;
 }
 exports.createMockContext = createMockContext;

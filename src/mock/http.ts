@@ -43,8 +43,8 @@ export function createMockContext(oPar: IMockContextParams) {
             }
         default: body = Buffer.alloc(0); break;
     }
-    let ctx = new HttpContext(serv as any, route as any, request, resp);
-    ctx.request.readBody = (cb) => cb(body);
-
+    const ctx = new HttpContext(serv as any, route as any, request, resp);
+    const fn: (cb: (b: Buffer) => void) => void = (cb: (b: Buffer) => void) => cb(body);
+    ctx.request.readBody = fn as any;
     return  ctx;
 }

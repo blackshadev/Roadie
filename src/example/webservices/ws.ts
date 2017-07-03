@@ -16,12 +16,12 @@ class WS extends WebService {
                 setTimeout(() => {
                     resolve("Told Ya");
                 }, 500);
-            }
+            },
         );
     }
 
     @WebMethod("[GET]/i/promise/judas")
-    public async judas() : Promise<string> {
+    public async judas(): Promise<string> {
         return new Promise<string>(
             (resolve, reject) => {
                 setTimeout(() => {
@@ -30,10 +30,10 @@ class WS extends WebService {
                             400,
                             "Backstab",
                             "I Lied!",
-                        )
+                        ),
                     );
                 }, 500);
-            }
+            },
         );
     }
 

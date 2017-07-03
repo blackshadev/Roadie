@@ -38,9 +38,8 @@ describe("AsyncRouter", () => {
         });
         r.getRouteChildren = (n) => __awaiter(this, void 0, void 0, function* () {
             return Object.keys(n.data).map((k) => {
-                let val = n.data[k];
-                let leafs = typeof (val) === "number" ? http_1.HttpVerb.GET : 0;
-                let node;
+                const val = n.data[k];
+                const leafs = typeof (val) === "number" ? http_1.HttpVerb.GET : 0;
                 let type;
                 if (k.indexOf("*") > -1) {
                     type = router_1.RouteType.wildcard;

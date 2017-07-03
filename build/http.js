@@ -64,7 +64,58 @@ class HttpRequest {
         this.parseUrl();
     }
     readBody(cb) {
-        this._reader.read(cb);
+        if (cb) {
+            this._reader.read(cb);
+        }
+        else {
+            return new Promise((resolve, reject) => {
+                this._reader.read((dat) => resolve(dat));
+            });
+        }
+    }
+    readString(encoding = "utf8", cb) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let err;
+            let str;
+            try {
+                const b = yield this.readBody();
+                str = b.toString(encoding);
+            }
+            catch (_err) {
+                err = _err;
+            }
+            if (cb) {
+                cb(err, str);
+            }
+            else if (err) {
+                throw err;
+            }
+            else {
+                return str;
+            }
+        });
+    }
+    readJSON(encoding, cb) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let err;
+            let obj;
+            try {
+                const str = yield this.readString(encoding);
+                obj = JSON.parse(str);
+            }
+            catch (_err) {
+                err = _err;
+            }
+            if (cb) {
+                cb(err, obj);
+            }
+            else if (err) {
+                throw err;
+            }
+            else {
+                return obj;
+            }
+        });
     }
     header(headerName) { return this._req.headers[headerName]; }
     queryParameter(paramName) { return this._queryParameters[paramName]; }

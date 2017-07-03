@@ -15,7 +15,6 @@ import { errno, IError } from "./errno";
 import { StaticRouter } from "./index";
 import { IRouter, IRoutingResult } from "./routing/router";
 
-
 interface IInputRoutes { [route: string]: string | WebFunction;  }
 
 export enum HttpVerb {
@@ -43,7 +42,6 @@ export const allVerbs: HttpVerb[] = (() => {
 
         return arr;
     })();
-
 
 export function parseHttpVerb(verb: string): HttpVerb {
     const v: HttpVerb = HttpVerb[verb];
@@ -82,8 +80,62 @@ export class HttpRequest {
         this.parseUrl();
     }
 
-    public readBody(cb: (data: Buffer) => void): void {
-        this._reader.read(cb);
+    public readBody(cb: (data: Buffer) => void): void;
+    public readBody(): Promise<Buffer>;
+    public readBody(cb?: (data: Buffer) => void): void|Promise<Buffer> {
+
+        if (cb) {
+            this._reader.read(cb);
+        } else {
+            return new Promise<Buffer>((resolve, reject) => {
+                this._reader.read((dat) => resolve(dat));
+            });
+        }
+    }
+
+    public readString(encoding: string, cb: (err: Error, data: string) => void): void;
+    public async readString(encoding?: string): Promise<string>;
+    public async readString(
+        encoding: string = "utf8",
+        cb?: (err: Error, data: string) => void,
+    ): Promise<string|void> {
+        let err: Error;
+        let str: string;
+        try {
+            const b = await this.readBody();
+            str = b.toString(encoding);
+        } catch (_err) {
+            err = _err;
+        }
+
+        if (cb) {
+            cb(err, str);
+        } else if (err) {
+            throw err;
+        } else {
+            return str;
+        }
+    }
+
+    public readJSON<T>(encoding: string, cb: (err: Error, data: T) => void): void;
+    public async readJSON<T>(encoding?: string): Promise<T>;
+    public async readJSON<T>(encoding?: string, cb?: (err: Error, data: T) => void): Promise<T|void> {
+        let err: Error;
+        let obj: T;
+        try {
+            const str = await this.readString(encoding);
+            obj = JSON.parse(str);
+        } catch (_err) {
+            err = _err;
+        }
+
+        if (cb) {
+            cb(err, obj);
+        } else if (err) {
+            throw err;
+        } else {
+            return obj;
+        }
     }
 
     public header(headerName: string): string { return this._req.headers[headerName]; }
@@ -138,7 +190,7 @@ export class HttpResponse {
         this._headers[headerName] = value;
     }
 
-    public data(dat: Buffer|string|Object): void {
+    public data(dat: Buffer|string|object): void {
         const bin: boolean = dat instanceof Buffer;
         if (!bin && typeof (dat) === "object") {
             dat = JSON.stringify(dat);

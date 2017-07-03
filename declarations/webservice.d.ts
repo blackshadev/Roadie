@@ -1,7 +1,7 @@
-import { constructorOf } from "./collections";
+import { IConstructorOf } from "./collections";
 import { HttpContext } from "./http";
 export declare class WebService {
-    static extend(oPar: {}): constructorOf<WebService>;
+    static extend(oPar: {}): IConstructorOf<WebService>;
     isReady: boolean;
     protected ctx: HttpContext;
     protected _method: string;

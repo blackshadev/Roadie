@@ -8,8 +8,8 @@ var ReaderState;
 })(ReaderState = exports.ReaderState || (exports.ReaderState = {}));
 class BufferReader {
     constructor(contentLength, strm) {
-        this._iX = 0;
         this.state = ReaderState.none;
+        this._iX = 0;
         contentLength = isNaN(contentLength) ? 0 : contentLength;
         this._buffer = new Buffer(contentLength);
         this._stream = strm;

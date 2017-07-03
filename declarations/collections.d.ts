@@ -12,17 +12,22 @@ export declare class SortedArray<T extends IValueOf> {
     getItem(idx: number): T;
     clear(): void;
 }
-export interface constructorOf<T> {
+export interface IConstructorOf<T> {
     new (...rest: any[]): T;
 }
 export declare class Map<K, V> {
     private items;
-    protected key(key: K): string;
     constructor();
     set(key: K, value: V): void;
     get(key: K): V;
+    protected key(key: K): string;
 }
 export interface IDictionary<V> {
     [key: string]: V;
 }
-export declare let extend: (target: {}, source: {}) => {};
+export interface IDeferedPromise<T> {
+    promise: Promise<T>;
+    resolve: (d: T) => void;
+    reject: (err: Error) => void;
+}
+export declare function deferPromise<T>(): IDeferedPromise<T>;
