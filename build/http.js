@@ -245,7 +245,7 @@ class HttpContext {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.route.resource) {
                 try {
-                    return this.route.resource.execute(this);
+                    return yield this.route.resource.execute(this);
                 }
                 catch (err) {
                     this.error(err);
