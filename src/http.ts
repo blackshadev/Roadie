@@ -306,7 +306,11 @@ export class HttpContext {
 
     public async execute(): Promise<void> {
         if (this.route.resource) {
-            return this.route.resource.execute(this);
+            try {
+                return this.route.resource.execute(this);
+            } catch (err) {
+                this.error(err);
+            }
         } else {
             this.error(404);
         }
