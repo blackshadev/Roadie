@@ -220,7 +220,7 @@ export class HttpResponse {
 
         const len: number = typeof (this._data) === "string" ?
             Buffer.byteLength(this._data as string, this._encoding) :
-            this._data.length;
+            this.data !== undefined ? this._data.length : 0;
         this._headers["Content-Length"] = len + "";
         this._headers.Date = new Date().toUTCString();
 
@@ -230,8 +230,12 @@ export class HttpResponse {
         this.eos = true;
 
         const t: number = Date.now() - this._startTime;
-        this._ctx.server.log("server", " send: " + typeof (this._data) +
-            " of length " + len + " bytes, took " + t + "ms");
+        this._ctx.server.log("server",
+            " send: status " + this._statusCode +
+            "; type: " + typeof (this._data) +
+            "; length: " + len + " bytes" +
+            "; took: " + t + "ms",
+        );
     }
 
     public getData(): string|Buffer {
