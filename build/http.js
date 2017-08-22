@@ -179,15 +179,17 @@ class HttpResponse {
         }
         const len = typeof (this._data) === "string" ?
             Buffer.byteLength(this._data, this._encoding) :
-            this._data.length;
+            this.data !== undefined ? this._data.length : 0;
         this._headers["Content-Length"] = len + "";
         this._headers.Date = new Date().toUTCString();
         this._resp.writeHead(this._statusCode, this._headers);
         this._resp.end(this._data);
         this.eos = true;
         const t = Date.now() - this._startTime;
-        this._ctx.server.log("server", " send: " + typeof (this._data) +
-            " of length " + len + " bytes, took " + t + "ms");
+        this._ctx.server.log("server", " send: status " + this._statusCode +
+            "; type: " + typeof (this._data) +
+            "; length: " + len + " bytes" +
+            "; took: " + t + "ms");
     }
     getData() {
         return this._data;
