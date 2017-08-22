@@ -179,7 +179,7 @@ class HttpResponse {
         }
         const len = typeof (this._data) === "string" ?
             Buffer.byteLength(this._data, this._encoding) :
-            this.data !== undefined ? this._data.length : 0;
+            this._data !== undefined ? this._data.length : 0;
         this._headers["Content-Length"] = len + "";
         this._headers.Date = new Date().toUTCString();
         this._resp.writeHead(this._statusCode, this._headers);
