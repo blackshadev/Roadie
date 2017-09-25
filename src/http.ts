@@ -249,7 +249,7 @@ export interface IHttpError {
     text?: string;
     statuscode: number;
 }
-export class HttpError implements IHttpError {
+export class HttpError extends Error implements IHttpError {
     public static translateErrNo(no: number): IError { return errno[no]; }
     public static httpStatusText(no: string|number): string {
         return STATUS_CODES[no];
@@ -261,6 +261,8 @@ export class HttpError implements IHttpError {
     public statuscode: number = 500;
 
     constructor(err: IHttpError | Error | number | any, errtxt?: string, extra?: string) {
+        super("HttpError");
+
         if (err.statuscode !== undefined) {
             this.statuscode = err.statuscode;
             this.text = err.text || err.message;
@@ -277,6 +279,9 @@ export class HttpError implements IHttpError {
                 this.extra = extra;
             }
         }
+
+        this.name = this.text;
+        this.message = this.extra || this.text;
     }
 
     public send(ctx: HttpContext) {

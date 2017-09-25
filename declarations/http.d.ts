@@ -82,7 +82,7 @@ export interface IHttpError {
     text?: string;
     statuscode: number;
 }
-export declare class HttpError implements IHttpError {
+export declare class HttpError extends Error implements IHttpError {
     static translateErrNo(no: number): IError;
     static httpStatusText(no: string | number): string;
     extra: string;

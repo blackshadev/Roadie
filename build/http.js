@@ -196,8 +196,9 @@ class HttpResponse {
     }
 }
 exports.HttpResponse = HttpResponse;
-class HttpError {
+class HttpError extends Error {
     constructor(err, errtxt, extra) {
+        super("HttpError");
         this.statuscode = 500;
         if (err.statuscode !== undefined) {
             this.statuscode = err.statuscode;
@@ -217,6 +218,8 @@ class HttpError {
                 this.extra = extra;
             }
         }
+        this.name = this.text;
+        this.message = this.extra || this.text;
     }
     static translateErrNo(no) { return errno_1.errno[no]; }
     static httpStatusText(no) {
