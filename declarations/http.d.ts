@@ -10,15 +10,15 @@ import { IError } from "./errno";
 import { IRouter, IRoutingResult } from "./routing/router";
 export declare enum HttpVerb {
     "NONE" = 0,
-    "GET" = 1,
-    "POST" = 2,
-    "PUT" = 4,
-    "DELETE" = 8,
-    "UPGRADE" = 16,
-    "TRACE" = 32,
-    "HEAD" = 64,
-    "OPTIONS" = 128,
-    "UPDATE" = 256,
+    "OPTIONS" = 1,
+    "GET" = 2,
+    "HEAD" = 4,
+    "POST" = 8,
+    "PUT" = 16,
+    "DELETE" = 32,
+    "TRACE" = 64,
+    "CONNECT" = 128,
+    "PATCH" = 256,
 }
 export declare const allVerbs: HttpVerb[];
 export declare function parseHttpVerb(verb: string): HttpVerb;

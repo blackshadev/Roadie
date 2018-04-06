@@ -1,65 +1,95 @@
 ﻿import {
     createServer as createHttpServer,
-    IncomingMessage, Server as HttpServer,
-    ServerResponse, STATUS_CODES,
+    IncomingMessage,
+    Server as HttpServer,
+    ServerResponse,
+    STATUS_CODES,
 } from "http";
-import { createServer as createHttpsServer, Server as HttpsServer } from "https";
+import {
+    createServer as createHttpsServer,
+    Server as HttpsServer,
+} from "https";
 import { Socket } from "net";
 import { Readable, Writable } from "stream";
 import { TlsOptions } from "tls";
 import { parse as urlParse, Url as IURL } from "url";
 import { BufferReader } from "./BufferReader";
 import { IDictionary } from "./collections";
-import { Endpoint, IWebServiceClass, WebFunction, WebMethodEndpoint } from "./endpoints";
+import {
+    Endpoint,
+    IWebServiceClass,
+    WebFunction,
+    WebMethodEndpoint,
+} from "./endpoints";
 import { errno, IError } from "./errno";
 import { StaticRouter } from "./index";
 import { IRouter, IRoutingResult } from "./routing/router";
 
-interface IInputRoutes { [route: string]: string | WebFunction;  }
+interface IInputRoutes {
+    [route: string]: string | WebFunction;
+}
 
 export enum HttpVerb {
     "NONE" = 0,
-    "GET"  = 1 << 0,
-    "POST" = 1 << 1,
-    "PUT"  = 1 << 2,
-    "DELETE" = 1 << 3,
-    "UPGRADE" = 1 << 4,
-    "TRACE" = 1 << 5,
-    "HEAD" = 1 << 6,
-    "OPTIONS" = 1 << 7,
-    "UPDATE" = 1 << 8,
+    "OPTIONS" = 1 << 0,
+    "GET" = 1 << 1,
+    "HEAD" = 1 << 2,
+    "POST" = 1 << 3,
+    "PUT" = 1 << 4,
+    "DELETE" = 1 << 5,
+    "TRACE" = 1 << 6,
+    "PATCH" = 1 << 7,
 }
 
 export const allVerbs: HttpVerb[] = (() => {
-        const arr: HttpVerb[] = [];
+    const arr: HttpVerb[] = [];
 
-        for (const k in HttpVerb) {
-            if (HttpVerb[k] as any !== HttpVerb.NONE && typeof (HttpVerb.GET) !== typeof (HttpVerb[k])) {
-                continue;
-            }
-            arr.push(HttpVerb[k] as any);
+    for (const k in HttpVerb) {
+        if (
+            (HttpVerb[k] as any) !== HttpVerb.NONE &&
+            typeof HttpVerb.GET !== typeof HttpVerb[k]
+        ) {
+            continue;
         }
+        arr.push(HttpVerb[k] as any);
+    }
 
-        return arr;
-    })();
+    return arr;
+})();
 
 export function parseHttpVerb(verb: string): HttpVerb {
     const v: HttpVerb = HttpVerb[verb];
-    if (typeof (HttpVerb.GET) !== typeof (v)) {
+    if (typeof HttpVerb.GET !== typeof v) {
         throw new Error("Invalid HttpVerb");
     }
     return v;
 }
 
 export class HttpRequest {
-    get url(): string { return this._req.url; }
-    get method(): string { return this._req.method; }
-    get parameters(): IDictionary<string> { return this._parameters; }
-    get headers(): IDictionary<string> { return this._req.headers; }
-    get ctx(): HttpContext { return this._ctx; }
-    get uri(): string { return this._uri; }
-    get queryParams(): IDictionary<string> { return this._queryParameters; }
-    get request(): IncomingMessage { return this._req; }
+    get url(): string {
+        return this._req.url;
+    }
+    get method(): string {
+        return this._req.method;
+    }
+    get parameters(): IDictionary<string> {
+        return this._parameters;
+    }
+    get headers(): IDictionary<string> {
+        return this._req.headers;
+    }
+    get ctx(): HttpContext {
+        return this._ctx;
+    }
+    get uri(): string {
+        return this._uri;
+    }
+    get queryParams(): IDictionary<string> {
+        return this._queryParameters;
+    }
+    get request(): IncomingMessage {
+        return this._req;
+    }
 
     protected _parameters: IDictionary<string>;
     protected _req: IncomingMessage;
@@ -75,30 +105,35 @@ export class HttpRequest {
         this._req = req;
         this._parameters = route.params;
         this._uri = route.uri;
-        this._reader = new BufferReader(parseInt(this.header("content-length"), 10), req);
+        this._reader = new BufferReader(
+            parseInt(this.header("content-length"), 10),
+            req,
+        );
 
         this.parseUrl();
     }
 
     public readBody(cb: (data: Buffer) => void): void;
     public readBody(): Promise<Buffer>;
-    public readBody(cb?: (data: Buffer) => void): void|Promise<Buffer> {
-
+    public readBody(cb?: (data: Buffer) => void): void | Promise<Buffer> {
         if (cb) {
             this._reader.read(cb);
         } else {
             return new Promise<Buffer>((resolve, reject) => {
-                this._reader.read((dat) => resolve(dat));
+                this._reader.read(dat => resolve(dat));
             });
         }
     }
 
-    public readString(encoding: string, cb: (err: Error, data: string) => void): void;
+    public readString(
+        encoding: string,
+        cb: (err: Error, data: string) => void,
+    ): void;
     public async readString(encoding?: string): Promise<string>;
     public async readString(
         encoding: string = "utf8",
         cb?: (err: Error, data: string) => void,
-    ): Promise<string|void> {
+    ): Promise<string | void> {
         let err: Error;
         let str: string;
         try {
@@ -117,9 +152,15 @@ export class HttpRequest {
         }
     }
 
-    public readJSON<T>(encoding: string, cb: (err: Error, data: T) => void): void;
+    public readJSON<T>(
+        encoding: string,
+        cb: (err: Error, data: T) => void,
+    ): void;
     public async readJSON<T>(encoding?: string): Promise<T>;
-    public async readJSON<T>(encoding?: string, cb?: (err: Error, data: T) => void): Promise<T|void> {
+    public async readJSON<T>(
+        encoding?: string,
+        cb?: (err: Error, data: T) => void,
+    ): Promise<T | void> {
         let err: Error;
         let obj: T;
         try {
@@ -138,26 +179,39 @@ export class HttpRequest {
         }
     }
 
-    public header(headerName: string): string { return this._req.headers[headerName]; }
+    public header(headerName: string): string {
+        return this._req.headers[headerName];
+    }
 
-    public queryParameter(paramName: string): string { return this._queryParameters[paramName]; }
+    public queryParameter(paramName: string): string {
+        return this._queryParameters[paramName];
+    }
 
-    public parameter(paramName: string): string { return this._parameters[paramName]; }
+    public parameter(paramName: string): string {
+        return this._parameters[paramName];
+    }
 
     private parseUrl(): void {
         const oPar: IURL = urlParse(this._req.url, true);
         this._queryString = oPar.search;
         this._queryParameters = oPar.query;
     }
-
 }
 
 export class HttpResponse {
-    get response(): ServerResponse { return this._resp; }
-    set contentType(val: string) { this._headers["Content-Type"] = val; }
-    get statusCode(): number { return this._statusCode; }
+    get response(): ServerResponse {
+        return this._resp;
+    }
+    set contentType(val: string) {
+        this._headers["Content-Type"] = val;
+    }
+    get statusCode(): number {
+        return this._statusCode;
+    }
     get length(): number {
-        return typeof(this._data) === "string" ? Buffer.byteLength(this._data) : this._data.length;
+        return typeof this._data === "string"
+            ? Buffer.byteLength(this._data)
+            : this._data.length;
     }
     get headers(): { [name: string]: string } {
         return Object.assign({}, this._headers);
@@ -173,7 +227,9 @@ export class HttpResponse {
     protected _ctx: HttpContext;
 
     private eos: boolean = false;
-    get ctx(): HttpContext { return this._ctx; }
+    get ctx(): HttpContext {
+        return this._ctx;
+    }
 
     constructor(ctx: HttpContext, resp: ServerResponse) {
         this._ctx = ctx;
@@ -190,19 +246,19 @@ export class HttpResponse {
         this._headers[headerName] = value;
     }
 
-    public data(dat: Buffer|string|object): void {
+    public data(dat: Buffer | string | object): void {
         const bin: boolean = dat instanceof Buffer;
-        if (!bin && typeof (dat) === "object") {
+        if (!bin && typeof dat === "object") {
             dat = JSON.stringify(dat);
             this.header("Content-Type", "application/json");
         }
 
-        this._data = dat as Buffer|string;
+        this._data = dat as Buffer | string;
     }
 
     public append(dat: Buffer | string): void {
         const bin: boolean = dat instanceof Buffer;
-        if (!bin && typeof (dat) === "object") {
+        if (!bin && typeof dat === "object") {
             dat = JSON.stringify(dat);
         }
 
@@ -218,9 +274,10 @@ export class HttpResponse {
             return this._ctx.server.log("server", "Request already send");
         }
 
-        const len: number = typeof (this._data) === "string" ?
-            Buffer.byteLength(this._data as string, this._encoding) :
-            this._data !== undefined ? this._data.length : 0;
+        const len: number =
+            typeof this._data === "string"
+                ? Buffer.byteLength(this._data as string, this._encoding)
+                : this._data !== undefined ? this._data.length : 0;
         this._headers["Content-Length"] = len + "";
         this._headers.Date = new Date().toUTCString();
 
@@ -230,18 +287,24 @@ export class HttpResponse {
         this.eos = true;
 
         const t: number = Date.now() - this._startTime;
-        this._ctx.server.log("server",
-            " send: status " + this._statusCode +
-            "; type: " + typeof (this._data) +
-            "; length: " + len + " bytes" +
-            "; took: " + t + "ms",
+        this._ctx.server.log(
+            "server",
+            " send: status " +
+                this._statusCode +
+                "; type: " +
+                typeof this._data +
+                "; length: " +
+                len +
+                " bytes" +
+                "; took: " +
+                t +
+                "ms",
         );
     }
 
-    public getData(): string|Buffer {
+    public getData(): string | Buffer {
         return this._data;
     }
-
 }
 
 export interface IHttpError {
@@ -250,8 +313,10 @@ export interface IHttpError {
     statuscode: number;
 }
 export class HttpError extends Error implements IHttpError {
-    public static translateErrNo(no: number): IError { return errno[no]; }
-    public static httpStatusText(no: string|number): string {
+    public static translateErrNo(no: number): IError {
+        return errno[no];
+    }
+    public static httpStatusText(no: string | number): string {
         return STATUS_CODES[no];
     }
 
@@ -260,7 +325,11 @@ export class HttpError extends Error implements IHttpError {
     // HTTP statuscode
     public statuscode: number = 500;
 
-    constructor(err: IHttpError | Error | number | any, errtxt?: string, extra?: string) {
+    constructor(
+        err: IHttpError | Error | number | any,
+        errtxt?: string,
+        extra?: string,
+    ) {
         super("HttpError");
 
         if (err.statuscode !== undefined) {
@@ -268,13 +337,17 @@ export class HttpError extends Error implements IHttpError {
             this.text = err.text || err.message;
             this.extra = err.extra;
         } else if (err instanceof Error) {
-            const errDescr: IError = HttpError.translateErrNo((err as NodeJS.ErrnoException).errno);
+            const errDescr: IError = HttpError.translateErrNo(
+                (err as NodeJS.ErrnoException).errno,
+            );
             this.statuscode = errDescr && errDescr.http ? errDescr.http : 500;
             this.text = errDescr ? errDescr.description : err.name;
             this.extra = err.toString();
-        } else if (typeof (err) === "number") {
+        } else if (typeof err === "number") {
             this.statuscode = err as number;
-            this.text = errtxt ? errtxt : HttpError.httpStatusText(this.statuscode);
+            this.text = errtxt
+                ? errtxt
+                : HttpError.httpStatusText(this.statuscode);
             if (extra) {
                 this.extra = extra;
             }
@@ -292,7 +365,6 @@ export class HttpError extends Error implements IHttpError {
         }
         ctx.response.send();
     }
-
 }
 
 export class HttpContext {
@@ -300,13 +372,26 @@ export class HttpContext {
     public response: HttpResponse;
     public readonly route: IRoutingResult;
 
-    get userData() { return this._server.userData; }
-    get url(): string { return this.request.url; }
-    get method(): string { return this.request.method; }
-    get server(): RoadieServer { return this._server; }
+    get userData() {
+        return this._server.userData;
+    }
+    get url(): string {
+        return this.request.url;
+    }
+    get method(): string {
+        return this.request.method;
+    }
+    get server(): RoadieServer {
+        return this._server;
+    }
 
     protected _server: RoadieServer;
-    constructor(serv: RoadieServer, route: IRoutingResult,  req: IncomingMessage, resp: ServerResponse) {
+    constructor(
+        serv: RoadieServer,
+        route: IRoutingResult,
+        req: IncomingMessage,
+        resp: ServerResponse,
+    ) {
         this._server = serv;
         this.route = route;
         this.request = new HttpRequest(this, route, req);
@@ -325,7 +410,11 @@ export class HttpContext {
         }
     }
 
-    public error(err: IHttpError | Error | number, errtxt?: string, extra?: string): void {
+    public error(
+        err: IHttpError | Error | number,
+        errtxt?: string,
+        extra?: string,
+    ): void {
         const error = new HttpError(err, errtxt, extra);
 
         if (this._server.onError) {
@@ -335,8 +424,9 @@ export class HttpContext {
         }
     }
 
-    public cwd(): string { return this._server.cwd; }
-
+    public cwd(): string {
+        return this._server.cwd;
+    }
 }
 
 export type ErrorHandle = (err: HttpError, ctx: HttpContext) => void;
@@ -362,7 +452,7 @@ export interface IRoutes {
 export type WebMethodDecorator = (
     target: any,
     method: string,
-    descr: TypedPropertyDescriptor<(...args: any[]) => void|Promise<any>>,
+    descr: TypedPropertyDescriptor<(...args: any[]) => void | Promise<any>>,
 ) => void;
 
 export interface IWebMethodParams {
@@ -370,16 +460,28 @@ export interface IWebMethodParams {
     server?: RoadieServer;
 }
 
-export function WebMethod(route: string, oPar?: IWebMethodParams): WebMethodDecorator {
+export function WebMethod(
+    route: string,
+    oPar?: IWebMethodParams,
+): WebMethodDecorator {
     oPar = oPar || {};
     oPar.server = oPar.server || RoadieServer.default;
 
-    return function(this: any, target: any, method: string, descr: TypedPropertyDescriptor<() => void>) {
-        if (typeof (descr.value) !== "function") {
+    return function(
+        this: any,
+        target: any,
+        method: string,
+        descr: TypedPropertyDescriptor<() => void>,
+    ) {
+        if (typeof descr.value !== "function") {
             throw new Error(`Given WebMethod ${method} is not a function`);
         }
 
-        const endpoint = new WebMethodEndpoint(target.constructor, method, oPar.data);
+        const endpoint = new WebMethodEndpoint(
+            target.constructor,
+            method,
+            oPar.data,
+        );
         oPar.server.addRoute(route, endpoint);
     };
 }
@@ -387,17 +489,29 @@ export function WebMethod(route: string, oPar?: IWebMethodParams): WebMethodDeco
 export class RoadieServer {
     public static default: RoadieServer;
 
-    get port(): number { return this._port; }
+    get port(): number {
+        return this._port;
+    }
 
-    get host(): string { return this._host; }
+    get host(): string {
+        return this._host;
+    }
 
-    get cwd(): string { return this._rootDir; }
+    get cwd(): string {
+        return this._rootDir;
+    }
 
-    get webserviceDir(): string { return this._rootDir + "/" + this._webserviceDir; }
+    get webserviceDir(): string {
+        return this._rootDir + "/" + this._webserviceDir;
+    }
 
-    get useHttps(): boolean { return !!this._tlsOptions; }
+    get useHttps(): boolean {
+        return !!this._tlsOptions;
+    }
 
-    get userData() { return this._userData; }
+    get userData() {
+        return this._userData;
+    }
 
     public onError: ErrorHandle;
     public router: IRouter;
@@ -418,7 +532,10 @@ export class RoadieServer {
     constructor(oPar: IRoadieServerParameters) {
         this._connections = {};
 
-        this._port = oPar.port !== undefined ? oPar.port : oPar.tlsOptions !== undefined ? 443 : 80;
+        this._port =
+            oPar.port !== undefined
+                ? oPar.port
+                : oPar.tlsOptions !== undefined ? 443 : 80;
         this._host = oPar.host || this._host;
         this._webserviceDir = oPar.webserviceDir || this.webserviceDir;
         this._rootDir = oPar.root || this._rootDir;
@@ -428,7 +545,9 @@ export class RoadieServer {
         this._includeHostname = !!oPar.includeHostname;
 
         if (!this._verbose) {
-            this.log = () => { /* NOOP */ };
+            this.log = () => {
+                /* NOOP */
+            };
         }
 
         this._tlsOptions = oPar.tlsOptions;
@@ -441,7 +560,7 @@ export class RoadieServer {
      */
     public async start(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this._server.listen(this._port, this._host, (err) => {
+            this._server.listen(this._port, this._host, err => {
                 if (err) {
                     reject(err);
                 } else {
@@ -455,27 +574,21 @@ export class RoadieServer {
      * Stops the service and destroys all connections
      */
     public async stop(): Promise<void> {
-        return new Promise<void>(
-            (resolve, reject) => {
-
-                (this._server as any).close(
-                    (err) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve();
-                        }
-                    },
-                );
-
-                for (const key in this._connections) {
-                    if (this._connections.hasOwnProperty(key)) {
-                        this._connections[key].destroy();
-                    }
+        return new Promise<void>((resolve, reject) => {
+            (this._server as any).close(err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
                 }
-            },
-        );
+            });
 
+            for (const key in this._connections) {
+                if (this._connections.hasOwnProperty(key)) {
+                    this._connections[key].destroy();
+                }
+            }
+        });
     }
 
     /**
@@ -483,7 +596,11 @@ export class RoadieServer {
      * @param url URL to parse
      * @param verb Verb used
      */
-    public async getRoute(url: string, verb: HttpVerb, hostname?: string): Promise<IRoutingResult> {
+    public async getRoute(
+        url: string,
+        verb: HttpVerb,
+        hostname?: string,
+    ): Promise<IRoutingResult> {
         return this.router.getRoute(url, verb, hostname);
     }
 
@@ -493,7 +610,9 @@ export class RoadieServer {
      * @param isAbsolute whenever or not the given filename is an absolute path or a relative file name
      */
     public include(svcFile: string, isAbsolute?: boolean) {
-        require(!isAbsolute ? (this.webserviceDir + "/" + svcFile + ".js") : svcFile );
+        require(!isAbsolute
+            ? this.webserviceDir + "/" + svcFile + ".js"
+            : svcFile);
     }
 
     /**
@@ -507,9 +626,10 @@ export class RoadieServer {
         endpoint: IWebServiceClass | WebFunction | string | Endpoint<any, any>,
         data?: any,
     ): void {
-        const endp = endpoint instanceof Endpoint ?
-            endpoint as Endpoint<any, any> :
-            Endpoint.Create(endpoint as WebFunction | string, data);
+        const endp =
+            endpoint instanceof Endpoint
+                ? (endpoint as Endpoint<any, any>)
+                : Endpoint.Create(endpoint as WebFunction | string, data);
 
         this.router.addRoute(route, endp);
     }
@@ -526,11 +646,11 @@ export class RoadieServer {
             return;
         }
 
-        if (typeof (routes) === "string") {
+        if (typeof routes === "string") {
             routes = require(`${this._rootDir}/${routes}`);
         }
 
-        if (typeof (routes) !== "object") {
+        if (typeof routes !== "object") {
             throw new Error("Invalid route argument given");
         }
 
@@ -553,21 +673,25 @@ export class RoadieServer {
     }
 
     protected createServer(): HttpsServer | HttpServer {
-
         const _h = async (req: IncomingMessage, resp: ServerResponse) => {
             try {
                 const verb = parseHttpVerb(req.method);
                 const path = urlParse(req.url).pathname;
-                const route = await this.getRoute(path, verb, this._includeHostname ? req.headers.host : undefined);
+                const route = await this.getRoute(
+                    path,
+                    verb,
+                    this._includeHostname ? req.headers.host : undefined,
+                );
 
                 const ctx = new HttpContext(this, route, req, resp);
                 await ctx.execute();
             } catch (e) {
                 resp.statusCode = 500;
                 resp.setHeader("Content-Type", "text/html");
-                resp.end(`<h1> Unkown server error occurred </h1><pre>${e.toString()}</pre>`);
+                resp.end(
+                    `<h1> Unkown server error occurred </h1><pre>${e.toString()}</pre>`,
+                );
             }
-
         };
 
         let serv: HttpServer | HttpsServer;
@@ -577,9 +701,8 @@ export class RoadieServer {
             serv = createHttpServer(_h);
         }
 
-        serv.on("connection", (s) => this.addConnection(s));
+        serv.on("connection", s => this.addConnection(s));
 
         return serv;
     }
-
 }

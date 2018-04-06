@@ -18,15 +18,15 @@ const index_1 = require("./index");
 var HttpVerb;
 (function (HttpVerb) {
     HttpVerb[HttpVerb["NONE"] = 0] = "NONE";
-    HttpVerb[HttpVerb["GET"] = 1] = "GET";
-    HttpVerb[HttpVerb["POST"] = 2] = "POST";
-    HttpVerb[HttpVerb["PUT"] = 4] = "PUT";
-    HttpVerb[HttpVerb["DELETE"] = 8] = "DELETE";
-    HttpVerb[HttpVerb["UPGRADE"] = 16] = "UPGRADE";
-    HttpVerb[HttpVerb["TRACE"] = 32] = "TRACE";
-    HttpVerb[HttpVerb["HEAD"] = 64] = "HEAD";
-    HttpVerb[HttpVerb["OPTIONS"] = 128] = "OPTIONS";
-    HttpVerb[HttpVerb["UPDATE"] = 256] = "UPDATE";
+    HttpVerb[HttpVerb["OPTIONS"] = 1] = "OPTIONS";
+    HttpVerb[HttpVerb["GET"] = 2] = "GET";
+    HttpVerb[HttpVerb["HEAD"] = 4] = "HEAD";
+    HttpVerb[HttpVerb["POST"] = 8] = "POST";
+    HttpVerb[HttpVerb["PUT"] = 16] = "PUT";
+    HttpVerb[HttpVerb["DELETE"] = 32] = "DELETE";
+    HttpVerb[HttpVerb["TRACE"] = 64] = "TRACE";
+    HttpVerb[HttpVerb["CONNECT"] = 128] = "CONNECT";
+    HttpVerb[HttpVerb["PATCH"] = 256] = "PATCH";
 })(HttpVerb = exports.HttpVerb || (exports.HttpVerb = {}));
 exports.allVerbs = (() => {
     const arr = [];
